@@ -51,7 +51,6 @@ For contact and further information see [Imperial College - pore-scale consortiu
 or send me an email:   a.qaseminejad-raeini09@imperial.ac.uk
 
 
-### References
 
 
 [Imperial College - pore-scale consortium]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling
