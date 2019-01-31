@@ -1,0 +1,10 @@
+
+
+all:
+	./AllMake
+
+
+clean: 
+	./AllClean
+
+

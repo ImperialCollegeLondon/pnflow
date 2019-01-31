@@ -1,0 +1,69 @@
+#!/bin/bash
+
+
+
+
+#if ! [ -d bin ]; then
+	#if [ -d ../bin/ ]; then
+		#ln -s ../bin ./
+	#fi
+#fi
+#if ! [ -d build ]; then
+	#if [ -d ../build/ ]; then
+		#ln -s ../build ./
+	#fi
+#fi
+
+SetedpsDir="$psDir"
+
+myCurrentDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+echo Running ${BASH_SOURCE[0]} on $myCurrentDIR  \{
+if ! [ -n "$psDir" ]; then
+	echo " ";
+	echo " PoreScale paths are not set"
+	echo " please set them (preferably in your ~/.bashrc file) by adding in a new line:"
+	echo " Press Cntrl+C to stop ";	echo " ";
+	sleep 1
+	echo "source $myCurrentDIR/bashrc"
+	source $myCurrentDIR/bashrc
+fi
+
+
+
+if [ -n "$1" ]; then
+    dataFiles=$1
+else
+	dataFiles="$(ls -d */ )"
+fi
+
+
+
+# needed to compile thirdparty libraries first 
+for case in $dataFiles ; do
+  if [ -f $case/makefile ]; then 
+    echo ;  echo "* cd $case && make:"
+	 (cd $case && make -j)
+  fi
+done
+
+for case in $dataFiles ; do
+  if [ -f $case/Makefile ]; then 
+    echo ;  echo "* cd $case && make:"
+	 (cd $case && make -j)
+  elif [ -f $case/makefile ]; then echo
+  else
+    echo "* skipping $case"
+  fi
+done
+
+
+
+
+echo "bin directory: $psBinDir"
+if ! [ -n "$SetedpsDir" ]; then
+	echo " ";	echo " ";
+	echo " variable psDir is not permanently set"
+	echo " please set in your ~/.bashrc file by adding new line:"
+	echo "source $psDir/bashrc"
+	echo " ";
+fi

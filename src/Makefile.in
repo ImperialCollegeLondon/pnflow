@@ -1,0 +1,149 @@
+################# settings to adjust from here or bashrc  ##############
+
+psCXX ?= g++
+
+psCFLAGS ?= -std=c++11
+
+#-O3 -Wall -pedantic
+
+# psDir=
+# psInstall=
+# psBinDir=
+
+#link to relative path to exe
+#psCFLAGS ?= -Wl,-rpath,'$ORIGIN/../lib' 
+
+
+
+############# set via makefile of individual applications ##############
+
+# USE_TIFF=1
+# USE_ZLIB=1
+# USE_OMP=1
+
+
+########################################################################
+####################### do not change here after   #####################
+
+
+ifndef psDir
+ # set psDir to upper directory if not already set
+ psDir := $(abspath $(lastword $(MAKEFILE_LIST))/..)
+ $(info psDir set to $(psDir))
+endif
+
+psInstall ?= $(psDir)/..
+
+# set psBinDir if not set
+psBinDir ?= $(psInstall)/bin
+psLibDir ?= $(psInstall)/lib
+
+psReleaseDate ?= \"$(shell date +'%Y.%m.%d')\"
+
+
+psCFLAGS := $(psCFLAGS) -I$(psInstall)/include -DRELEASE_DATE=$(psReleaseDate)
+psLFLAGS := $(psLFLAGS) -L$(psLibDir)
+
+
+
+
+ifeq ($(USE_VXLIMG),1)
+   psCFLAGS := -I$(psDir)/voxelImage $(psCFLAGS)
+   psLFLAGS := -L$(psLibDir)     $(psLFLAGS)
+endif
+
+   $(info psCFLAGS: $(psCFLAGS))
+
+
+# set thirdparty directory if not set
+ifndef PS3rdParty
+ ifneq ("$(wildcard $(psDir)/thirdparty/makefile)","")
+  PS3rdParty := $(psDir)/thirdparty
+ else
+  ifneq ("$(wildcard $(psDir)/../thirdparty/makefile)","")
+   PS3rdParty := $(psDir)/../thirdparty
+  endif
+ endif
+ $(info PS3rdParty set to $(PS3rdParty))
+endif
+
+
+# set libtiff install directory: TIFDIR
+# Note: libtiff depends on libzxx above
+# libtiff.so will be copied to $(psDir)/bin; for now linking staticly
+ifdef USE_TIFF
+ TIFDIR=$(psInstall)
+ ifeq ("$(wildcard $(TIFDIR)/include/tiff.h)","")
+  TIFDIR=$(PS3rdParty)/libtiff/build
+ endif
+
+ ifneq ("$(wildcard $(TIFDIR)/include/tiff.h)","")
+   psCFLAGS := -I$(TIFDIR)/include $(psCFLAGS) -DTIFLIB 
+   psLFLAGS := -L$(TIFDIR)/libtiff     $(psLFLAGS) -ltiff -ltiffxx -lstdc++ -lm
+
+   ljpeg=$(shell $(psCXX) -ljpeg 2>&1 | grep  'cannot find' | sed 's/.*cannot.*/0/g')
+   ifneq "$(ljpeg)" "0"
+       psLFLAGS := $(psLFLAGS)  -ljpeg 
+   else
+     $(ignoring jpeg)
+   endif
+
+   llzma=$(shell $(psCXX) -llzma 2>&1 | grep  'cannot find' | sed 's/.*cannot.*/0/g')
+   ifneq ("$(llzma)","0")
+      psLFLAGS := $(psLFLAGS)  -llzma 
+   else
+      #$(info cannot find -llzma: $(llzma) )
+   endif
+
+ else
+   $(warning tiff.h not found in TIFDIR,$(TIFDIR)/include, nor in $(psInstall)/include/, ignoring USE_TIFF)
+ endif
+endif
+
+
+
+# set zlib directory
+# Note: $(ZLIBDIR)/contrib/iostream3/zfstream.cc should be compiled in libzxx
+ifdef USE_ZLIB
+ ZLIBDIR=$(psInstall)
+ ifeq ("$(wildcard $(ZLIBDIR)/include/zlib.h)","")
+   ZLIBDIR=$(PS3rdParty)/zlib-1.2.11/build
+ endif
+ ifneq ("$(wildcard $(ZLIBDIR)/include/zlib.h)","")
+   psCFLAGS := -I$(ZLIBDIR)/include $(psCFLAGS) -DZLIB
+   psLFLAGS := -L$(ZLIBDIR)/lib     $(psLFLAGS)  -lzxx
+ else
+   $(warning ZLIBDIR, $(PS3rdParty)/zlib-1.2.11/zlib.h, not found, ignoring USE_ZLIB)
+ endif
+endif
+
+
+
+
+# set hypre directory
+ifdef USE_HYPRE
+ HYPRE_DIR=$(psInstall)
+ ifeq ("$(wildcard $(HYPRE_DIR)/include/HYPRE.h)","")
+   HYPRE_DIR=$(PS3rdParty)/hypre-2.11.2/src/hypre
+ endif
+ ifneq ("$(wildcard $(HYPRE_DIR)/include/HYPRE.h)","")
+  CDEFS     = -DHAVE_CONFIG_H -DHYPRE_TIMING
+  CINCLUDES = -I$(HYPRE_DIR)/include
+  psCFLAGS := $(psCFLAGS) $(COPTS)  -pedantic -MMD -MP  -DMULTITHREAD  -static  $(CDEFS) $(CINCLUDES) 
+  psLFLAGS := $(psLFLAGS) $(COPTS) -pthread  $(HYPRE_DIR)/lib/libHYPRE.a 
+ else
+   $(error HYPRE_DIR, $(HYPRE_DIR)/include/HYPRE.h, not found )
+ endif
+endif
+
+
+
+
+
+
+# set openMP for parallel image processing, mesh generation ...
+# not yet integrated with the "released" codes due to portability concerns / too experimental 
+ifdef USE_OMP 
+ psCFLAGS := $(psCFLAGS) -DOpenMP -I/usr/lib/openmpi/include -fopenmp
+ psLFLAGS := $(psLFLAGS) -L/usr/lib/openmpi/lib -lmpi_cxx -lmpi -lopen-rte -lopen-pal -ldl -Wall -fopenmp
+endif

@@ -1,0 +1,41 @@
+#!/bin/bash
+
+if [  -n "$psDir" ]; then
+	echo "Info: psDir(=$psDir) is NOT reset from "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+else
+
+	export psDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+	export psInstall=$( cd "$psDir/../" && pwd )
+	export psBinDir=$psInstall/bin
+	export psLibDir=$psInstall/lib
+	export psIncDir=$psInstall/include
+
+
+	export PATH=$PATH:$psDir/scripts
+	export PATH=$PATH:$psDir/scripts/misc
+	export PATH=$PATH:$psDir/scripts/twoPhase
+	export PATH=$PATH:$psDir/scripts/networkModel
+	export PATH=$PATH:$psDir/scripts/singlePhase
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$psLibDir
+	export PATH=$PATH:$psBinDir
+
+
+	if ! [ -d $psBinDir ]; then
+		 mkdir -p $psBinDir
+	fi
+	if ! [ -d $psLibDir ]; then
+		 mkdir -p $psLibDir
+	fi
+	if ! [ -d $psIncDir ]; then
+		 mkdir -p $psIncDir
+	fi
+fi
+
+
+# single-phase codes and preprocessing codes for two-phase flow solver: not updated anymore
+#export poreFoamBashrc="$psDir/porefoam-v1612/bashrc"
+export poreFoamBashrc="$psDir/porefoam/bashrc"
+
+# two-phase flow solver
+export poreFoamBashrcExtend="$psDir/porefoam/bashrc"
+

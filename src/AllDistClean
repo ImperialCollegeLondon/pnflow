@@ -1,0 +1,19 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # run from this directory
+
+
+. ./AllClean
+
+
+if [ -z "$psInstall" ] ; then
+ echo ; echo "Warning: psInstall $psInstall is not set" ; echo
+ exit
+fi
+
+(cd $psInstall/bin  && rm -f  voxelImageConvert voxelImageProcess  nelmToFoamPar  Ufraw2Uc  gnextract*  gnflow*  pnextract*  pnflow* gncompare  gnconvert rawToFoam*)
+(cd $psInstall/bin  && rm -rf porefoam-*/)
+rm -rf  ./build/gncompare/  ./build/gnconvert/  ./build/gnextract/  ./build/gnflow/  ./build/pnextract/  ./build/pnflow/ 
+rm -f log.AllMake*
+
+
+
