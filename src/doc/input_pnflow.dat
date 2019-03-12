@@ -91,7 +91,7 @@ visualize
   6  %< resolution of sylinders/spheres in 3D visualization (6-18)
      % visualise    visualize  visualize   visualize  visualize 
      %   init        Drainage  Imbibition   corners   all steps
-          F            F         F             F          F
+           F            T         T             F          T
 #
 
 
