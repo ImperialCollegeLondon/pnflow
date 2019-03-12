@@ -85,17 +85,15 @@ SAT_COVERGENCE
 #
 
 
-visualizeF
-%  file      throat radius   resolution   visualise    visualise  visualise   visualise  visualise 
-% prefix      scale factor     (6-18)       init        Drainage  Imbibition   corners   all steps
-    B             .1             6            F            F         F             F          F
+visualize 
+  F  %< write full-3D (T) or light ball-stick visualization only (F)
+  1. %< throat radius  scale factor in full visualization
+  6  %< resolution of sylinders/spheres in 3D visualization (6-18)
+     % visualise    visualize  visualize   visualize  visualize 
+     %   init        Drainage  Imbibition   corners   all steps
+          F            F         F             F          F
 #
 
-visualizeLightF
-%   file   visualise    visualise  visualise   visualise
-%  prefix    init        Drainage  Imbibition  all steps
-      L        F            F          T           F
-#
 
 
 RAND_SEED
