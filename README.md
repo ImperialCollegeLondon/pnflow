@@ -39,8 +39,9 @@ The './AllMakeMinGW' bash script compiles the code for Windows machines.
 Run './AllClean' beforhand, to avoid mixing the intermidiate Linux and Windows object files.
 
 ###  Dependencies
-The pnflow code depends on the [Hypre] library for solving linear equations. 
-This library, along with [pnextract] dependencies, is included in the thirdparty/ folder. 
+The pnflow code depends on the [Hypre] library, used to solve the linear system of equations 
+for viscous pressure drop. This library, along with [pnextract] dependencies, is included in 
+the thirdparty folder. 
 
 ###  Licence
 
