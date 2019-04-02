@@ -5,7 +5,7 @@ This repository included the classical network flow simulation code called pnflo
 code is also included for convenience.
 
 These pnflow code is essentially a cleaned up version of the [poreflow code] by
-[Valvatne and Blunt (2014)].  The poreflow code was restructured with some 
+[Valvatne and Blunt (2004)].  The poreflow code was restructured with some 
 post-processing features added in preparation for the generalized network 
 model [Raeini, Bijeljic and Blunt 2018], sponsored by [TOTAL]. 
 A recent validation of the pnflow and [pnextract] codes is published by [Bultreys et al. 2018].
