@@ -31,7 +31,7 @@ using namespace std;
  * needs to occur at least at one face.
  */
 void Netsim::Drainage(InputData& input, double& Sw, double& Pc, double requestedFinalSw, double requestedFinalPc,
-              double deltaSw, double deltaPc, double deltaPcIncFactor, bool calcKr, bool calcI, 
+              double deltaSw, double deltaPc, double deltaPcIncFactor, bool calcKr, bool calcI,
 			  bool entreL, bool entreR, bool exitL, bool exitR, bool swOut)
 {
 
@@ -41,9 +41,9 @@ void Netsim::Drainage(InputData& input, double& Sw, double& Pc, double requested
     //SortedEvents<Apex*, PceDrainCmp>&   m_layerEventsCh(m_eventsCh);
 
 
-    //if (useHypre) 
+    //if (useHypre)
      m_solver = new hypreSolver(m_rockLattice, m_krInletBoundary, m_krOutletBoundary, m_numPores+1, m_comn.debugMode, "solverDrain", m_writeSlvMatrixAsMatlab);
-    //else 
+    //else
      //m_solver = new amg_solver(m_rockLattice, m_krInletBoundary, m_krOutletBoundary, m_numPores+1, m_maxNonZeros, m_comn.debugMode,
 		//m_matrixFileName + "_draincycle_"+to_string(m_comn.floodingCycle()), m_writeSlvMatrixAsMatlab);
 
@@ -51,7 +51,7 @@ void Netsim::Drainage(InputData& input, double& Sw, double& Pc, double requested
     Netsim::initializeDrainage(m_eventsCh,calcKr, calcI, entreL, entreR, exitL, exitR);
 
 
-	if (m_comn.debugMode>100) 
+	if (m_comn.debugMode>100)
 	{	cout<<m_rockLattice[0]->model()->Pc_pistonTypeAdv()<<"  ";
 		cout<<m_rockLattice[0]->model()->Pc_pistonTypeRec()<<endl;
 		cout<<m_rockLattice[m_numPores+1]->model()->Pc_pistonTypeAdv()<<"  ";
@@ -129,7 +129,7 @@ void Netsim::singleDrainStep(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, double
         int numInv(0), invInsideBox(0);
         bool insideBox(false);
 
-		dbgFile<<"\n Sw = "<<m_satWater<<":"<<"  Pc = "<<m_cappPress<<"   "<<"  "<<nextCentrInjPc(m_eventsCh)<<": ";dbgFile.flush();
+		outD<<"\n Sw = "<<m_satWater<<":"<<"  Pc = "<<m_cappPress<<"   "<<"  "<<nextCentrInjPc(m_eventsCh)<<": ";outD.flush();
 
         while((invInsideBox < fillTarget && !m_eventsCh.empty() && nextCentrInjPc(m_eventsCh) <= PcTarget) )  ///. inner filling loop
         {
@@ -153,7 +153,7 @@ void Netsim::singleDrainStep(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, double
 
 
 ///. Third inner loop, only when option m_StableFilling, until no layer ready for pop(?)
-            if(m_StableFilling)   
+            if(m_StableFilling)  
              while(nextCentrInjPc(m_eventsCh) <= m_cappPress+1.0e-32)
                 {	//cout<<" StableFilling ";
                     Netsim::popUpdateOilInj(m_eventsCh, insideBox, m_cappPressCh, PcTarget);
@@ -199,7 +199,7 @@ void Netsim::singleDrainStep(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, double
     m_maxCycleCappPress = max(m_cappPress, m_maxCycleCappPress);
 
 	cout.precision(3);
-	m_out << "Sw: " << setw(8) << std::left << m_satWater << " Pc: " << setw(10) << round(m_cappPress)  << " "; 
+	m_out << "Sw: " << setw(8) << std::left << m_satWater << " Pc: " << setw(10) << round(m_cappPress)  << " ";
     m_out << setw(2) << std::right << numSteps << ":" << setw(5) << totNumFill << " invasions " ;
 
     Netsim::solve_forRelPermResIndex(m_wantRelPerm, m_wantResIdx);
@@ -209,7 +209,7 @@ void Netsim::singleDrainStep(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, double
 
 
 
-	if (m_comn.debugMode>0 && Element::nErrs>0) 
+	if (m_comn.debugMode>0 && Element::nErrs>0)
 		cout<<"   nErrs:"<<Element::nErrs<<"  ";
 	Element::nErrs = 0;
 
@@ -260,7 +260,7 @@ inline bool Netsim::insertReCalcDrainEntryPrs(SortedEvents<Apex*,PceDrainCmp>& m
 	}
 	//elem->ChS hape()->ca lcR(cappPrs);///. candidate to be removed
 	return true;
-} 
+}
 
 template<class compType>
 inline void Netsim::reCalcOilLayerPc_markTrappedFilms(SortedEvents<Apex*,compType>& m_layerEventsCh, Element* elem, double cappPrs)
@@ -276,9 +276,9 @@ inline void Netsim::reCalcOilLayerPc_markTrappedFilms(SortedEvents<Apex*,compTyp
                 //m_layerEventsCh->setInOilFloodVec(false);
             }
         }
- 
+
         polyShape->calcOilLayerPc_syncTrappings(cappPrs-polyShape->rhogh());
- 
+
         for(int j = 0; j < polyShape->numCorners(); ++j)
         {
             if(polyShape->oilLayerConst()[j].isInOilFloodVec())
@@ -308,7 +308,7 @@ inline void Netsim::addElemTo_layerDrainEvents(SortedEvents<Apex*,PceDrainCmp>& 
 		{
 			for(size_t i = 0; i < addCrns.size(); ++i)
 			{
-				softAssert(!polyShape->oilLayerConst()[addCrns[i]].isInOilFloodVec());
+				ensure(!polyShape->oilLayerConst()[addCrns[i]].isInOilFloodVec());
 				m_layerEventsCh.insert(&polyShape->oilLayerCh()[addCrns[i]]);
 				polyShape->oilLayerCh()[addCrns[i]].setInOilFloodVec(true);
 			}
@@ -349,7 +349,7 @@ void Netsim::initializeDrainage(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, boo
     m_comn.injectant(invadingFluid);
     m_comn.setDrainageCycle(true);
 
-	dbgFile<<std::endl<<std::endl<<"initializeDrainage cycle "<<m_comn.floodingCycle()<<" "<<endl;
+	outD<<std::endl<<std::endl<<"initializeDrainage cycle "<<m_comn.floodingCycle()<<" "<<endl;
 
     m_cpuTimeTotal = 0.0;
     m_cpuTimeCoal = 0.0;
@@ -387,7 +387,7 @@ void Netsim::initializeDrainage(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, boo
     else if(exitL)        m_trappingCriteria = escapeToInlet;
     else if(exitR)        m_trappingCriteria = escapeToOutlet;
 	else    			  m_out << "Error: exit boundary is not specified "<<exitL << exitR<<endl;
-    
+   
 
 
 
@@ -423,7 +423,7 @@ void Netsim::initializeDrainage(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, boo
     //m_eventsCh.clear();
     //m_layerEventsCh.clear();
 
-	dbgFile<<" 2"; dbgFile.flush();
+	outD<<" 2"; outD.flush();
 
 	///. initialize all elements, except inlet and outlet BCs
     for(size_t i = m_numPores+2; i < m_rockLattice.size(); ++i)
@@ -440,7 +440,7 @@ void Netsim::initializeDrainage(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, boo
             m_rockLattice[i]->ChModel()->initOilInjection(m_cappPress-m_rockLattice[i]->model()->rhogh());
         }
     }
-    
+   
 
     for(int i = 1; i < int(m_rockLattice.size()); ++i)
     {
@@ -448,7 +448,7 @@ void Netsim::initializeDrainage(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, boo
         {
             if(m_rockLattice[i]->canBeAddedToEventVec(&m_oil))
             {
-                if (m_rockLattice[i]->model()->bulkFluid()->isOil())  		cout<< " depb " ; 
+                if (m_rockLattice[i]->model()->bulkFluid()->isOil())  		cout<< " depb " ;
 
 				m_rockLattice[i]->calcCentreEntryPrsOilInj();
                m_eventsCh.quickInsert(m_rockLattice[i]);
@@ -459,7 +459,7 @@ void Netsim::initializeDrainage(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, boo
         }
     }
 
-	dbgFile<<"3"; dbgFile.flush();
+	outD<<"3"; outD.flush();
 
 	///.  sort events to find the highest priority element to start injecting from
     m_eventsCh.sortEvents();
@@ -518,13 +518,13 @@ void Netsim::initializeDrainage(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, boo
         m_drainListOut << endl << "% The filling list identifies the order through which pores/throats get filled by oil" << endl;
         m_drainListOut << "fill = [";
     }
-    
+   
 
         Netsim::checkUntrapWaterIfUnstableConfigsDrain(m_eventsCh);
 
 
 
-	dbgFile<<" . ";
+	outD<<" . ";
 	cout<<endl;
 
 }
@@ -577,23 +577,23 @@ void Netsim::popUpdateCentreInj_Oil(Element *currElemCh, SortedEvents<Apex*,PceD
 
     const Element *currElem = currElemCh;
     double currentPc = currElem->model()->gravCorrectedEntryPress();
-     if(currElem->model()->bulkFluid()->isOil()) 
+     if(currElem->model()->bulkFluid()->isOil())
      {		 cout<<"\n bypd "<<currElem->latticeIndex()<<"  "<<currElem->isInOilFloodVec()<<"  "<<currElem->model()->displacementType()<<endl;		 return; //exit(-1);
 	 }
 
     localPc = max(localPc, currentPc);
     //m_boundPress = min(m_boundPress, currentPc);
-    dbgFile<<currElem->model()->displacementType()<<currElem->iRockType();dbgFile.flush();
- 
+    outD<<currElem->model()->displacementType()<<currElem->iRockType();outD.flush();
+
     bool HadNoOil(!currElem->model()->conductsAnyOil());//any oil
 
-    currElemCh->fillElemCentreWithOilRemoveLayers(); 
+    currElemCh->fillElemCentreWithOilRemoveLayers();
     if (m_eventsCh.remove(currElemCh)) cout<<" dblInsOInj ";     ///. popUpdateCentreInj _Oil  inject through centre
     if (m_eventsCh.checkIfThere(currElemCh)) cout<<" dblInsOIndsdaadsj ";     ///. popUpdateCentreInj _Oil  inject through centre
-	if (currElem->isInOilFloodVec())  cout<<" CWVN "; 
+	if (currElem->isInOilFloodVec())  cout<<" CWVN ";
 
 
-    if(HadNoOil) 
+    if(HadNoOil)
     {
 		for(int j = 0; j < currElem->connectionNum(); ++j)
 		{
@@ -611,7 +611,7 @@ void Netsim::popUpdateCentreInj_Oil(Element *currElemCh, SortedEvents<Apex*,PceD
 			{///. THE RULES TO BE CHECKED
                 if(disconnectRetreading || connection->model()->disConectedCentreWCornerW() )
                 {
-                    Netsim::findMarkStoreTrappedWater_reCalcOlPc(m_layerEventsCh,connection, bulkBlob, localPc); 
+                    Netsim::findMarkStoreTrappedWater_reCalcOlPc(m_layerEventsCh,connection, bulkBlob, localPc);
 					if(disconnectRetreading && connection->model()->disConectedCentreWCornerW())
 						Netsim::findMarkStoreTrappedWater_reCalcOlPc(m_layerEventsCh,connection, filmBlob, localPc);
 				}
@@ -632,7 +632,7 @@ void Netsim::popUpdateCentreInj_Oil(Element *currElemCh, SortedEvents<Apex*,PceD
 
 /** trapping routine
  */
-void Netsim::findMarkStoreTrappedWater_reCalcOlPc(SortedEvents<Apex*,PceDrainCmp>& m_layerEventsCh, Element* elem, FluidBlob startPt, double localPc) 
+void Netsim::findMarkStoreTrappedWater_reCalcOlPc(SortedEvents<Apex*,PceDrainCmp>& m_layerEventsCh, Element* elem, FluidBlob startPt, double localPc)
 {
     vector< pair<Element*, FluidBlob> > trappingStorage;
     double rhogh(elem->model()->rhogh());
@@ -642,7 +642,7 @@ void Netsim::findMarkStoreTrappedWater_reCalcOlPc(SortedEvents<Apex*,PceDrainCmp
     if(!trappingStorage.empty())
     {
 		int WarningImproveEfficiency;
-		dbgFile<<' '<<trappingStorage.size()<<'t'<<'w'<<elem->iRockType()<<" ";dbgFile.flush();
+		outD<<' '<<trappingStorage.size()<<'t'<<'w'<<elem->iRockType()<<" ";outD.flush();
         for(size_t elm = 0; elm < trappingStorage.size(); ++elm)
         {
 			if(trappingStorage[elm].first->isInOilFloodVec())
@@ -755,7 +755,7 @@ void Netsim::finaliseDrainage()
 
     //if(m_prtPressureProfile && m_wantRelPerm)
     //{
-        //writePrsProfileData(retreatingFluid, m_floodCycleResultsOut); 
+        //writePrsProfileData(retreatingFluid, m_floodCycleResultsOut);
         //writePrsProfileData(invadingFluid, m_floodCycleResultsOut);
     //}
 
@@ -764,7 +764,7 @@ void Netsim::finaliseDrainage()
     {
         if(i != m_numPores + 1 && m_rockLattice[i]->connectedToNetwork())
         {
-            m_rockLattice[i]->ChModel()->finitOilInjection(m_cappPress-m_rockLattice[i]->model()->rhogh());        
+            m_rockLattice[i]->ChModel()->finitOilInjection(m_cappPress-m_rockLattice[i]->model()->rhogh());       
         }
     }
 
@@ -785,18 +785,18 @@ void Netsim::finaliseDrainage()
 void Netsim::popUpdate_layerInjs_Oil(Apex*apex,  SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, double & localPc)
 {///. oil layer growth
 
-		dbgFile<<'l'<<'o';dbgFile.flush();
+		outD<<'l'<<'o';outD.flush();
 
 		Polygon* polyCh = (Polygon*)apex->parentModel();
         const int & cornerIndex = apex->subIndex();
 		const Polygon* poly = polyCh;
 
-		softAssert(!poly->eleman()->isTrappedOil());
-		//softAssert(!poly->conductCOil());
+		ensure(!poly->eleman()->isTrappedOil());
+		//ensure(!poly->conductCOil());
      if(polyCh->bulkFluid()->isOil() )
      {
 
-		if(m_comn.debugMode > 0) 
+		if(m_comn.debugMode > 0)
 		{
 			cout<<" bydsdspd ";			cout<<apex->isInOilFloodVec()<<"  ";			cout<< apex->subIndex()<<endl;
 			apex->setInOilFloodVec(false);
@@ -814,15 +814,15 @@ void Netsim::popUpdate_layerInjs_Oil(Apex*apex,  SortedEvents<Apex*,PceDrainCmp>
 	   double currentPc = apex->entryPc();
 	   if ( !polyCh->Pc_growStableOilLayerDrain_UseLess(localPc,cornerIndex)+poly->rhogh() ) return;
 	   localPc = max(currentPc, localPc);
-		//softAssert(currentPc < nextEventPc);
-		softAssert(m_eventsCh.empty() || currentPc <= m_eventsCh.peek()->entryPc());
+		//ensure(currentPc < nextEventPc);
+		ensure(m_eventsCh.empty() || currentPc <= m_eventsCh.peek()->entryPc());
 
 		if(poly->numLayers() == poly->numCorners()-1)
 		{  // Oblique corner  => water in center and corner is separated, check for trapping
             Netsim::findMarkStoreTrappedWater_reCalcOlPc(m_layerEventsCh, polyCh->ChParent(), filmBlob, localPc);
             Netsim::findMarkStoreTrappedWater_reCalcOlPc(m_layerEventsCh, polyCh->ChParent(), bulkBlob, localPc);
         }
-		else if(poly->numLayers() == 0)   ///. last element in W-W, first element in O-W OInj 
+		else if(poly->numLayers() == 0)   ///. last element in W-W, first element in O-W OInj
 		{  if (poly->numLayers()==0) cout<<"dsssdknb";
           // Sharpest corner  => new oil connection need to check for oil coalescence
 			Netsim::insertReCalcDrainEntryPrs(m_layerEventsCh,polyCh->ChParent(),localPc);
@@ -833,7 +833,7 @@ void Netsim::popUpdate_layerInjs_Oil(Apex*apex,  SortedEvents<Apex*,PceDrainCmp>
 				Netsim::addElemTo_layerDrainEvents(m_layerEventsCh, polyCh->eleman()->connection(i));
 			}
 		}
-} 
+}
 
 
 
@@ -849,7 +849,7 @@ void Netsim::untrap_WaterGanglia(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, El
         trapWatInfo.second += elem->model()->rhogh();
 		double localPc = trapWatInfo.second;
 
-		dbgFile<<newElems.size()<<'u'<<'W';dbgFile.flush();
+		outD<<newElems.size()<<'u'<<'W';outD.flush();
 
 			for(size_t elm = 0; elm < newElems.size(); ++elm)
 			{
@@ -869,8 +869,8 @@ void Netsim::untrap_WaterGanglia(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, El
 							polyShape->oilLayerCh()[i].setInOilFloodVec(false);
 						}
 					}
-					softAssert(!newElems[elm].first->isInOilFloodVec());
-					softAssert(!polyShape->oilLayerConst()[0].isInOilFloodVec());
+					ensure(!newElems[elm].first->isInOilFloodVec());
+					ensure(!polyShape->oilLayerConst()[0].isInOilFloodVec());
 				}
 				///. start from the local ganglia Pc and gradually equlibriate
 				//newElems[elm].first->ChModel()->finitOilInjection(max(localPc, mcappPress)-newElems[elm].first->ChModel()->rhogh());
@@ -882,11 +882,11 @@ void Netsim::untrap_WaterGanglia(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, El
 			}
 
 
-		if(localPc > m_cappPress) 
+		if(localPc > m_cappPress)
 		{
 
 			{const Fluid* OldInv=invadingFluid; invadingFluid=retreatingFluid; retreatingFluid=OldInv;}
-			m_comn.injectant(invadingFluid); //================================================= 
+			m_comn.injectant(invadingFluid); //=================================================
 			for(size_t elm = 0; elm < newElems.size(); ++elm)
 			{
 				newElems[elm].first->ChModel()->finitOilInjection(localPc-newElems[elm].first->ChModel()->rhogh());
@@ -910,9 +910,9 @@ void Netsim::untrap_WaterGanglia(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, El
 			if (!waterFillingEvents.empty())                                  // have been identified it's time to increase/reduce
 			{   //do the events                                               // pressure in the blob. Dropping pressure will in fact be
 				waterFillingEvents.sortEvents();                              // water injection process (water snap off, layer collapse).
-				while(!waterFillingEvents.empty() && waterFillingEvents.peek()->gravCorrectedEntryPress() > m_cappPress) 
+				while(!waterFillingEvents.empty() && waterFillingEvents.peek()->gravCorrectedEntryPress() > m_cappPress)
 				{
-					dbgFile<<'V'<<'o'<<'!';dbgFile.flush();
+					outD<<'V'<<'o'<<'!';outD.flush();
 					bool tmp;
 					popUpdateWaterInj(waterFillingEvents, tmp, localPc, m_cappPress);
 				}
@@ -923,7 +923,7 @@ void Netsim::untrap_WaterGanglia(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, El
 					newElems[elm].first->ChModel()->finitWaterInjection(localPc-newElems[elm].first->ChModel()->rhogh());
 			}
 			{const Fluid* OldInv=invadingFluid; invadingFluid=retreatingFluid; retreatingFluid=OldInv;}
-			m_comn.injectant(invadingFluid); //================================================= 
+			m_comn.injectant(invadingFluid); //=================================================
 
 			//double lowestPc=max(trapWatInfo.second,m_cappPress);
 			for(size_t elm = 0; elm < newElems.size(); ++elm)
@@ -970,14 +970,14 @@ void Netsim::untrap_WaterGanglia(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, El
 ///. never does anything TO DELETE
 void Netsim::checkUntrapWaterIfUnstableConfigsDrain(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh)
 {
-    dbgFile<<"[";dbgFile.flush();
+    outD<<"[";outD.flush();
     for(size_t i = 0; i < m_rockLattice.size(); ++i)
     {
         Element* elem = m_rockLattice[i];
         double rhogh(elem->model()->rhogh());
         if(elem->model()->hasOilLayer_TrappedOutside_PcHsnapPc(m_cappPress-rhogh))
         {
-			dbgFile<<'D';dbgFile.flush();
+			outD<<'D';outD.flush();
 			cout<<"D";cout.flush();
 
            if(elem->isInOilFloodVec())
@@ -986,17 +986,17 @@ void Netsim::checkUntrapWaterIfUnstableConfigsDrain(SortedEvents<Apex*,PceDrainC
                 else  cout<<" cled "; cout.flush();
             }
 
-			softAssert(!elem->model()->bulkFluid()->isOil());
+			ensure(!elem->model()->bulkFluid()->isOil());
 			
             double capillaryPressure=-1000000000.0;
 		   Netsim::popUpdateCentreInj_Oil(elem, m_eventsCh, capillaryPressure);
 
 		}
     }
-    dbgFile<<"]"<<"  ";
+    outD<<"]"<<"  ";
 }
 
- 
+
 
 
 
@@ -1011,7 +1011,7 @@ void Netsim::untrap_OilGanglia(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, Elem
 		trapOilInfo.second += elem->model()->rhogh();
 		double localPc = trapOilInfo.second;
 
-		dbgFile<<newElems.size()<<'u'<<'o';dbgFile.flush();
+		outD<<newElems.size()<<'u'<<'o';outD.flush();
 
 			for(size_t elm = 0; elm < newElems.size(); ++elm)
 			{
@@ -1031,8 +1031,8 @@ void Netsim::untrap_OilGanglia(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, Elem
 							polyShape->oilLayerCh()[i].setInOilFloodVec(false);
 						}
 					}
-					softAssert(!newElems[elm]->isInOilFloodVec());
-					softAssert(!polyShape->oilLayerConst()[0].isInOilFloodVec());
+					ensure(!newElems[elm]->isInOilFloodVec());
+					ensure(!polyShape->oilLayerConst()[0].isInOilFloodVec());
 				}
 
 				//newElems[elm]->ChModel()->finitOilInjection(localPc-newElems[elm]->ChModel()->rhogh());
@@ -1042,13 +1042,13 @@ void Netsim::untrap_OilGanglia(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, Elem
 					polyShape->calcOilLayerPc_markUntrappedFilms(m_cappPress-polyShape->rhogh());
 				}
 			}
- 
+
 
 		if(localPc > m_cappPress) ///. higher curvature, we need to inject water from films to equilibrate
 		{
 
 			{const Fluid* OldInv=invadingFluid; invadingFluid=retreatingFluid; retreatingFluid=OldInv;}
-			m_comn.injectant(invadingFluid); //================================================= 
+			m_comn.injectant(invadingFluid); //=================================================
 			
 			for(size_t elm = 0; elm < newElems.size(); ++elm)
 			{
@@ -1068,7 +1068,7 @@ void Netsim::untrap_OilGanglia(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, Elem
 					polyShape->insertWatSnapEvent_IfSnapPcHgPc(waterFillingEvents, m_cappPress-polyShape->rhogh());   //  => insert water snap off + oil layer collapse
         if(polyShape->waterLayer_UntrappedCorner_PcLsnapPc(m_cappPress))
         {
-			dbgFile<<'I';dbgFile.flush();
+			outD<<'I';outD.flush();
 			cout<<'I';cout.flush();
 		}
 				}
@@ -1079,7 +1079,7 @@ void Netsim::untrap_OilGanglia(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, Elem
 				waterFillingEvents.sortEvents();                            // pressure in the blob. Dropping pressure will in fact be
 				while(!waterFillingEvents.empty() && waterFillingEvents.peek()->gravCorrectedEntryPress() > m_cappPress)
 				{
-					dbgFile<<'V'<<'o';dbgFile.flush();
+					outD<<'V'<<'o';outD.flush();
 
 					bool tmp;
 					popUpdateWaterInj(waterFillingEvents, tmp, localPc, m_cappPress);
@@ -1091,7 +1091,7 @@ void Netsim::untrap_OilGanglia(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, Elem
 					newElems[elm]->ChModel()->finitWaterInjection(localPc-newElems[elm]->ChModel()->rhogh());
 			}
 			{const Fluid* OldInv=invadingFluid; invadingFluid=retreatingFluid; retreatingFluid=OldInv;}
-			m_comn.injectant(invadingFluid); //================================================= 
+			m_comn.injectant(invadingFluid); //=================================================
 
 			//double lowestPc=min(trapOilInfo.second,m_cappPress);
 			for(size_t elm = 0; elm < newElems.size(); ++elm)

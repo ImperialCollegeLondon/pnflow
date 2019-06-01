@@ -42,8 +42,8 @@ void LayerApex::getCAApexDistUntraped(double& apxDist, double& conAng, const dou
     {
 		apxDist = (intfacTen/pc)*cos(conAng-halfAng)/sin(halfAng);
 		if(itr && apxDist <=  0.0) apxDist=1.0E-15;
-		softAssert(apxDist > 0.0);
-		softAssert(conAng >= 0.0 && conAng <=  PI);
+		ensure(apxDist > 0.0);
+		ensure(conAng >= 0.0 && conAng <=  PI);
 	}
 }
 
@@ -58,7 +58,7 @@ void LayerApex::getCAApexDistUntraped(double& apxDist, double& conAng, const dou
         return hingAng;
     }
 
-    softAssert(conAng >= 0.0 && conAng <=  PI, "k");
+    ensure(conAng >= 0.0 && conAng <=  PI, "k");
     return conAng;
 }
 
@@ -69,7 +69,7 @@ double LayerApex::getApexDistanceUntraped(double pc, double conAng, double halfA
 	
     double apxDist = (intfacTen/pc)*cos(conAng-halfAng)/sin(halfAng);
     if(itrRoutine && apxDist <=  0.0) return 1.0E-15;
-    softAssert(apxDist > 0.0, "iu");
+    ensure(apxDist > 0.0, "iu");
     return apxDist;
 }
 */
@@ -79,7 +79,7 @@ double LayerApex::getApexDistanceUntraped(double pc, double conAng, double halfA
 void LayerApex::getCAApexDist(double& apxDist, double& conAng, const double& halfAng, double pc, double intfacTen, bool itr) const
 {
 
-	softAssert(m_inited || m_trappedCL.first>-1 || m_parentShape->eleman()->trappingWatBulk().first>-1);	
+	ensure(m_inited || m_trappedCL.first>-1 || m_parentShape->eleman()->trappingWatBulk().first>-1);	
 
     const double delta = itr ? 0.0: SMALL_NUM;
     if(m_trappedCL.first>-1)
@@ -87,14 +87,14 @@ void LayerApex::getCAApexDist(double& apxDist, double& conAng, const double& hal
         conAng = (acos(m_trappedCL.second*m_initedOLApexDist*sin(halfAng)/intfacTen)+halfAng);
         conAng = std::max(std::min(PI, conAng), 0.0);
         apxDist = m_initedOLApexDist;
-        //softAssert(conAng >= 0.0 && conAng <=  PI, "j");
+        //ensure(conAng >= 0.0 && conAng <=  PI, "j");
         return;
     }
     else if (m_parentShape->eleman()->trappingWatBulk().first>-1)
     {
         conAng = (acos(m_parentShape->eleman()->trappingWatBulk().second*m_initedOLApexDist*sin(halfAng)/intfacTen)+halfAng);
         conAng = std::max(std::min(PI, conAng), 0.0);
-        //softAssert(conAng >= 0.0 && conAng <=  PI, "j");
+        //ensure(conAng >= 0.0 && conAng <=  PI, "j");
         apxDist = m_initedOLApexDist;
         return;
 	}
@@ -102,19 +102,19 @@ void LayerApex::getCAApexDist(double& apxDist, double& conAng, const double& hal
     {
         conAng  = (acos(pc*m_initedOLApexDist*sin(halfAng)/intfacTen)+halfAng);
         conAng = std::max(std::min(PI, conAng), 0.0);
-        //softAssert(conAng >= 0.0 && conAng <=  PI, "j");
+        //ensure(conAng >= 0.0 && conAng <=  PI, "j");
         apxDist = m_initedOLApexDist;
         return;
     }
     else
 	{
-		softAssert(conAng >= 0.0 && conAng <=  PI);
+		ensure(conAng >= 0.0 && conAng <=  PI);
 		
 		apxDist = (intfacTen/pc)*cos(conAng-halfAng)/sin(halfAng);
     
 
 		if(itr && apxDist <=  0.0) apxDist = 1.0E-15;
-		softAssert(apxDist > 0.0);
+		ensure(apxDist > 0.0);
 		if(apxDist < 0.0)
 		{
 			cout<< apxDist<<"  "<< pc<<"  "<< m_receedingPc<<"  "<< m_advancingPc<<"  "<<conAng<<"  "<<halfAng<<"  "<<intfacTen<<"  "<< itr<<endl;
@@ -136,33 +136,33 @@ void LayerApex::getCAApexDist(double& apxDist, double& conAng, const double& hal
     {
         double hingAng(acos(m_trappedCL.second*m_initedOLApexDist*sin(halfAng)/intfacTen)+halfAng);
         hingAng = std::max(std::min(PI, hingAng), 0.0);
-        //softAssert(hingAng >= 0.0 && hingAng <=  PI, "j");
+        //ensure(hingAng >= 0.0 && hingAng <=  PI, "j");
         return hingAng;
     }
     else if (m_parentShape->eleman()->trappingWatBulk().first>-1)
     {
         double hingAng(acos(m_parentShape->eleman()->trappingWatBulk().second*m_initedOLApexDist*sin(halfAng)/intfacTen)+halfAng);
         hingAng = std::max(std::min(PI, hingAng), 0.0);
-        //softAssert(hingAng >= 0.0 && hingAng <=  PI, "j");
+        //ensure(hingAng >= 0.0 && hingAng <=  PI, "j");
         return hingAng;
 	}
     else if (pc > m_advancingPc-delta && pc < m_receedingPc+delta)
     {
         double hingAng(acos(pc*m_initedOLApexDist*sin(halfAng)/intfacTen)+halfAng);
         hingAng = std::max(std::min(PI, hingAng), 0.0);
-        //softAssert(hingAng >= 0.0 && hingAng <=  PI, "j");
+        //ensure(hingAng >= 0.0 && hingAng <=  PI, "j");
         return hingAng;
     }
     else
 	{
-		softAssert(conAng >= 0.0 && conAng <=  PI, "k");
+		ensure(conAng >= 0.0 && conAng <=  PI, "k");
 		return conAng;
 	}
 }
 
 double LayerApex::getApexDistance(double pc, double conAng, double halfAng, double intfacTen, bool itrRoutine) const
 {
-	softAssert(m_inited || m_trappedCL.first>-1 || m_parentShape->eleman()->trappingWatBulk().first>-1, " qljt ");	
+	ensure(m_inited || m_trappedCL.first>-1 || m_parentShape->eleman()->trappingWatBulk().first>-1, " qljt ");	
 
 	if( m_trappedCL.first>-1 || m_parentShape->eleman()->trappingWatBulk().first>-1 || (pc > m_advancingPc-SMALL_NUM && pc < m_receedingPc+SMALL_NUM) )
         return m_initedOLApexDist;
@@ -171,7 +171,7 @@ double LayerApex::getApexDistance(double pc, double conAng, double halfAng, doub
     
 
     if(itrRoutine && apxDist <=  0.0) return 1.0E-15;
-    softAssert(apxDist > 0.0, "i");
+    ensure(apxDist > 0.0, "i");
     if(apxDist < 0.0)
     {
 		cout<< apxDist<<"  "<< pc<<"  "<< m_receedingPc<<"  "<< m_advancingPc<<"  "<<conAng<<"  "<<halfAng<<"  "<<intfacTen<<"  "<< itrRoutine<<endl;
@@ -190,7 +190,7 @@ double LayerApex::getApexDistance(double pc, double conAng, double halfAng, doub
 //bool LayerApex::create Film(double pc, double conAng, double maxSpontConAng, double halfAng, double intfacTen)
 bool LayerApex::createOLayer(double pc, double conAngRec, double conAngAdv, double maxSpontConAng, double halfAng, double intfacTen, bool oilInj)
 {
-    softAssert(!m_exists);
+    ensure(!m_exists);
 	double conAng = oilInj ? conAngRec: conAngAdv;
     m_exists = conAng > PI/2.0 + halfAng  && conAng > maxSpontConAng;
     
@@ -210,7 +210,7 @@ bool LayerApex::createOLayer(double pc, double conAngRec, double conAngAdv, doub
 		return false;                               
 	}
 
-	softAssert(m_initedOLApexDist>0);
+	ensure(m_initedOLApexDist>0);
   
 
     m_advancingPc = intfacTen*cos(conAngAdv-halfAng)/(m_initedOLApexDist*sin(halfAng)); ///.  set
@@ -223,7 +223,7 @@ bool LayerApex::createOLayer(double pc, double conAngRec, double conAngAdv, doub
 
 	m_exists = pc > m_entryPc; 
 	if (!m_exists) { m_inited=false; m_initedOLApexDist= -1.0; }
-	softAssert(m_initedOLApexDist>0);
+	ensure(m_initedOLApexDist>0);
 
 
 
@@ -235,8 +235,8 @@ bool LayerApex::createOLayer(double pc, double conAngRec, double conAngAdv, doub
 bool LayerApex::finitLayerApex(double pc, double conAngRec, double conAngAdv, double halfAng, double intfacTen, bool oilInj, bool overwriteTrapping)
 {   ///. called from initOilInjection/initWaterInjection
     if(!exists()) return true;
-    softAssert(m_inited ||  m_trappedCL.first > -1 || m_parentShape->eleman()->trappingWatBulk().first>-1); //,"opin"
-    softAssert(!m_parentShape->containCOil());//,"finx"
+    ensure(m_inited ||  m_trappedCL.first > -1 || m_parentShape->eleman()->trappingWatBulk().first>-1); //,"opin"
+    ensure(!m_parentShape->containCOil());//,"finx"
 
 	double conAng = oilInj ? conAngRec : conAngAdv;
 
@@ -247,7 +247,7 @@ bool LayerApex::finitLayerApex(double pc, double conAngRec, double conAngAdv, do
 		///. m_initedOLApexDist = 
 		getCAApexDist(m_initedOLApexDist, conAng, halfAng, pc, intfacTen);//const
 		
-		softAssert(m_initedOLApexDist > m_innerCornerApex->pinnedApexDist());
+		ensure(m_initedOLApexDist > m_innerCornerApex->pinnedApexDist());
 		m_inited = false;
 
 
@@ -339,10 +339,10 @@ bool LayerApex::initLayerApex(double pc, double conAngRec, double conAngAdv, dou
 double LayerApex::layerCollapsePc_FromCentre(double outPc, double inPc, double conAng, double halfAng,
                                            double intfacTen) const
 {
-    softAssert(m_trappedCL.first<0|| m_parentShape->eleman()->trappingWatBulk().first<0);
+    ensure(m_trappedCL.first<0|| m_parentShape->eleman()->trappingWatBulk().first<0);
 
     double inerApexDist, innerConAng(m_parentShape->minInitRecCntAng()); m_innerCornerApex->getCApexDistConAng(inerApexDist, innerConAng, inPc, halfAng, intfacTen);
-    softAssert(innerConAng != conAng);
+    ensure(innerConAng != conAng);
     double ki = (intfacTen/inPc)*(cos(innerConAng)/sin(halfAng)-1.0);
 
     if(m_inited)
@@ -363,7 +363,7 @@ double LayerApex::layerCollapsePc_FromCentre(double outPc, double inPc, double c
                 {	m_colType =30;
 
                     double pc(intfacTen/newRad);
-                    softAssert(fabs(ki-newRad*(cos(outConAng)/sin(halfAng)+1.0)) < EPSILON);
+                    ensure(fabs(ki-newRad*(cos(outConAng)/sin(halfAng)+1.0)) < EPSILON);
                     return pc;
                 }
                 oldRad = newRad;
@@ -393,14 +393,14 @@ double LayerApex::layerCollapsePc_FromCentre(double outPc, double inPc, double c
 
     double collPc2 = intfacTen*(cos(m_advConAng)+sin(halfAng))/(ki*sin(halfAng));
     double collPc = max(collPc1, collPc2);
-    softAssert(collPc < 0.0);
+    ensure(collPc < 0.0);
     if (collPc > 0.0) cout<<"CA"<<m_advConAng<<" "<<conAng<<" ";
     return collPc;
 }
 
 double LayerApex::layerCollapsePc_FromCorner(double outPc, double inPc, double conAng, double halfAng, double intfacTen) const
 {
-    softAssert(m_trappedCL.first<0);
+    ensure(m_trappedCL.first<0);
 
 
 
@@ -418,7 +418,7 @@ double LayerApex::layerCollapsePc_FromCorner(double outPc, double inPc, double c
         double bi = m_innerCornerApex->pinnedApexDist();
         for(int itr = 0; itr < MAX_ITR; ++itr)
         {
-            softAssert((m_innerCornerApex->pinnedApexDist()*sin(halfAng)/oldRad) >= -1.0 &&
+            ensure((m_innerCornerApex->pinnedApexDist()*sin(halfAng)/oldRad) >= -1.0 &&
                 (m_innerCornerApex->pinnedApexDist()*sin(halfAng)/oldRad) <=  1.0);
 
             double inConAng = acos(bi*sin(halfAng)/oldRad)-halfAng;
@@ -431,7 +431,7 @@ double LayerApex::layerCollapsePc_FromCorner(double outPc, double inPc, double c
             {				m_colType =10;
 
                 double pc(intfacTen/newRad);
-                softAssert(fabs(ko-(intfacTen/pc)*(cos(inConAng)/sin(halfAng)-1.0)) < EPSILON);//, "outTrap"
+                ensure(fabs(ko-(intfacTen/pc)*(cos(inConAng)/sin(halfAng)-1.0)) < EPSILON);//, "outTrap"
                 return pc;
             }
             oldRad = newRad;
@@ -483,14 +483,14 @@ inline double dimLessCornerArea(double halfAng, double contactAng)
 
 double LayerApex::layerCollapsePc_fromEitherSide(double pc, double conAng, double halfAng, double intfacTen,bool debug) const
 {
-    softAssert(m_trappedCL.first<0);
+    ensure(m_trappedCL.first<0);
 
 //if (debug)
 //{
     if((m_exists && !m_inited) || (!m_exists && m_inited))
     {
-    softAssert(m_inited); 
-    //softAssert(m_exists,"kfh");
+    ensure(m_inited); 
+    //ensure(m_exists,"kfh");
 		//m_parentShape->ChParent()[1000000].setInOilFloodVec(true);
 	}
 //}
@@ -498,7 +498,7 @@ double LayerApex::layerCollapsePc_fromEitherSide(double pc, double conAng, doubl
     //{
 	double slipPrs = m_inited ? m_advancingPc : pc;
 	double innerSlipPrs = m_innerCornerApex->cornerExists() ? m_innerCornerApex->advancingPc() : pc;
-	softAssert(slipPrs < 0.0);
+	ensure(slipPrs < 0.0);
 	//double innerHingConAng = m_innerCornerApex->cornerExists() ? m_innerCornerApex->getCA pexDistConAng(innerSlipPrs, conAng, halfAng, intfacTen) : m_parentShape->minInitRecCntAng();
     double bi, innerHingConAng(m_parentShape->minInitRecCntAng()); 
     if (m_innerCornerApex->cornerExists()) m_innerCornerApex->getCApexDistConAng(bi, innerHingConAng, innerSlipPrs, halfAng, intfacTen,true);
@@ -506,7 +506,7 @@ double LayerApex::layerCollapsePc_fromEitherSide(double pc, double conAng, doubl
 
 	double /*ki*/innerApexDistThroughCentre = (intfacTen/innerSlipPrs)*(cos(innerHingConAng)/sin(halfAng)-1.0);
 	double ko = (intfacTen/slipPrs)*(cos(m_advConAng)/sin(halfAng)+1.0);
-softAssert(ko>0);
+ensure(ko>0);
 	if(ko - innerApexDistThroughCentre < NEG_ALMOST_ZERO   && pc < innerSlipPrs +0.1)//
 	{
 		double oldRad(intfacTen/(slipPrs+SMALL_NUM));
@@ -526,9 +526,9 @@ softAssert(ko>0);
 			double newRad = oldRad - func/funcDr;
 			if(fabs((newRad-oldRad)/newRad) < EPSILON)
 			{
-				softAssert(fabs(newRad*(cos(innerHingConAng)/sin(halfAng)-1.0) -
+				ensure(fabs(newRad*(cos(innerHingConAng)/sin(halfAng)-1.0) -
 					newRad*(cos(m_advConAng)/sin(halfAng)+1.0)) < EPSILON);
-				softAssert(intfacTen/newRad < 0.0);
+				ensure(intfacTen/newRad < 0.0);
 
 
 			m_colType =20;
@@ -580,7 +580,7 @@ softAssert(ko>0);
 
 		double pinnedOLApexDist = outertouchApexRad*cos(m_advConAng-halfAng)/(sin(halfAng));
 		
-		softAssert (dimLessCornerArea(halfAng,PI-m_advConAng)*pinnedOLApexDist*pinnedOLApexDist > dimLessCornerArea(halfAng,innerHingConAng)*bi*bi-1.0e-18);
+		ensure (dimLessCornerArea(halfAng,PI-m_advConAng)*pinnedOLApexDist*pinnedOLApexDist > dimLessCornerArea(halfAng,innerHingConAng)*bi*bi-1.0e-18);
 		
 		if (debug || !(dimLessCornerArea(halfAng,PI-m_advConAng)*pinnedOLApexDist*pinnedOLApexDist > dimLessCornerArea(halfAng,innerHingConAng)*bi*bi-1.0e-18))
 		{
@@ -616,7 +616,7 @@ softAssert(ko>0);
 		//exit(-1);
 		}
 			
-		softAssert(collPc2 < 0.0);
+		ensure(collPc2 < 0.0);
 		if (collPc1<collPc2)
 		{
 			m_colType = 22;
@@ -640,8 +640,8 @@ double LayerApex::layerCollapsePc(double pc, double conAng, double halfAng, doub
 	m_colType=0;
     if(!m_innerCornerApex->cornerExists())
     {
-        //softAssert(exists(), "quacki di quack");
-        int WarningFiEnablesoftAssert;
+        //ensure(exists(), "quacki di quack");
+        int WarningFiEnableensure;
         collPrs = LOWEST_LAYER_PC;                      // No water in corner  => never to collapse
     }
 	else if(injOil && exists())                      // Oil Inj, stable layer  => no update needed
@@ -658,8 +658,8 @@ double LayerApex::layerCollapsePc(double pc, double conAng, double halfAng, doub
 		
 		
 		int Warning_unsynced_Trappings;
-		 //softAssert(m_parentShape->eleman()->trappingWatFilm().first<0 && m_innerCornerApex->trappedCorner().first>-1, " Fq1");
-		 //softAssert(m_parentShape->eleman()->trappingWatFilm().first>-1 && m_innerCornerApex->trappedCorner().first<0, " Fq2");
+		 //ensure(m_parentShape->eleman()->trappingWatFilm().first<0 && m_innerCornerApex->trappedCorner().first>-1, " Fq1");
+		 //ensure(m_parentShape->eleman()->trappingWatFilm().first>-1 && m_innerCornerApex->trappedCorner().first<0, " Fq2");
 //
 	//if(!(m_parentShape->eleman()->trappingWatFilm().first<0 && m_innerCornerApex->trappedCorner().first>-1))
 	//{
@@ -683,7 +683,7 @@ double LayerApex::layerCollapsePc(double pc, double conAng, double halfAng, doub
        
     //if(!m_innerCornerApex->cornerExists())
     //{
-        //softAssert(exists(), "quacki di quack");
+        //ensure(exists(), "quacki di quack");
         //collPrs = LOWEST_LAYER_PC;                      // No water in corner  => never to collapse
     //}
     //else if(injOil && exists())                      // Oil Inj, stable layer  => no update needed

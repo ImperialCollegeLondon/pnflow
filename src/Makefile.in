@@ -2,6 +2,8 @@
 
 psCXX ?= g++
 
+
+# Note: add -std=c++11 manually if you set psCFLAGS
 psCFLAGS ?= -std=c++11
 
 #-O3 -Wall -pedantic
@@ -41,7 +43,7 @@ psLibDir ?= $(psInstall)/lib
 psReleaseDate ?= \"$(shell date +'%Y.%m.%d')\"
 
 
-psCFLAGS := $(psCFLAGS) -I$(psInstall)/include -DRELEASE_DATE=$(psReleaseDate)
+psCFLAGS := $(psCFLAGS) -I$(psDir)/include -I$(psInstall)/include -DRELEASE_DATE=$(psReleaseDate)
 psLFLAGS := $(psLFLAGS) -L$(psLibDir)
 
 
@@ -49,7 +51,6 @@ psLFLAGS := $(psLFLAGS) -L$(psLibDir)
 
 ifeq ($(USE_VXLIMG),1)
    psCFLAGS := -I$(psDir)/voxelImage $(psCFLAGS)
-   psLFLAGS := -L$(psLibDir)     $(psLFLAGS)
 endif
 
    $(info psCFLAGS: $(psCFLAGS))
@@ -124,7 +125,7 @@ endif
 ifdef USE_HYPRE
  HYPRE_DIR=$(psInstall)
  ifeq ("$(wildcard $(HYPRE_DIR)/include/HYPRE.h)","")
-   HYPRE_DIR=$(PS3rdParty)/hypre-2.11.2/src/hypre
+   HYPRE_DIR=$(PS3rdParty)/hypre-master/src/hypre
  endif
  ifneq ("$(wildcard $(HYPRE_DIR)/include/HYPRE.h)","")
   CDEFS     = -DHAVE_CONFIG_H -DHYPRE_TIMING
@@ -137,6 +138,21 @@ ifdef USE_HYPRE
 endif
 
 
+# set hypre directory
+ifdef USE_HYPRESEQ
+ HYPRE_DIR=$(psInstall)
+ ifeq ("$(wildcard $(HYPRE_DIR)/include/HYPRE.h)","")
+   HYPRE_DIR=$(PS3rdParty)/hypre-master/src/hypre
+ endif
+ ifneq ("$(wildcard $(HYPRE_DIR)/include/HYPRE.h)","")
+  CDEFS     = -DHAVE_CONFIG_H -DHYPRE_TIMING
+  CINCLUDES = -I$(HYPRE_DIR)/include
+  psCFLAGS := $(psCFLAGS) $(COPTS)  -pedantic -MMD -MP  -DMULTITHREAD  -static  $(CDEFS) $(CINCLUDES) 
+  psLFLAGS := $(psLFLAGS) $(COPTS) -pthread  $(HYPRE_DIR)/lib/libHYPRESeq.a 
+ else
+   $(error HYPRE_DIR, $(HYPRE_DIR)/include/HYPRE.h, not found )
+ endif
+endif
 
 
 

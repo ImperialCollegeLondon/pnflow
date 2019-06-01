@@ -25,24 +25,22 @@ using namespace std;
 
 const double	Netsim::MAX_FLOW_ERR = 0.02;
 const int	   Netsim::DUMMY_IDX = -99;
-OnDemandStream    outD;  ///. alias to OnDemandStream::dbgFile
+OnDemandStream    outD;  ///. alias to OnDemandStream::dbgFile  //thread_local
 
 /**
  * Netsim constructor
  */
-Netsim::Netsim(InputData & input) 
+Netsim::Netsim(InputData & input)
 : 	m_input(input),
 	m_comn(input),
 	m_oil(m_comn.oil()),	
 	m_water(m_comn.water()),
 	m_cappPress(m_cappPressCh),	
 	m_baseFileName(input.title()),
-	m_out(m_baseFileName + "_out.prt"),
-	//dbgFile(m_baseFileName + "_out.dbg",m_comn.debugMode),
+	m_out(m_baseFileName + "_pnflow.prt"),
 	m_vtkWriter(input.keywordData("visualize"),this,m_baseFileName+"_res/")
 
 {
-	
 	srand(input.randSeed());
 	m_inletSolverPrs = 1.0;
 	m_outletSolverPrs = 0.0;
@@ -90,8 +88,8 @@ Netsim::Netsim(InputData & input)
 	m_amottDataImbibition.resize(3);
 	m_deltaPo = 0.0;
 	m_deltaPw = 0.0;
-	if(m_comn.debugMode) dbgFile.open(m_baseFileName + "_pnflow.dbg");
-	//dbgFile.debugMode=m_comn.debugMode;
+	if(m_comn.debugMode) outD.open(m_baseFileName + "_pnflow.dbg");
+
 	init(input);
 
 
@@ -192,19 +190,22 @@ void Netsim::init(InputData& input)
 	NetworkTransform(input.randSeed()+rand()/RAND_MAX*1000, m_out).modify(input, m_rockLattice,m_numPores, m_xSize*m_ySize*m_zSize);
 
 
-	{
+	{  // m_elemans is not used much yet, it will  replace m_rockLattice
 		m_elemans.resize(m_rockLattice.size());
 		                              m_elemans[0]=m_rockLattice[0];    m_elemans[1]=m_rockLattice[1+m_numPores];
 		for(size_t el = 1; el < 1+m_numPores; ++el)		                m_elemans[el+1]=m_rockLattice[el];
-		for(size_t el = 2+m_numPores; el < m_rockLattice.size(); ++el)	 m_elemans[el]=m_rockLattice[el];
+		for(size_t el = 2+m_numPores; el < m_rockLattice.size(); ++el)	m_elemans[el]=m_rockLattice[el];
 	}
 
 	m_totalFlowVolume = 0.0;
 	m_totalClayVolume = 0.0;
 	for(size_t i = 0; i < m_rockLattice.size(); ++i)
 	{
-		m_totalFlowVolume += m_rockLattice[i]->isInsideSatBox() ? m_rockLattice[i]->flowVolume() : 0.0;
-		m_totalClayVolume += m_rockLattice[i]->isInsideSatBox() ? m_rockLattice[i]->clayVolume() : 0.0;
+		if(m_rockLattice[i]->isInsideSatBox())
+		{
+			m_totalFlowVolume += m_rockLattice[i]->flowVolume();
+			m_totalClayVolume += m_rockLattice[i]->clayVolume();
+		}
 	}
 
 	updateSatAndConductances(m_cappPress);
@@ -226,7 +227,7 @@ void Netsim::init(InputData& input)
 			throats2Set.push_back(m_rockLattice[el]);
 			//absVolume += m_rockLattice[el]->flowVolume();
 		}
-	
+
 	int	   wettingClass = 1;
 	string	angDistScheme;
 	double minEqConAng(0.0), maxEqConAng(0.0),  wettDelta, wettEta, modelTwoSepAng(0.0);
@@ -235,7 +236,7 @@ void Netsim::init(InputData& input)
 
 
 	useHypre=true;
-	input.getType(useHypre,"useHypre");
+	input.getVar(useHypre,"useHypre");
 	if(useHypre) m_out << "using hypre solver"<<endl;
 	else 	m_out << "using netlib amg-1.5 (1995) solver"<<endl;
 	//if(useHypre)
@@ -247,7 +248,8 @@ void Netsim::init(InputData& input)
 
 	writeNetworkToFile(input);
 	
-	m_vtkWriter.vtuWrite(&m_elemans, m_numPores, m_cappPress, m_oil.interfacialTen());
+//	m_vtkWriter.vtuWrite(&m_elemans, m_numPores, m_cappPress, m_oil.interfacialTen());
+	m_vtkWriter.vtuWrite(reinterpret_cast<const std::vector<Element const *>*>(&m_rockLattice), m_numPores, m_cappPress, m_oil.interfacialTen());
 	const std::vector<Element const *>* rockLatticeConst = reinterpret_cast<const std::vector<Element const *>*>(&m_rockLattice);
 	printCornerNumStatistics(rockLatticeConst, m_numPores);
 	printCornerAngStatistics(rockLatticeConst, m_numPores);
@@ -303,7 +305,7 @@ void Netsim::initNetwork(InputData& input)
 	vector<Element*> throatsToInlet;								 // All throats connected to the in/outlet are
 	vector<Element*> throatsToOutlet;								// recorded while crating the throats
 
-	int newNumThroats = 
+	int newNumThroats =
    readAndCreateThroats(input, newTrotNeibors, throatsToInlet, throatsToOutlet, insidePoreHashs, insideThroatHashs, newNumPores);
    readAndCreatePores(input, /*newTrotNeibors, insidePoreHashs,*/ insideThroatHashs, newNumPores);
 	input.clearNetworkData(); //functions above create a lot of additional working data not needed anymore, lets clean them to free the memory
@@ -325,10 +327,10 @@ void Netsim::initNetwork(InputData& input)
 
 		if(poreIndex1 >= 0 && poreIndex2 >= 0)
 		{
-			softAssert(poreIndex1 < m_numPores+2 && poreIndex2 < m_numPores+2);
+			ensure(poreIndex1 < m_numPores+2 && poreIndex2 < m_numPores+2);
 			Element* pore1 = m_rockLattice[poreIndex1];
 			Element* pore2 = m_rockLattice[poreIndex2];
-			softAssert(pore1 != NULL && pore2 != NULL);
+			ensure(pore1 != NULL && pore2 != NULL);
 
 			m_rockLattice[m_numPores + 2 + runIdx]->addConnections(pore1, pore2, m_xSize*m_solverBoxStart,
 				m_xSize*m_solverBoxEnd, !m_useAvrPrsAsBdr);
@@ -351,7 +353,7 @@ void Netsim::initNetwork(InputData& input)
 
 
 	bool inOrOutThroats(false);
-	if(input.getType(inOrOutThroats, "convertInOutThroatsToMicroPorosity"))
+	if(input.getVar(inOrOutThroats, "convertInOutThroatsToMicroPorosity"))
 	{
 		int converted = 0;
 		for(size_t elem = 0; elem < m_rockLattice.size(); ++elem)
@@ -365,12 +367,10 @@ void Netsim::initNetwork(InputData& input)
 		m_out << endl << converted << " elements are converted to micro-porosity type 1"<<endl<<endl;
 	}
 
-	
-
 
 	int numSingletsRemoved(0);
 	bool drainSinglets(true);
-	input.getType(drainSinglets, "DRAIN_SINGLETS");
+	input.getVar(drainSinglets, "DRAIN_SINGLETS");
 	if(!drainSinglets)
 	{
 		for(int pr = 1; pr <= m_numPores; ++pr)
@@ -382,9 +382,10 @@ void Netsim::initNetwork(InputData& input)
 	
 	m_out <<  " Number of singlets removed:				" << numSingletsRemoved							 << endl;
 
+
 	for(size_t elem = 0; elem < m_rockLattice.size(); ++elem)
 	{
-		softAssert(m_rockLattice[elem] != NULL);
+		ensure(m_rockLattice[elem] != NULL);
 		m_rockLattice[elem]->calcVolume_CheckIntegrity(m_totalFlowVolume, m_totalClayVolume, m_maxNonZeros, m_numIsolatedElems);
 		if(m_rockLattice[elem]->connectedToNetwork())
 		{
@@ -410,6 +411,7 @@ void Netsim::initNetwork(InputData& input)
 		}
 	}
 }
+
 
 void Netsim::modifyConnNum_removeConnectionsFromNetwork(InputData& input)
 {
@@ -461,7 +463,7 @@ void Netsim::modifyConnNum_removeConnectionsFromNetwork(InputData& input)
 			poreOne->severConnection(damned);
 			poreTwo->severConnection(damned);
 
-			softAssert(m_rockLattice[damned->latticeIndex()] == damned);
+			ensure(m_rockLattice[damned->latticeIndex()] == damned);
 			m_rockLattice[damned->latticeIndex()] = 0;
 			delete damned;
 			--numToRemove;
@@ -471,7 +473,7 @@ void Netsim::modifyConnNum_removeConnectionsFromNetwork(InputData& input)
 	Element *ghost = NULL;
 	m_rockLattice.erase(remove(m_rockLattice.begin()+m_numPores+2, m_rockLattice.end(), ghost),
 		m_rockLattice.end());
-	softAssert(static_cast< int >(m_rockLattice.size()) == m_numPores+m_numThroats+2);
+	ensure(static_cast< int >(m_rockLattice.size()) == m_numPores+m_numThroats+2);
 
 	for(int newTIdx = m_numPores+2; newTIdx < static_cast< int >(m_rockLattice.size()); ++newTIdx)
 		m_rockLattice[newTIdx]->updateLatticeIndex(newTIdx);
@@ -684,7 +686,7 @@ void Netsim::applyFWettabilityChange(InputData& input)
 		
 		setContactAngles(pores2Set, throats2Set, minEqConAng, maxEqConAng, wettDelta, wettEta, wettingClass, modelTwoSepAng,  angDistScheme);
 	}
-	else 
+	else
 	{
 		m_input.missingDataErr(keywordEqui+" not found" );
 	}
@@ -787,12 +789,12 @@ void Netsim::applyFWettabilityChange(InputData& input)
 							{
 								if(oilClustInWat && dynamic_cast< Pore* >(*itrElem) != 0)
 								{
-									softAssert((*itrElem)->iAmAPore());
+									ensure((*itrElem)->iAmAPore());
 									pores2BAltered.push_back(*itrElem);
 								}
 								else if(oilClustInWat)
 								{
-									softAssert(!(*itrElem)->iAmAPore());
+									ensure(!(*itrElem)->iAmAPore());
 									throats2BAltered.push_back(*itrElem);
 								}
 								(*itrElem)->ChModel()->setClusterIndex(clusterIdx);					// Set flag
@@ -836,12 +838,12 @@ void Netsim::applyFWettabilityChange(InputData& input)
 						++numFracWetted;
 						if(static_cast< int >(elm) < m_numPores+2)
 						{
-							softAssert(m_rockLattice[elm]->iAmAPore());
+							ensure(m_rockLattice[elm]->iAmAPore());
 							pores2BAltered.push_back(m_rockLattice[elm]);
 						}
 						else
 						{
-							softAssert(!m_rockLattice[elm]->iAmAPore());
+							ensure(!m_rockLattice[elm]->iAmAPore());
 							throats2BAltered.push_back(m_rockLattice[elm]);
 						}
 					}
@@ -951,9 +953,9 @@ void Netsim::SolveSinglePhaseFlow(InputData& input)
 
 	string matFile = m_matrixFileName + "_init";
 
-	//if(useHypre) 
+	//if(useHypre)
 	 m_solver = new hypreSolver(m_rockLattice, m_krInletBoundary, m_krOutletBoundary, m_numPores+1, m_comn.debugMode, matFile, m_writeSlvMatrixAsMatlab);
-	//else 
+	//else
 	 //m_solver = new amg_solver(m_rockLattice, m_krInletBoundary, m_krOutletBoundary, m_numPores+1, m_maxNonZeros, m_comn.debugMode, matFile, m_writeSlvMatrixAsMatlab);
 	m_out << " ";cout.flush();
 
@@ -1162,7 +1164,7 @@ int Netsim::readAndCreateThroats(InputData& input, vector< pair<int, int> >& new
 		///. allow initializing pores/throats with zero-length/volume
 		radius = max(radius,1.0e-32); volume = max(volume,1.0e-96); shapeFactor = max(shapeFactor,1.0e-32);
 		lenThroat = max(lenThroat,1.0e-32); lenPore1 = max(lenPore1,1.0e-32); lenPore2 = max(lenPore2,1.0e-32);
-		lenTot = max(lenTot,3.0e-32); 
+		lenTot = max(lenTot,3.0e-32);
 
 
 		if(pore1Idx > 0)  newTrotNeibors[iTrot].first = insidePoreHashs[pore1Idx-1].first;
@@ -1191,7 +1193,7 @@ int Netsim::readAndCreateThroats(InputData& input, vector< pair<int, int> >& new
 
 
 
-			Element *throat = new Throat(m_comn, m_oil, m_water, radius, volume, clayVolume, shapeFactor, 
+			Element *throat = new Throat(m_comn, m_oil, m_water, radius, volume, clayVolume, shapeFactor,
 							  lenThroat, lenPore1, lenPore2, newNumPores+1+newNumThroats,throatTypes[iTrot]);
 
 
@@ -1323,11 +1325,11 @@ void Netsim::readAndCreatePores(InputData& input, /*vector< pair<int, int> >& ne
 					//hashedPoreIdx = -1;
 				//else if(hashedPoreIdx > 0 && insidePoreHashs[connPores[j]-1].second > m_xSize/2.0)
 					//hashedPoreIdx = 0;
-				//softAssert(hashedPoreIdx == newTrotNeibors[connThroats[j]-1].first
+				//ensure(hashedPoreIdx == newTrotNeibors[connThroats[j]-1].first
 					//|| hashedPoreIdx == newTrotNeibors[connThroats[j]-1].second);
 
 
-				//softAssert(newIndex == newTrotNeibors[connThroats[j]-1].first || newIndex == newTrotNeibors[connThroats[j]-1].second);
+				//ensure(newIndex == newTrotNeibors[connThroats[j]-1].first || newIndex == newTrotNeibors[connThroats[j]-1].second);
 
 				connectingThroats[j] = m_rockLattice[ newNumPores+1+insideThroatHashs[connThroats[j]-1] ];
 			}
@@ -1510,7 +1512,7 @@ void Netsim::solveforRelPerm()
 		if(m_useAvrPrsAsBdr)
 		{
 			bool chk = Netsim::prsOrVoltDrop(&m_water, 0, m_deltaPw);
-			softAssert(chk);
+			ensure(chk);
 			relPermWater = (m_watFlowRate * m_singlePhaseDprs) / ((m_singlePhaseWaterQ+1.0e-100) * m_deltaPw);
 		}
 	}
@@ -1524,7 +1526,7 @@ void Netsim::solveforRelPerm()
 		if(m_useAvrPrsAsBdr)
 		{
 			bool chk = Netsim::prsOrVoltDrop(&m_oil, 0, m_deltaPo);
-			softAssert(chk);
+			ensure(chk);
 			relPermOil = (m_oilFlowRate * m_singlePhaseDprs) / ((m_singlePhaseOilQ+1.0e-100) * m_deltaPo);
 		}
 	}
@@ -1552,7 +1554,7 @@ void Netsim::solveforResIndex()
 			bool chk = Netsim::prsOrVoltDrop(&m_water, 1, m_deltaV);
 			resIndex = m_singlePhaseCurrent / (abs(m_current)+1.0e-100) * m_deltaV/m_singlePhaseDvolt;
 
-			softAssert(chk);
+			ensure(chk);
 		}
 	}
 
@@ -1702,7 +1704,7 @@ void Netsim::writeResultData(bool relPermIncluded, bool resIdxIncluded)
 			else
 				resmcpStream.open(mcpFilename.c_str(), std::ios_base::app);
 
-			resmcpStream<<"\n\n\n"<<m_baseFileName<<"_SwPcKrwKroRI_cycle"<<cycle<<endl; 
+			resmcpStream<<"\n\n\n"<<m_baseFileName<<"_SwPcKrwKroRI_cycle"<<cycle<<endl;
 			resmcpStream << "%"<< legend  << endl;
 			resmcpStream << "%Sw	  \t   Pc(Pa)   \t   Krw	   \t   Kro	   \t   RI"<<endl;
 

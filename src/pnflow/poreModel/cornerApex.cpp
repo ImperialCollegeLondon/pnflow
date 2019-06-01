@@ -43,8 +43,8 @@ int Apex::debugMode = 0;
  */
 void CornerApex::createFilm(double pc, double conAngRec, double conAngAdv, double halfAng, double intfacTen, bool isOilInj)
 {
-    softAssert(!m_exists);
-    softAssert(!m_inited);
+    ensure(!m_exists);
+    ensure(!m_inited);
 
 	if(m_exists) return;
 		
@@ -57,7 +57,7 @@ void CornerApex::createFilm(double pc, double conAngRec, double conAngAdv, doubl
 
 
 	m_initedApexDist = (intfacTen/pc)*cos(conAng+halfAng)/sin(halfAng);
-	softAssert(m_initedApexDist > 0.0);
+	ensure(m_initedApexDist > 0.0);
 	if (m_initedApexDist > m_parentShape->radius()/tan(halfAng)*2) 	{ cout<<" xkg ";	}
 	creationPc=pc;
 
@@ -132,8 +132,8 @@ void CornerApex::initCornerApex(double pc, double conAngRec, double conAngAdv, d
 void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double pc, double halfAng, double intfacTen, bool overidetrapping, bool accurat, bool debug) const
 {
     double delta = accurat ? 0.0: SMALL_NUM;
-		softAssert(m_inited || m_trappedCL.first>-1 || m_parentShape->eleman()->isTrappedOil() || m_outerLayerApex->trappingCL().first>-1);
-		softAssert(m_exists);
+		ensure(m_inited || m_trappedCL.first>-1 || m_parentShape->eleman()->isTrappedOil() || m_outerLayerApex->trappingCL().first>-1);
+		ensure(m_exists);
 
 	if(!m_exists)	{ apexDist = MOLECULAR_LENGTH;  return; }
 
@@ -148,7 +148,7 @@ void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double p
 			part = std::min(part, 0.999999);
 			part = std::max(part, -0.999999);
 			double hingAng(acos(part)-halfAng);
-			softAssert(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
+			ensure(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
 			conAng = (std::min(std::max(hingAng, 0.0), PI));
 			if (debug) cout<< "d8sAA";
 			return;
@@ -160,7 +160,7 @@ void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double p
 			part = std::min(part, 0.999999);
 			part = std::max(part, -0.999999);
 			double hingAng(acos(part)-halfAng);
-			softAssert(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
+			ensure(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
 			conAng = (std::min(std::max(hingAng, 0.0), PI));
 			if (debug) cout<< "d8sBB";
 			return;
@@ -172,7 +172,7 @@ void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double p
 			part = std::min(part, 0.999999);
 			part = std::max(part, -0.999999);
 			double hingAng(acos(part)-halfAng);
-			softAssert(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
+			ensure(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
 			conAng = (std::min(std::max(hingAng, 0.0), PI));
 			if (debug) cout<< "d8sCC";
 
@@ -187,7 +187,7 @@ void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double p
         part = std::min(part, 0.999999);
         part = std::max(part, -0.999999);
         double hingAng(acos(part)-halfAng);
-        softAssert(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
+        ensure(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
         conAng = (std::min(std::max(hingAng, 0.0), PI));
 		apexDist=m_initedApexDist;
     }
@@ -205,7 +205,7 @@ void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double p
 			part = std::min(part, 0.999999);
 			part = std::max(part, -0.999999);
 			double hingAng(acos(part)-halfAng);
-			softAssert(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
+			ensure(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
 			conAng = (std::min(std::max(hingAng, 0.0), PI));
 			apexDist = m_initedApexDist;
 			if (debug) 	cout<<"   efs2 ";
@@ -235,7 +235,7 @@ void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double p
 			part = std::min(part, 0.999999);
 			part = std::max(part, -0.999999);
 			double hingAng(acos(part)-halfAng);
-			softAssert(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
+			ensure(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
 			conAng = (std::min(std::max(hingAng, 0.0), PI));
 			
 			if (debug) 	cout<<"   pcrecPcusds "<<pc<<" "<<m_receedingPc<<" "<<apexDist<<" <= "<<m_initedApexDist<<" "<<conAng<<"         ";
@@ -251,7 +251,7 @@ void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double p
 			part = std::min(part, 0.999999);
 			part = std::max(part, -0.999999);
 			double hingAng(acos(part)-halfAng);
-			softAssert(hingAng+SMALL_NUM >= m_parentShape->minInitRecCntAng() && hingAng <=  PI+SMALL_NUM);
+			ensure(hingAng+SMALL_NUM >= m_parentShape->minInitRecCntAng() && hingAng <=  PI+SMALL_NUM);
 			conAng = (std::min(std::max(hingAng, 0.0), PI));
 			if (debug) cout<<"  pcrecPcuadsdsds "<<pc<<" "<<m_receedingPc<<"   ";		
 			apexDist=m_initOrMinApexDistHist;
@@ -265,7 +265,7 @@ void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double p
         apexDist = (intfacTen/pc)*cos(conAng+halfAng)/sin(halfAng);
 			if (debug) 	cout<<"   efs6 ";
 
-		softAssert(conAng >= 0.0 && conAng <=  PI);
+		ensure(conAng >= 0.0 && conAng <=  PI);
 	}
 	
 	if (debug) if (apexDist > m_parentShape->radius()/tan(halfAng)*2) 

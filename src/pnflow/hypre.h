@@ -43,6 +43,7 @@ private:
     static const double                                     SCALE_FACTOR;
 
 
+	const int                                     			m_debugMode;
 
 	const vector<Element*>&                            m_netelems;
 	vector< FourSome<int, double, double, double> >         m_networkOutlets;
@@ -59,7 +60,6 @@ private:
 	vector< int>                						m_rowedPores;
 	vector< int>                						m_poreiRows;
 
-	const int                                     			m_debugMode;
 
 };
 

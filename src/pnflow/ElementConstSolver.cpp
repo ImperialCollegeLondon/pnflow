@@ -41,7 +41,7 @@ Element* Pore::getConnectionProp(int conn, double& conductance, double& deltaGra
 	}
 
 	Throat *throat = dynamic_cast< Throat* >(m_connections[conn]);
-	softAssert(throat);
+	ensure(throat);
 
 	Element *nextPore;
 	double nextLength, thisLength, throatLength(throat->length());
@@ -95,7 +95,7 @@ Element* Pore::getConnectionProp(int conn, double& conductance, double& deltaGra
 			nextCond = nextPore->model()->electricalConductance(fluid, neighbourToExit);
 
 			//cout<<thisCond <<" "<< throatCond <<" "<< nextCond <<" "<<nextPore->isEntryOrExitRes()<< endl;
-			softAssert(thisCond > 0.0 &&  throatCond > 0.0 && nextCond > 0.0);
+			ensure(thisCond > 0.0 &&  throatCond > 0.0 && nextCond > 0.0);
 
 			flowResistance = (throatLength/throatCond + thisLength/thisCond + nextLength/nextCond);
 			double A_clay = (throat->clayVolume() + clayVolume() + nextPore->clayVolume()) / (nextLength + thisLength + throatLength);
@@ -107,11 +107,11 @@ Element* Pore::getConnectionProp(int conn, double& conductance, double& deltaGra
 		else if(paralell)
 		{
 			double thisCond, throatCond, nextCond;
-			softAssert(dynamic_cast< const Water* >(fluid));
+			ensure(dynamic_cast< const Water* >(fluid));
 			thisCond = m_elemModel->getWaterConductance(filmBlob);
 			throatCond = throat->model()->getWaterConductance(filmBlob);
 			nextCond = nextPore->model()->getWaterConductance(filmBlob, neighbourToExit);
-			softAssert(thisCond*throatCond*nextCond != 0.0);
+			ensure(thisCond*throatCond*nextCond != 0.0);
 
 			if(thisCond*throatCond*nextCond > 0.0)
 				flowResistance = (throatLength/throatCond + thisLength/thisCond + nextLength/nextCond);
@@ -121,7 +121,7 @@ Element* Pore::getConnectionProp(int conn, double& conductance, double& deltaGra
 		        double thisCondBulk = m_elemModel->getWaterConductance(bulkBlob);
 		        double throatCondBulk = throat->model()->getWaterConductance(bulkBlob);
 		        double nextCondBulk = nextPore->model()->getWaterConductance(bulkBlob, neighbourToExit);
-		        softAssert(thisCondBulk*throatCondBulk*nextCondBulk != 0.0);
+		        ensure(thisCondBulk*throatCondBulk*nextCondBulk != 0.0);
 
 		        double flowResistBulk = 1.0e32;
 
@@ -162,7 +162,7 @@ Element* Pore::getConnectionProp(int conn, double& conductance, double& deltaGra
 		        flowResistance = (throatLength/throatCond + thisLength/thisCond + nextLength/nextCond);
 		}
 
-		softAssert(flowResistance > 0.0);
+		ensure(flowResistance > 0.0);
 
 		conductance = 1.0 / flowResistance;
 
@@ -265,7 +265,7 @@ bool Pore::prevSolvrRes(const Fluid* fluid, int resistSolve, double loc, double&
 
 void Pore::setSolverResults(const Fluid* fluid, int resistSolve, double res) const
 {
-    //softAssert(///. we add -1.5e24 for those with dummy value
+    //ensure(///. we add -1.5e24 for those with dummy value
     //((canBePassedToSolver() || m_isOnInletSlvrBdr || m_isOnOutletSlvrBdr) && res>-1.0) || res<-1.0);
 
 		
@@ -347,7 +347,7 @@ bool Throat::prevSolvrRes(const Fluid* fluid, int resistSolve, double loc, doubl
     double locOne(m_connections[0]->node()->xPos());
     double locTwo(m_connections[1]->node()->xPos());
 
-    softAssert(m_poreToPoreCond>=0.0);
+    ensure(m_poreToPoreCond>=0.0);
 
     if(m_poreToPoreCond > 0.0)
     {
@@ -365,8 +365,8 @@ bool Throat::prevSolvrRes(const Fluid* fluid, int resistSolve, double loc, doubl
     else
 		res = resZero + (resOne-resZero) * (loc-locOne) / (locTwo-locOne);
 
-    softAssert((loc >= locOne && loc <=  locTwo) || (loc >= locTwo && loc <=  locOne));
-    softAssert(res >= min(resZero, resOne) && res <=  max(resZero, resOne));
+    ensure((loc >= locOne && loc <=  locTwo) || (loc >= locTwo && loc <=  locOne));
+    ensure(res >= min(resZero, resOne) && res <=  max(resZero, resOne));
 
     return m_poreToPoreCond > 0.0;
 }

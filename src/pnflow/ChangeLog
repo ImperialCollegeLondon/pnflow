@@ -23,7 +23,7 @@ ChangeLog,  a summary of main changes and updates:
 	is moved to 'bu/' folder.
 
 2014-2015	Ali Q Raeini
-	Visualization and statistics utilities added to folder postProcess/. 
+	Visualization and statistics utilities added to folder psPrc/. 
 
 2013-2014	Ali Q Raeini
 	Code restructuring and clean-up, in preparation for the development 
@@ -88,7 +88,7 @@ poreModel:
 	polygon.h
 	polygonImb.cpp
 
-postProcess:
+psPrc:
 	makefile
 	netStatistics.cpp
 	netStatistics.h
@@ -97,6 +97,6 @@ postProcess:
 	vtuWriter.h
 
 
-(poerflow): [http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/software/two-phase-network-modelling-code]
+(poreflow): [http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/software/two-phase-network-modelling-code]
 (pore-scale-modelling-and-imaging): [http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/]
 

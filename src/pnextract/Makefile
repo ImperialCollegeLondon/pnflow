@@ -16,7 +16,6 @@ endif
 
 ifdef USE_CORRELATIONS
 
- USE_HYPRE=1
 
 
 endif
@@ -47,7 +46,7 @@ psCXXWin 	?= x86_64-w64-mingw32-g++
 psCXX 		?= g++
 
 
-psCFLAGS := $(psCFLAGS) $(COPTS)   -Wall -pedantic -MMD -MP  -std=c++0x  -I../voxelImage  -I.
+psCFLAGS := $(psCFLAGS) $(COPTS)   -Wall -pedantic -MMD -MP    -I.
 psLFLAGS := $(psLFLAGS) -static-libgcc -static-libstdc++ 
 
 

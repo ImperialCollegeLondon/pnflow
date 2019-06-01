@@ -60,7 +60,7 @@ std::ostream & operator << (std::ostream & outstream, const std::valarray<T>& ve
 #include "netStatistics.h"
 
 using namespace std;
-const static double PI = 3.14159265358979;
+//const static double PI = 3.14159265358979;
 
 void printDistanceMapStatistics( const std::vector<Element const *>&  m_rockLattices, int m_numPores)
 {

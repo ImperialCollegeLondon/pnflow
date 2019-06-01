@@ -2,7 +2,7 @@
 #define CONFIG_H
 
 
-#include "inputFile.h"
+#include "InputFile.h"
 #include "voxelImage.h"
 #include "ElementGNE.h"
 
@@ -29,16 +29,16 @@ public:
 #endif //PORORANGE_H
 
 
-inline int generate_input_nextract(string fileName, string opts)
+inline int createSample_input_nextract(string fileName, string opts)
 {
-	if (fileName.empty()) fileName = "input_image.mhd";
+	if (fileName.empty()) fileName = "vxlImage.mhd";
 
 	std::ifstream in(fileName.c_str());
-	if (in) {
-		cout << "\n\nError: file "<<fileName<<" exists," << endl
+	if (in) { std::cout << "\n\nError: file "<<fileName<<" exists," << endl
 		     <<      "  to run simulation: rerun with "<< fileName<<" as the only argument "<< endl
-		     <<      "  to regenerate: delete it and try again" << endl;
-		return 0; }
+	         	        <<      "  to regenerate: delete it and try again,\n or provide a different file name:\n"
+	         	        <<      "   pnextract -g vxlImage2.mhd" << endl;
+	         	return -1; }
 
 	ofstream of(fileName);
 	if(opts=="-g")
@@ -100,12 +100,12 @@ inline int generate_input_nextract(string fileName, string opts)
 	else
 		cout<<"Error unknown option (first argument)"<<endl;
 
-		of.close();
+	of.close();
 
-		cout <<" file "<<fileName<<" generated, edit: set Image size, name etc, and rerun\n";	
+	cout <<" file "<<fileName<<" generated, edit: set Image size, name etc, and rerun\n";
 	return 0;
-}
 
+}
 
 
 
@@ -167,7 +167,7 @@ public:
 		cout<<"  file type: "<<dataType <<endl;
 	}
 
-	if (!getVar(imgfrmt,"DefaultImageFormat")) imgfrmt=".tif";
+	if (!getVar(imgfrmt,"DefaultImageFormat")) imgfrmt=".raw.gz";
 	if(imgfrmt[0]!='.') imgfrmt="."+imgfrmt;
 	suffix(imgfrmt);
 	cout<<"DefaultImageFormat: "<<imgfrmt<<endl;

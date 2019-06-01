@@ -75,4 +75,4 @@ if ! [ -n "$SetedpsDir" ]; then
 	echo " ";
 fi
 
-x86_64-w64-mingw32-objdump -p  bin/pnflow.exe    | grep 'DLL Name:'
+x86_64-w64-mingw32-objdump -p  $psBinDir/pnflow.exe    | grep 'DLL Name:'

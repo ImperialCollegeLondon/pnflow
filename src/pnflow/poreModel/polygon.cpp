@@ -19,7 +19,7 @@ VoidElem::VoidElem(Element& parent, const CommonData& common,
     m_SatWater = 1.0;
     m_minInitRecCntAng = 180.0;
 
-    softAssert(m_area > 0.0);
+    ensure(m_area > 0.0);
 
 }
 
@@ -58,7 +58,7 @@ void Polygon::insertOilSnapEvent_IfSnapPcLgPc(SortedEvents< Apex*, PceDrainCmp >
 {
     if(m_bulkFluid == &m_comn.water() && m_oilLayer[0].exists(/*st ab le*/) && m_oilLayer[0].trappedOLayer().first<0)
     {   
-		softAssert(m_numLayers==0);
+		ensure(m_numLayers==0);
 
         double snapOffPrs = calcSnapOffPressureDrain();
 		
@@ -81,16 +81,15 @@ void VoidElem::setRadius(double newRad)
 {
     m_R = newRad;
     m_area = pow(newRad, 2.0) / (4.0 * m_shapeFactor);
-    softAssert(m_area > 0.0);
+    ensure(m_area > 0.0);
 }
 
 
 
 
-/**
-// Contact angles are assigned based on the principle of equilibrium contacr angles
-*/
-void VoidElem::setContactAngle(double equilConAng, int wettClass, double modelTwoSepAng)
+///  Contact angles are assigned based on the principle of equilibrium contacr angles
+/// DAng  is (modelTwo/5) Seperation angle,
+void VoidElem::setContactAngle(double equilConAng, int wettClass, double DAng)
 {
 	
 
@@ -102,12 +101,12 @@ void VoidElem::setContactAngle(double equilConAng, int wettClass, double modelTw
 	}
 	else if(wettClass == 2)
 	{
-        double growthExp((PI+modelTwoSepAng)/PI);
+        double growthExp((PI+DAng)/PI);
 
-        m_cntAngRec = max(0.0, growthExp*m_conAngEquil-modelTwoSepAng);
+        m_cntAngRec = max(0.0, growthExp*m_conAngEquil-DAng);
         m_cntAngAdv = min(PI, growthExp*m_conAngEquil);
 	}
-	else
+	else  if(wettClass == 3)
 	{
         if(m_conAngEquil < 0.38349) m_cntAngRec = 0.0;
         else if(m_conAngEquil < 1.5289) m_cntAngRec = (0.5*exp(0.05*m_conAngEquil*180.0/PI)-1.5)*PI/180.0;
@@ -118,6 +117,19 @@ void VoidElem::setContactAngle(double equilConAng, int wettClass, double modelTw
         else if(m_conAngEquil < 1.61268) m_cntAngAdv = 2.0*(m_conAngEquil-0.38349);
         else if(m_conAngEquil < 2.75805) m_cntAngAdv = (181.5 - 4051.0*exp(-0.05*m_conAngEquil*180.0/PI))*PI/180.0;
         else m_cntAngAdv = PI;
+	}
+	else  if(wettClass == 4)
+	{
+		m_cntAngAdv = m_conAngEquil;
+		m_cntAngRec = pow(PI-1.3834263-pow(PI-m_cntAngAdv+0.004,0.45), 1.0/0.45)-0.004;
+	}
+	else
+	{
+		double PlusCoef = PI-(0.1171859 *DAng*DAng*DAng -0.6614868 *DAng*DAng + 1.632065 *DAng) ;
+		double exponentCoef = 1.0-(0.01502745 *DAng*DAng*DAng -0.1015349 *DAng*DAng + 0.4734059 *DAng) ;
+
+		m_cntAngAdv = m_conAngEquil;
+		m_cntAngRec = pow(PlusCoef-pow(PI-m_cntAngAdv+0.004,exponentCoef), 1.0/exponentCoef)-0.004;
 	}
 
     Polygon *polyShape = dynamic_cast< Polygon* >(this);
@@ -180,10 +192,10 @@ Triangle::Triangle(Element& parent, const CommonData& common,  double radius,
 
 void Triangle::setShapeFactor(double shapeFact)
 {
-    softAssert(shapeFact <=  sqrt(3.0)/36.0);
+    ensure(shapeFact <=  sqrt(3.0)/36.0);
     m_shapeFactor = max(shapeFact,1.0e-6);
     m_area = pow(m_R, 2.0) / (4.0 * m_shapeFactor);
-    softAssert(m_area > 0.0);
+    ensure(m_area > 0.0);
     //m_areaWater = m_area;
     setHalfAngles();
     //m_conductanceWater.second = SPConductance(m_areaWater, m_comn.water().viscosity());
@@ -254,7 +266,7 @@ void Polygon::fillCentreWithWaterCreateLayers(bool snapOffOverRide)
     m_bulkFluid = &m_comn.water(); ///K
     m_waterConnection = true;
     m_oilConnection = false;
-    //softAssert(m_waterInCorner[0].trappedCorner().first<0," flxpq ");
+    //ensure(m_waterInCorner[0].trappedCorner().first<0," flxpq ");
     //double snapOffPrs = ;
     double pc = m_comn.GuessCappPress()-m_elem.gravityCorrection();
 
@@ -267,7 +279,7 @@ void Polygon::fillCentreWithWaterCreateLayers(bool snapOffOverRide)
 			//LayerApex* oillayeri = ;
             if ( m_oilLayer[i].createOLayer(pc, m_cntAngRec, m_cntAngAdv, m_maxConAngSpont, m_crnHafAngs[i],  m_comn.oil().interfacialTen(),false))
             {
-				softAssert(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
+				ensure(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
                 ++m_numLayers;
                 //this->addFillingEventToHistory(5)
             }
@@ -346,7 +358,7 @@ void Polygon::calcOilLayerPc_syncTrappings(double pc)
 	const pair<int, double>& watTrpBulk = m_elem.trappingWatBulk();
 	const pair<int, double>& watTrpFilm = m_elem.trappingWatFilm();
 
-	//softAssert (m_elem->isTrappedOil.first>-1 || elem->isTrappedOil.first>-1 || elem->isTrappedOil.first>-1)
+	//ensure (m_elem->isTrappedOil.first>-1 || elem->isTrappedOil.first>-1 || elem->isTrappedOil.first>-1)
 
 	double ComWarningToFix = 1.0;
 
@@ -393,7 +405,7 @@ void Polygon::calcOilLayerPc_syncTrappings(double pc)
 			}
 			else  if (m_oilLayer[i].exists())
 			{
-				softAssert(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
+				ensure(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
 			}
 			
 			m_oilLayer[i].LayerApex::markCentreLayerTrappings(oilTrp, pc, m_cntAngRec, m_cntAngAdv, m_crnHafAngs[i],
@@ -447,7 +459,7 @@ void Polygon::calcOilLayerPc_syncTrappings(double pc)
 			}
 			else if (m_oilLayer[i].exists())
 			{
-				softAssert(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
+				ensure(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
 				if(!(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1])))))
 				{
 					//m_elem.unTrapWat(bulkBlob);
@@ -495,7 +507,7 @@ void Polygon::calcOilLayerPc_markUntrappedFilms(double pc)
 	const pair<int, double>& watTrpBulk = m_elem.trappingWatBulk();
 	const pair<int, double>& watTrpFilm = m_elem.trappingWatFilm();
 
-	//softAssert (m_elem->isTrappedOil.first>-1 || elem->isTrappedOil.first>-1 || elem->isTrappedOil.first>-1)
+	//ensure (m_elem->isTrappedOil.first>-1 || elem->isTrappedOil.first>-1 || elem->isTrappedOil.first>-1)
 
 	double ComWarningToFix = 1.0;
 
@@ -541,7 +553,7 @@ void Polygon::calcOilLayerPc_markUntrappedFilms(double pc)
 			}
 			else  if (m_oilLayer[i].exists())
 			{
-				softAssert(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
+				ensure(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
 			}
 			
 			//m_waterInCorner[i].finitCornerApex(pc, m_cntAngRec, m_cntAngAdv, m_crnHafAngs[i],tension, oilInj,false);
@@ -589,7 +601,7 @@ void Polygon::calcOilLayerPc_markUntrappedFilms(double pc)
 			}
 			else if (m_oilLayer[i].exists())
 			{
-				softAssert(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
+				ensure(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
 				if(!(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1])))))
 				{
 					//m_elem.unTrapWat(bulkBlob);
@@ -657,12 +669,12 @@ double Polygon::calcSnapOffPressureDrain() const
     if(m_cntAngRec > PI/2.0 + m_crnHafAngs[0])      // Spontaneous
     {
         snapOffPrs = snapOffPrsDrainSpontNR();
-		softAssert(snapOffPrs!=0.0);
+		ensure(snapOffPrs!=0.0);
     }
     else
     {                                                       // Forced
         snapOffPrs = m_oilLayer[0].receedingPc();
-        softAssert(snapOffPrs>0.0);
+        ensure(snapOffPrs>0.0);
         if (snapOffPrs <=  0.0)
         {
 			cout<<m_oilLayer[0].receedingPc()<<endl;
@@ -827,7 +839,7 @@ double Triangle::snapOffPrsDrainFromCorner(bool& casePossible, int cor) const
             double pinnApexThree,halfAng(m_crnHafAngs[cor]);// = m_oilLayer[cor].getApexDistance(oldPc,tetaCor,m_crnHafAngs[cor],tension);// acos(part)+m_crnHafAngs[cor];
             m_oilLayer[cor].getCAApexDist(pinnApexThree,tetaCor,halfAng,oldPc,tension);// acos(part)+m_crnHafAngs[cor];
 
-			softAssert(pinnApexThree>0);
+			ensure(pinnApexThree>0);
 
             double tetaCorDpc = -pinnApexThree*sin(m_crnHafAngs[cor])/(tension*sin(tetaCor-m_crnHafAngs[cor]));
 
@@ -844,7 +856,7 @@ double Triangle::snapOffPrsDrainFromCorner(bool& casePossible, int cor) const
 
             if(errorVal < EPSILON)
             {
-                softAssert(tetaCor >= m_cntAngRec || m_comn.debugMode < 1000);
+                ensure(tetaCor >= m_cntAngRec || m_comn.debugMode < 1000);
                 casePossible = tetaCor >= m_cntAngRec;//  && m_oilLayer[cor].freeAtPrs(newPc);
                 
                 return newPc;

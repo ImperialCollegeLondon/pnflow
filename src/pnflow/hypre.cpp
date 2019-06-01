@@ -731,7 +731,7 @@ void hypreSolver::fillMatrixHypre(HYPRE_IJMatrix AAA, HYPRE_IJVector bbb, HYPRE_
 				Element *nextPore = currPore->getConnectionProp(conn, conductance, deltaGrav, fluid, resistivitySolve);
 
 				USE_GRAVITY = false;
-				softAssert(conductance >= 0.0);
+				ensure(conductance >= 0.0);
 				if(!USE_GRAVITY) deltaGrav = 0.0;
 				conductance *= SCALE_FACTOR;            // Some of the preconditioners will assume a value to be zero if very small. Let's just scale the matrix a bit...
 

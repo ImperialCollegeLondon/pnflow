@@ -196,7 +196,7 @@ inline double ElemModel::getConductance(const Fluid* fluid,  bool neighbourToInO
     else 
         flowConductance = max(m_conductanceWater.first,0.0) + max(m_conductanceWater.second,0.0);
 
-	softAssert(m_comn.debugMode<1 || flowConductance > 1.0e-50);
+	ensure(m_comn.debugMode<1 || flowConductance > 1.0e-50);
 	if(flowConductance <=  1.0e-50 && m_comn.debugMode>500)
 	{
 		cout<<"\nError: zero flow conductance "<<"\n" ;

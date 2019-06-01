@@ -2,12 +2,12 @@
 
 Copyright (c):  2004, Imperial College Pore-Scale Consortium
                 2004, Per Valvatne and Martin J Blunt,  original code
-                2015, Ali Q Raeini: clean-up and post-processing 
+                2015, Ali Q Raeini: clean-up and post-processing
 
 
 This software is provided 'as-is', without any express or implied
 warranty. In no event will the authors be held liable for any damages
-arising from the use of this software. 
+arising from the use of this software.
 
 Permission is granted to anyone to use this software for any purpose,
 including commercial applications, and to alter it and redistribute it
@@ -19,7 +19,7 @@ freely, subject to the following restrictions:
    appreciated but is not required.
 2. Altered source versions must be marked as such, and must not be
    misrepresented as being the original software.
-3. This copyright notice may not be altered or removed from any source 
+3. This copyright notice may not be altered or removed from any source
    distribution.
 
 
@@ -31,7 +31,7 @@ https://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/
 */
 
 
-//!  Netsim, main network driver, 
+//!  Netsim, main network driver,
 //!  implements quasi-static network flow simulation routines
 
 
@@ -50,7 +50,7 @@ class Solver;
 class Fluid;
 class CommonData;
 class ElemModel;
- 
+
 #include "Element.h"
 #include "elem_Model.h"
 #include "polygon.h"
@@ -66,7 +66,7 @@ class ElemModel;
 
 ///. class to write both to std::cout, and .prt file
 class mstream
-{ 
+{
 	public:
 	ofstream prtFile;
 	mstream(string fileName){ if (!fileName.empty()) prtFile.open(fileName.c_str()); };
@@ -85,7 +85,7 @@ mstream& operator<< (mstream& st, T val)
 
 ///. class to write .dbg  file for debugging
 //class dbgstream
-//{ 
+//{
 	//public:
 	//ofstream prtFile;
 	//dbgstream(string fileName,int dbgMode) : debugMode(dbgMode) { if (dbgMode && !fileName.empty()) prtFile.open(fileName.c_str()); };
@@ -102,8 +102,8 @@ mstream& operator<< (mstream& st, T val)
 		//(st.prtFile) << val;
   //return st;
 //}
- #define dbgstream OnDemandStream
- #define dbgFile OnDemandStream::dbgFile
+ //#define dbgstream OnDemandStream
+ //#define dbgFile OnDemandStream::dbgFile
 
 
 
@@ -133,7 +133,7 @@ public:
 	void Drainage(InputData& input, double& Sw, double& Pc, double requestedFinalSw, double requestedFinalPc,
               double deltaSw, double deltaPc, double deltaPcIncFactor, bool calcKr, bool calcI, bool entreL, bool entreR, bool exitL, bool exitR, bool swOut);
     void finaliseDrainage();
-    
+   
     bool oilInjection() const {return m_comn.injectant() == &m_oil;}
     //int floodingCycle() const {return m_comn.floodingCycle();}
     void initializeImbibition(SortedEvents<Apex*,PceImbCmp>& m_eventsCh, bool wantRelPerm, bool wantResIdx, bool entreL, bool entreR, bool exitL, bool exitR, InputData& input);
@@ -193,7 +193,7 @@ private:
 		//if(!m_layerEventsCh.empty())
 		//{
 			//double nextLayerPc = m_layerEventsCh.peek()->gravCorrectedEntryPress() ;
-			//nextEventPc = 
+			//nextEventPc =
 			//m_dd*min( m_dd*nextEventPc,
 				 //m_dd*nextLayerPc
 			   //);
@@ -223,7 +223,7 @@ private:
 	
     void checkUntrapWaterIfUnstableConfigsDrain(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh);///. rarely does anything
     void addElemTo_layerDrainEvents(SortedEvents<Apex*,PceDrainCmp>& m_layerEventsCh, Element* elem);
-    inline void clearTrappedWatFromEvents(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh);    
+    inline void clearTrappedWatFromEvents(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh);   
 
     void untrap_WaterGanglia(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, Element* elem, FluidBlob blob);////. Imb+Drain
 
@@ -240,13 +240,13 @@ private:
     void addElemTo_layerImbibeEvents(SortedEvents<Apex*,PceImbCmp>& m_layerEventsCh, Element* elem);
     inline void clearTrappedOilFromEvents(SortedEvents<Apex*,PceImbCmp>&    m_eventsCh);
 
- 
+
     static const double                             MAX_FLOW_ERR;
     static const int                                DUMMY_IDX;
 
     const InputData&                                m_input;
     CommonData                                      m_comn;
-    
+   
 
 
 
@@ -262,7 +262,7 @@ private:
     vector<Element*>                              m_krInletBoundary;
     vector<Element*>                              m_krOutletBoundary;
     int                                             m_sourceNode;
-    vector<const Element*>                        m_elemans;
+    vector<const Element*>                        m_elemans;  // duplicate, for merging
 
     vector< double >                                m_pressurePlanesLoc;
     vector< vector<Element*> >                    m_pressurePlanes;
@@ -279,20 +279,20 @@ private:
 
     bool                                            m_useAvrPrsAsBdr;
     bool                                            m_wantRelPerm;
-    bool                                            m_wantResIdx;    
+    bool                                            m_wantResIdx;   
     bool                                            m_includeGravityInRelPerm;
     double									        m_inletSolverPrs;
     double									        m_outletSolverPrs;
     double                                          m_deltaPo;
     double                                          m_deltaPw;
     double                                          m_deltaV;
-    
+   
     double                                          m_singlePhaseWaterQ;
     double                                          m_singlePhaseOilQ;
     double                                          m_singlePhaseDprs;
     double                                          m_singlePhaseCurrent;
     double                                          m_singlePhaseDvolt;
-    
+   
     double                                          m_oilFlowRate;
     double                                          m_watFlowRate;
 	double                                          m_current;
@@ -300,21 +300,21 @@ private:
     mutable double                                  m_maxOilFlowErr;
     mutable double                                  m_maxWatFlowErr;
     mutable double                                  m_maxResIdxErr;
-    
-    
+   
+   
     double                                          m_keepFraction;
     double                                          m_satBoxStart;
     double                                          m_satBoxEnd;
     double                                          m_solverBoxStart;
     double                                          m_solverBoxEnd;
-    double                                          m_totalVoidVolume; 
+    double                                          m_totalVoidVolume;
     double                                          m_totalFlowVolume;
     double                                          m_totalClayVolume;
     double                                          m_satBoxVolume;
     double                                          m_xSize;
     double                                          m_ySize;
     double                                          m_zSize;
-    
+   
 
     double                                          m_satWater;
     double                                          m_cappPressCh;
@@ -328,23 +328,23 @@ private:
     double                                          m_initStepSize;
     double                                          m_extrapCutBack;
     double                                          m_maxFillIncrease;
-    bool                                            m_StableFilling;    
+    bool                                            m_StableFilling;   
     bool                                            m_injAtLeftRes;
     bool                                            m_injAtRightRes;
     TrappingCriteria                                m_trappingCriteria;
 
-    
+   
     Solver*                                         m_solver;
 
 
     string  										m_baseFileName;
     string                                          m_matrixFileName;
 
-    
+   
     mstream 										m_out;
     ofstream                                        m_drainListOut;
     ofstream                                        m_imbListOut;
-    //dbgstream                                        dbgFile;    
+    //dbgstream                                        dbgFile;   
 
 
     bool                                            m_apexPrsReported;
@@ -359,8 +359,8 @@ private:
     bool                                            m_writeSlvMatrixAsMatlab;
     bool                                            m_writeDrainList;
     bool                                            m_writeImbList;
-    
-    
+   
+   
     vector< string >                                m_results;
     //vector< vector< string > >                      m_watPrsProfiles;
     //vector< vector< string > >                      m_oilPrsProfiles;
@@ -377,8 +377,8 @@ private:
     vector< double >                                m_resultResistivityIdx;
     vector< double >                                m_resultWaterMass;
     vector< double >                                m_resultOilMass;
-    //vector< double >                                m_SwHistory;
-    
+
+   
     double                                          m_cpuTimeTotal;
     double                                          m_cpuTimeCoal;
     double                                          m_cpuTimeKrw;

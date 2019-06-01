@@ -33,34 +33,33 @@ inline void usage(int detailed=1)
 	std::cout<<"Pore Network Extraction: pnextract version " << RELEASE_DATE << std::endl;
 	if(detailed)
 	{
-		cout<<"Usage:\n  pnextract input_image.mhd\n";
-		cout<<"Usage:\n  pnextract input_image.mhd";
+		std::cout<<"\nUsage:"<< std::endl;
+		std::cout<<"  pnextract vxlImage.mhd\n"<< std::endl;
+		std::cout<<"  pnextract -g vxlImage.mhd\n"<< std::endl;
 
 		std::cout<<" For more information, please visit Imperial College pore-scale modelling website:"<<std::endl
 			 <<"http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling"<<std::endl
 			 <<"or contact Ali Q. Raeini by email: a.qaseminejad-raeini@imperial.ac.uk"<<endl;
-		std::cout<<"\nUsage:"<< std::endl;
-		std::cout<<"  pnextract vxlImage.mhd\n"<< std::endl;
 	}
 }
 
-int debugLevel=0;
+int globals::debugLevel_=0;
 int main(int argc, char* argv[])
 {
 
 	usage(0);
 
-	string inputName;
-	if(argc>1)  inputName = argv[1];
-	else  {     cout << "Please input data file: ";    getline(cin, inputName);    }
-	if (inputName.empty()) { usage(); inputName = "vxlImage.mhd"; }
-	if (inputName=="-h") { usage(); exit(0);}
-	if (inputName=="-g") return generate_input_nextract(string(argc>2? argv[2] : ""), inputName);
+	string arg1;
+	if(argc>1)  arg1 = argv[1];
+	else  {     cout << "Please input data file: ";    getline(cin, arg1);    }
+	if (arg1.empty()) { usage(); arg1 = "vxlImage.mhd"; }
+	if (arg1=="-h") { usage(); exit(0);}
+	if (arg1=="-g") return createSample_input_nextract(string(argc>2? argv[2] : ""), arg1);
 	srand(1001);
 	try
 	{
 
-		inputDataNE cfg(inputName);
+		inputDataNE cfg(arg1);
 			nextract(cfg,true);
 
 	}
@@ -75,7 +74,7 @@ int main(int argc, char* argv[])
 int nextract(inputDataNE& cfg, bool verbose)
 {
 
-		if (cfg.getOr(false,"write_all")) // use `write_all` as a rememberable alternative for all other visualization keywords 
+		if (cfg.getOr(false,"write_all")) // use `write_all` as a rememberable alternative for all other visualization keywords
 		{
 			cfg.addKeyword("write_radius","true");
 			cfg.addKeyword("write_statistics","true");

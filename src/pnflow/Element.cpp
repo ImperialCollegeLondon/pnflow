@@ -294,7 +294,7 @@ bool Element::foundEscapePathOil_trapOtherwise(double pc, vector<Element*>& trap
         }
 
         double localPc(datumPc - elemPtr->model()->rhogh());
-        softAssert(!elemPtr->isEntryOrExitRes());
+        ensure(!elemPtr->isEntryOrExitRes());
         elemPtr->trapOil(localPc);
         trappingStorage.push_back(elemPtr);          
 		elemStack.push(elemPtr);            // Simulate recursive descent
@@ -405,11 +405,11 @@ inline bool Element::foundEscapePathWat_trapOtherwise(double pc, FluidBlob start
             return false;
 		}
 
-        softAssert(!elem.first->isEntryOrExitRes());
+        ensure(!elem.first->isEntryOrExitRes());
         double localPc(datumPc-elem.first->model()->rhogh());
         elem.first->trapWat(localPc, elem.second);
         trappingStorage.push_back(elem);
-        softAssert(elem.first);
+        ensure(elem.first);
         elem.first = elem.first->nextSuccessorWat(criteria, elem.second);
 
         while(!elem.first)
@@ -417,7 +417,7 @@ inline bool Element::foundEscapePathWat_trapOtherwise(double pc, FluidBlob start
             elemStack.pop();
             if(elemStack.empty()) break;
             elem = elemStack.top();
-            softAssert(elem.first);
+            ensure(elem.first);
             elem.first = elem.first->nextSuccessorWat(criteria, elem.second);
         }
 
@@ -502,7 +502,7 @@ int Element::removeFromNetwork()
 */
 void Element::severConnection(Element* connection)
 {
-    softAssert(m_connectionNum > 0);
+    ensure(m_connectionNum > 0);
     vector<Element*>::iterator delCandidate;
     delCandidate = find(m_connections.begin(), m_connections.end(), connection);
     if(*delCandidate == connection)
@@ -554,7 +554,7 @@ double Element::updateSat_calcR(double cappPrs)
 */
 void Element::fillElemCentreWithOilRemoveLayers()
 {
-    //softAssert((m_comn.water()));
+    //ensure((m_comn.water()));
     //double warninnng;
     if(m_elemModel->bulkFluid()->isOil()) return;
     

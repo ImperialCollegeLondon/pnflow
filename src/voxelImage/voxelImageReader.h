@@ -18,7 +18,7 @@ Ali Q Raeini:	a.qaseminejad-raeini09@imperial.ac.uk
 \*-------------------------------------------------------------------------*/
 
 #include <sstream>
-//~ #include <streambuf>
+//#include <streambuf>
 
 
 namespace MCTProcessing
@@ -39,8 +39,8 @@ template<typename T> bool fillHoles( std::stringstream & ins, voxelImageT<T>& vx
 		vxlImage.fillHoles(maxHoleSize);
 
 		vxlImage.FaceMedian06(1,5);
-		//~ vxlImage.FaceMedian07(2,5);
-		//~ vxlImage.FaceMedian07(2,5);
+		//vxlImage.FaceMedian07(2,5);
+		//vxlImage.FaceMedian07(2,5);
 		return true;
 }
 
@@ -59,7 +59,7 @@ template<typename T> bool selectPore( std::stringstream & ins, voxelImageT<T>& v
 
 template<typename T> bool rescale( std::stringstream & ins, voxelImageT<T>& vxlImage)
 {
-	//~ thresholdImage=true;
+	//thresholdImage=true;
 	(std::cout<<"  rescaling voxel values to [ ").flush();
 	unsigned int  thresholdMin=0,thresholdMax=0;
 	ins>>thresholdMin;
@@ -430,13 +430,13 @@ void voxelImageT<T>::readFromHeader
 
 			
 
-			//~ ObjectType = Image
-			//~ NDims = 3
-			//~ Offset = 0 0 0
-			//~ ElementSize = 8 8 8
-			//~ DimSize = 200 225 153
-			//~ ElementType = MET_UCHAR
-			//~ ElementDataFile = Ketton100.raw
+			//ObjectType = Image
+			//NDims = 3
+			//Offset = 0 0 0
+			//ElementSize = 8 8 8
+			//DimSize = 200 225 153
+			//ElementType = MET_UCHAR
+			//ElementDataFile = Ketton100.raw
 			std::stringstream keywordData;
 			if(headerFile.peek()!='\n') headerFile.get (*(keywordData.rdbuf()));
 			if (headerFile.fail()) break;

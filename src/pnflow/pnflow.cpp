@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 {
 
  try
- { 
+ {
 	//int myid(0), num_procs(1);
 	//MPI_Init(&argc, &argv);
 	//MPI_Comm_rank(MPI_COMM_WORLD, &myid);

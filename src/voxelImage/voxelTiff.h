@@ -81,7 +81,7 @@ inline void getTifTags(dbl3& X0_, dbl3& dx_, TIFF *tif)
 			else if(str=="X0")	instrim >> X0_;
 		}
 	}
-	if(dx_[0]<1.0e-16) (std::cout<<"\n *** Error: dx read from tif seems invalid  *** \n     ").flush();
+	if(dx_[0]<1.0e-16) (std::cout<<"\n !!! Error: dx read from tif seems invalid  !!! \n     ").flush();
 
 }
 
@@ -238,8 +238,8 @@ template<typename Type>   int writeTif(const voxelField<Type>&  aa, std::string 
 	//uint16 photometric;
 	//uint16* red, green, blue;
 	//tsize_t rowsize;
-	register int row;
-	//register tsample_t s;
+	int row;
+	//tsample_t s;
 
   tif = (TIFF *) NULL;
 

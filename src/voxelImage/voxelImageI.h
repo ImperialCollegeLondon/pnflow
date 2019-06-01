@@ -208,20 +208,20 @@ template<typename Type>   void voxelField<Type>::reset(int3 n, Type value)
 
 
 
-//kji
+
 template<typename Type>   void voxelField<Type>::getSize(int& n1, int& n2, int& n3) const
 {
-  n3 = (*this).size3()[2];
-  if (n3>0)
-  {
+	n3 = (*this).size3()[2];
+	if (n3>0)
+	{
 	  n1 = (*this).size3()[0];
 	  n2 = (*this).size3()[1];
-   }
-   else
-   {
+	}
+	else
+	{
 	  n1 = 0;
 	  n2 = 0;
-   }
+	}
 }
 
 
@@ -282,7 +282,7 @@ template<typename Type>   void voxelField<Type>::readMicroCT(std::string fileNam
 	double  xmax[3];
 
 	in>>n[2]>>n[1]>>n[0];						// number of variables (dimension of
-	//~ in>>	dx[0]>>dx[1]>>dx[2] ;
+	//in>>	dx[0]>>dx[1]>>dx[2] ;
 	in>>	xmin[0]>>xmin[1]>>xmin[2] ;
 	in>>	xmax[0]>>xmax[1]>>xmax[2] ;
 
@@ -291,15 +291,16 @@ template<typename Type>   void voxelField<Type>::readMicroCT(std::string fileNam
 	in.close();
 }
 
-//kji
+
 template<typename Type>   bool voxelField<Type>::readBin(std::string fileName, int nSkipBytes)
 {
 	int3 n = size3();
+	size_t siz = size_t(n[0])*n[1]*n[2];
 
 	#ifdef TIFLIB
 	if(fileName.compare(fileName.size()-4,4,".tif")==0)
 	{ 
-		(std::cout<<  " reading tif file "<<fileName<<" size:"<<size_t(n[0])*n[1]*n[2]<<"*"<<sizeof(Type)).flush();
+		(std::cout<<  " reading tif file "<<fileName<<" size:"<<siz<<"*"<<sizeof(Type)).flush();
 		readTif(*this, fileName);
 		std::cout<<  "."<<std::endl;
 		return true;
@@ -313,10 +314,10 @@ template<typename Type>   bool voxelField<Type>::readBin(std::string fileName, i
 	 #ifdef ZLIB
 		if(std::ifstream(fileName.c_str()).good())
 		{
-			(std::cout<<  " reading compressed file "<<fileName<<" size:"<<size_t(n[0])*n[1]*n[2]<<"*"<<sizeof(Type)).flush();
+			(std::cout<<  " reading compressed file "<<fileName<<" size:"<<siz<<"*"<<sizeof(Type)).flush();
 			gzifstream  in(fileName.c_str());
 			//in << setcompression(Z_NO_COMPRESSION);
-			in.read(reinterpret_cast<char*>(&((*this)(0,0,0))), (size_t(n[0])*n[1]*n[2])*sizeof(Type) );
+			in.read(reinterpret_cast<char*>(&((*this)(0,0,0))), siz*sizeof(Type) );
 			in.close();
 
 			std::cout<<"."<<std::endl;
@@ -329,20 +330,20 @@ template<typename Type>   bool voxelField<Type>::readBin(std::string fileName, i
 
 	}
 
-	(std::cout<<  " reading binary file "<<fileName<<" size:"<<size_t(n[0])*n[1]*n[2]<<"*"<<sizeof(Type)).flush();
+	(std::cout<<  " reading binary file "<<fileName<<" size:"<<siz<<"*"<<sizeof(Type)).flush();
 	std::ifstream in (fileName.c_str(), std::ios::in | std::ios::binary);
-	if(!in)  {std::cout<<"\n\n  Error: can not open image file, "<<fileName<<std::endl<<std::endl;		return false;}
+	if(!in)  {std::cout<<"\n\n  ***** Error: could not open image file, "<<fileName<<"  *****\n"<<std::endl;		return false;}
 	if(nSkipBytes) in.ignore(nSkipBytes);
-	in.read(reinterpret_cast<char*>(&((*this)(0,0,0))), (size_t(n[0])*n[1]*n[2])*sizeof(Type) );
+	in.read(reinterpret_cast<char*>(&((*this)(0,0,0))), siz*sizeof(Type) );
 
-	if (!in)		std::cout<<  "\n\n ***** Error in reading "<<fileName<<" ***** \n"<<std::endl;
+	if (!in) 	 std::cout<<  "\n\n ***** Error in reading "<<fileName<<", only  read "<<in.gcount()<<"B ***** \n"<<std::endl;
 	in.close();
 	std::cout<<  "."<<std::endl;
 	return true;
 
 }
 
-//kji
+
 template<typename Type>   bool voxelField<Type>::readBin(std::string fileName,
 				int iS,int iE ,	int jS,int jE ,	int kS,int kE, int nSkipBytes
 )
@@ -441,7 +442,7 @@ template<typename Type>   void voxelField<Type>::writeBin(std::string fileName) 
 
 
 
-//kji
+
 template<typename Type>   void voxelField<Type>::writeBin(std::string fileName,
 							   int iS,int iE , int jS,int jE , int kS,int kE ) const
 {
@@ -579,7 +580,7 @@ void voxelImageT<T>::crop( int cropBegin[3],  int cropEnd[3],int emptylayers, T 
 	crop(cropBegin[0],cropEnd[0],cropBegin[1],cropEnd[1],cropBegin[2],cropEnd[2],emptylayers,emptylayersValue);
 }
 
-//kji
+
 template<typename T>
 void voxelImageT<T>::crop(
 							int iS, int iE ,
@@ -646,10 +647,10 @@ void voxelField<T>::replacexLayer(int i, int fromi)
 	{
 		for ( int j=0; j<(*this).size3()[1] ; ++j )
 		{
-			//~ for ( int i=0; i<Values.size3()[0] ; ++i )
-			//~ {
+			//for ( int i=0; i<Values.size3()[0] ; ++i )
+			//{
 				(*this)(i,j,k)=(*this)(fromi,j,k);
-			//~ }
+			//}
 		}
 	}
 
@@ -660,18 +661,18 @@ void voxelField<T>::replaceyLayer(int j, int fromj)
 
 	 for ( int k=0; k<(*this).size3()[2] ; k++ )
 	{
-		//~ for ( int j=0; j<Values.size3()[1] ; ++j )
-		//~ {
+		//for ( int j=0; j<Values.size3()[1] ; ++j )
+		//{
 			for ( int i=0; i<(*this).size3()[0] ; ++i )
 			{
 				(*this)(i,j,k)=(*this)(i,fromj,k);
 			}
-		//~ }
+		//}
 	}
 
 }
 
-//kji
+
 template<typename T>
 void voxelField<T>::setBlock(int n1, int n2, int n3, const voxelField<T>& Values)
 {
@@ -683,7 +684,7 @@ void voxelField<T>::setFrom(const voxelField<T>&Values, int n1, int n2, int n3)
 {
 	forAllkji_(*this)	(*this)(i,j,k)=Values(i+n1,j+n2,k+n3);
 }
-//kji
+
 template<typename T>
 template<typename T2>
 void voxelImageT<T>::resetFrom(const voxelImageT<T2>&Values)
@@ -808,9 +809,9 @@ void voxelImageT<T>::rotate(char direction)
 	voxelField<T>::getSize(n1,n2,n3);
 	if (direction=='z' || direction=='Z')
 	{
-		//~ int nMinTmp=nMin_[0];
-		//~ nMin_[0]=nMin_[2];
-		//~ nMin_[2]=nMinTmp;
+		//int nMinTmp=nMin_[0];
+		//nMin_[0]=nMin_[2];
+		//nMin_[2]=nMinTmp;
 		{
 			double X0Tmp=X0_[0];
 			X0_[0]=X0_[2];
@@ -838,9 +839,9 @@ void voxelImageT<T>::rotate(char direction)
 	}
 	else if (direction=='y' || direction=='Y')
 	{
-		//~ int nMinTmp=nMin_[0];
-		//~ nMin_[0]=nMin_[1];
-		//~ nMin_[1]=nMinTmp;
+		//int nMinTmp=nMin_[0];
+		//nMin_[0]=nMin_[1];
+		//nMin_[1]=nMinTmp;
 		{
 			double X0Tmp=X0_[0];
 			X0_[0]=X0_[1];
@@ -927,12 +928,12 @@ void voxelImageT<T>::PointMedian026(int thereshold0,int thereshold1)
 
 
 //~
-//~ #define forAllFaceNei \/
-//~ for (int k_nei_m=-1;k_nei_m<2;k_nei_m++) \/
-//~ for (int j_nei_m=-1;j_nei_m<2;j_nei_m++) \/
-//~ for (int i_nei_m=-1;i_nei_m<2;i_nei_m++)
+//#define forAllFaceNei \/
+//for (int k_nei_m=-1;k_nei_m<2;k_nei_m++) \/
+//for (int j_nei_m=-1;j_nei_m<2;j_nei_m++) \/
+//for (int i_nei_m=-1;i_nei_m<2;i_nei_m++)
 //~
-//~ #define nei(i,j,k) (*this)[k+k_nei_m][j+j_nei_m][i+i_nei_m]
+//#define nei(i,j,k) (*this)[k+k_nei_m][j+j_nei_m][i+i_nei_m]
 
 
 template<typename T>
@@ -989,7 +990,7 @@ void voxelImageT<T>::shrinkPore()
 	{
 		for ( int j=1; j<voxls.size3()[1]-1 ; ++j )
 		{
-			//~ for ( int i=0; i<voxls.size3()[0]-1 ; ++i )
+			//for ( int i=0; i<voxls.size3()[0]-1 ; ++i )
 			{	int i=0;
 				if (voxls(i,j,k)==0 && ( voxls(i,j+1,k) || voxls(i,j-1,k) || voxls(i,j,k+1) || voxls(i,j,k-1) ) )
 					(*this)(i,j,k)=1;
@@ -1005,7 +1006,7 @@ void voxelImageT<T>::shrinkPore()
 	OMPragma("omp parallel for") 		
 	for ( int k=1; k<voxls.size3()[2]-1 ; k++ )
 	{
-		//~ for ( int j=0; j<voxls.size3()[1]-1 ; ++j )
+		//for ( int j=0; j<voxls.size3()[1]-1 ; ++j )
 		{
 			for ( int i=1; i<voxls.size3()[0]-1 ; ++i )
 			{
@@ -1020,7 +1021,7 @@ void voxelImageT<T>::shrinkPore()
 		}
 	}
 
-	//~ for ( int k=0; k<voxls.size3()[2]-1 ; k++ )
+	//for ( int k=0; k<voxls.size3()[2]-1 ; k++ )
 	{
 		OMPragma("omp parallel for") 		
 		for ( int j=1; j<voxls.size3()[1]-1 ; ++j )
@@ -1583,7 +1584,7 @@ template<typename T>
 void maskWriteFraction(voxelImageT<T>& vImage, std::string maskname, std::string outName, unsigned char maskvv, T minIelm, T maxIelm)//  TODO to be tested
 {
 	voxelImageT<unsigned char> mask(maskname);
-	T maxvv = std::min(maxIelm, accumulate(vImage,(const T& (*)(const T&, const T&))(std::max<T>)));
+	T maxvv = std::min(maxIelm, accumulate(vImage,(std::max<T>)));//(const T& (*)(const T&, const T&))(std::max<T>)
 	std::cout<<"  maxvv:"<<maxvv<<std::endl;
 	std::vector<int> nMasked(maxvv+3,0);
 	std::vector<int> nNotmsk(maxvv+3,0);

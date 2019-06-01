@@ -23,8 +23,8 @@ using namespace std;
 #include "vtuWriter.h"
 #include "netsim.h"
 
-#define _pi  3.14159265359
-#define _nl_ if(!((i+1)%20)) outp<<"\n"
+#define _pi   3.14159265359
+#define _nl_  if(!((i+1)%20)) outp<<"\n"
 
 
 #if defined _MSC_VER
@@ -34,6 +34,37 @@ using namespace std;
 #include <sys/stat.h>
 #endif
 
+
+
+
+void vtuWriter::vtuWrite( const vector<Element const *> *  elems, size_t m_numPores, double pc, double intfacTen)
+{
+
+	string suffix;
+	if      (!iWrite)
+	{	if (!m_visualise[0] )return ;
+		else suffix = myto_string(m_comn->floodingCycle())+"_Init";
+	}else if (m_comn->oilInjection() )
+	{	if (!m_visualise[1] )return ;
+		else suffix = myto_string(m_comn->floodingCycle())+"_OInj";
+	}else if ( ! m_comn->oilInjection() )
+	{	if (!m_visualise[2] )return ;
+		else suffix = myto_string(m_comn->floodingCycle())+"_WInj";
+	}else suffix = "Cycle";
+
+
+	cout<<" visua";cout.flush();
+	if(m_FullOrLight[0]=='T')
+	{
+	vtuWritePores( suffix+"Pore",  elems, m_numPores);
+	cout<<"liza";cout.flush();
+	vtuWriteThroats(suffix+"Throat", elems, m_numPores, pc, intfacTen);
+	cout<<"tion "<<endl;
+	}
+
+	vtuWriteThroatLines(suffix, *elems, m_numPores, pc, intfacTen);
+	iWrite++;
+}
 
 
 float ffTofloat(const Element* slm){  float ff=slm->ffaz();
@@ -91,20 +122,20 @@ void insertHalfCorneroints(vector<dbl3>&  points, vector<int>& cellPoints, dbl3 
 	///. radii of curvature
 
 	double gama = abs(hafAng)*CARelax;
-	double appex_iInnerR = appexDist_inrR*(cos(gama)+(sin(gama)/cos(gama+conAng1))*(sin(gama+conAng1)-1));
-	double appex_iOuterR = appexDist_outR*(cos(gama)+(sin(gama)/cos(gama+conAng2))*(sin(gama+conAng2)-1));
+	double lc_InnerR = appexDist_inrR*(cos(gama)+(sin(gama)/cos(gama+conAng1))*(sin(gama+conAng1)-1));
+	double lc_OuterR = appexDist_outR*(cos(gama)+(sin(gama)/cos(gama+conAng2))*(sin(gama+conAng2)-1));
 
 	if(hafAng>0)
 	{
-		hcPoints[0] = e1-appex_iInnerR*nE1;
-		hcPoints[1] = e1-appex_iOuterR*nE1;
+		hcPoints[0] = e1-lc_InnerR*nE1;
+		hcPoints[1] = e1-lc_OuterR*nE1;
 		hcPoints[2] = e1-appexDist_outR*nE11;
 		hcPoints[3] = e1-appexDist_inrR*nE11;
 	}
 	else
 	{
-		hcPoints[3] = e1-appex_iInnerR*nE1;
-		hcPoints[2] = e1-appex_iOuterR*nE1;
+		hcPoints[3] = e1-lc_InnerR*nE1;
+		hcPoints[2] = e1-lc_OuterR*nE1;
 		hcPoints[1] = e1-appexDist_outR*nE11;
 		hcPoints[0] = e1-appexDist_inrR*nE11;
 	}
@@ -115,15 +146,15 @@ void insertHalfCorneroints(vector<dbl3>&  points, vector<int>& cellPoints, dbl3 
 	 nE11 = rotateAroundVec(normal,nE2,hafAng);
 	if(hafAng>0)
 	{
-		hcPoints[4] = e1-appex_iInnerR*nE2;
-		hcPoints[5] = e1-appex_iOuterR*nE2;
+		hcPoints[4] = e1-lc_InnerR*nE2;
+		hcPoints[5] = e1-lc_OuterR*nE2;
 		hcPoints[6] = e1-appexDist_outR*nE11;
 		hcPoints[7] = e1-appexDist_inrR*nE11;
 	}
 	else
 	{
-		hcPoints[7] = e1-appex_iInnerR*nE2;
-		hcPoints[6] = e1-appex_iOuterR*nE2;
+		hcPoints[7] = e1-lc_InnerR*nE2;
+		hcPoints[6] = e1-lc_OuterR*nE2;
 		hcPoints[5] = e1-appexDist_outR*nE11;
 		hcPoints[4] = e1-appexDist_inrR*nE11;
 	}
@@ -1123,40 +1154,7 @@ void vtuWriter::vtuWriteThroatLines(string fName, const vector<Element const *> 
 
 	outp<<vtuWriter::finish();
 	outp.close();
-
 }
-
-
-void vtuWriter::vtuWrite( const vector<Element const *> *  elems, size_t m_numPores, double pc, double intfacTen)
-{
-
-	string suffix;
-	if      (!iWrite)
-	{	if (!m_visualise[0] )return ;
-		else suffix = myto_string(m_comn->floodingCycle())+"_Init";
-	}else if (m_comn->oilInjection() )
-	{	if (!m_visualise[1] )return ;
-		else suffix = myto_string(m_comn->floodingCycle())+"_OInj";
-	}else if ( ! m_comn->oilInjection() )
-	{	if (!m_visualise[2] )return ;
-		else suffix = myto_string(m_comn->floodingCycle())+"_WInj";
-	}else suffix = "Cycle";
-
-
-	cout<<" visua";cout.flush();
-	if(m_FullOrLight[0]=='T')
-	{
-	vtuWritePores( suffix+"Pore",  elems, m_numPores);
-	cout<<"liza";cout.flush();
-	vtuWriteThroats(suffix+"Throat", elems, m_numPores, pc, intfacTen);
-	cout<<"tion "<<endl;
-	}
-
-	vtuWriteThroatLines(suffix, *elems, m_numPores, pc, intfacTen);
-	iWrite++;
-}
-
-
 
 
 

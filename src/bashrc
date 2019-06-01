@@ -14,7 +14,7 @@ else
 	export PATH=$PATH:$psDir/scripts
 	export PATH=$PATH:$psDir/scripts/misc
 	export PATH=$PATH:$psDir/scripts/twoPhase
-	export PATH=$PATH:$psDir/scripts/networkModel
+	export PATH=$PATH:$psDir/scripts/PNM/depricated
 	export PATH=$PATH:$psDir/scripts/singlePhase
 	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$psLibDir
 	export PATH=$PATH:$psBinDir

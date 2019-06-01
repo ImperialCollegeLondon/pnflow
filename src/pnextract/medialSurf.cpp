@@ -149,7 +149,7 @@ void medialSurface::paradox_pre_removeincludedballI() //to remove the included m
 				voxel* smallers[8] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
 				register int counter = -1;
 				register float maxRRR = 0;
-				register voxel* maxRPV = NULL;
+				voxel* maxRPV = NULL;
 
 
 				for (int c = 0; c<2 ; ++c)
@@ -512,7 +512,7 @@ void medialSurface::competeForParent(medialBall* vi, medialBall* vj)
 
 
 
-	voxel* middlevxl=vxl( wsinv*(vi->fi*rjSqr+vj->fi*riSqr)+_pp5, wsinv*(vi->fj*rjSqr+vj->fj*riSqr)+_pp5, wsinv*(vi->fk*rjSqr+vj->fk*riSqr)+_pp5 );
+	const voxel* middlevxl=vxl( wsinv*(vi->fi*rjSqr+vj->fi*riSqr)+_pp5, wsinv*(vi->fj*rjSqr+vj->fj*riSqr)+_pp5, wsinv*(vi->fk*rjSqr+vj->fk*riSqr)+_pp5 );
 	if ( middlevxl && middlevxl->R>min(ri,rj)*_midRf-0.5 && 1.01*sqrt(dSqr)<ri+rj+1.0+1.0*noise )
 	{
 
@@ -668,6 +668,8 @@ void medialSurface::createBallsAndHierarchy()
 
 
    for (int i=0;i<_nRSmoothing;++i)        smoothRadius();
+
+
 
 
 

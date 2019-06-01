@@ -47,7 +47,7 @@ double Polygon::calcR(double pc)
 		calcR_waterWithOilLayers(pc-rhogh()-m_elem.snapOfLongitCurvature()*m_comn.oil().interfacialTen());
     }
 
-    softAssert(m_conductanceOil >= 0.0 && (m_conductanceWater.first >= 0.0 || m_conductanceWater.second >= 0.0));
+    ensure(m_conductanceOil >= 0.0 && (m_conductanceWater.first >= 0.0 || m_conductanceWater.second >= 0.0));
     if ( !(m_conductanceOil >= 0.0 && (m_conductanceWater.first >= 0.0 || m_conductanceWater.second >= 0.0) ) )
 		cout<<"Ks = "<< m_conductanceOil << "  " << m_conductanceWater.first << "  " << m_conductanceWater.second <<endl;
     ///. TODO: sensitivity analysis, add non-linearity by decoupling Aw_dl from Sw
@@ -122,7 +122,7 @@ double cornerConductance(double dimLessCornerA, double meniscusApexDist, double 
     double cFactor = 0.364 + 0.28 * cornerGstar / cornerG;
     double dimLessCornerConduct = cFactor * dimLessCornerA * dimLessCornerA * cornerG;
 
-    softAssert(dimLessCornerA != 0.0 && halfAng != 0.0 && cornerG != 0.0);
+    ensure(dimLessCornerA != 0.0 && halfAng != 0.0 && cornerG != 0.0);
 
     return dimLessCornerConduct * pow(meniscusApexDist, 4.0) / viscosity;
 }
@@ -238,7 +238,7 @@ void Polygon::calcR_oilWithWaterInCorners(double cappPressure)
 			double conductance = cornerConductance(dlCornerArea, apexDist, m_crnHafAngs[i],
 				conAngCurr, m_comn.water().viscosity());
 
-            softAssert(conductance > 0.0);
+            ensure(conductance > 0.0);
             cornerCond += conductance;
 			cornerAreas += apexDist * apexDist * dlCornerArea;
 
@@ -247,7 +247,7 @@ void Polygon::calcR_oilWithWaterInCorners(double cappPressure)
 
     }
     m_SatWater = min(cornerAreas/m_area,1.0);
-    softAssert( m_SatWater < 1.0 && cornerCond > 0.0);
+    ensure( m_SatWater < 1.0 && cornerCond > 0.0);
     
 	if ( m_comn.debugMode>10 && !(cornerAreas/m_area < 1.0 && cornerCond > 0.0))
 	{	cout<< "============ !(cornerAreas/m_area < 1.0 && cornerCond > 0.0  =================";
@@ -314,10 +314,10 @@ void Polygon::calcR_waterWithOilLayers(double cappPressure)
 			double outerApexDist;// = m_oilLayer[i].getApexDistance(cappPressure,outerConAng,m_crnHafAngs[i],  m_comn.oil().interfacialTen());
 			m_oilLayer[i].getCAApexDist(outerApexDist, outerConAng,m_crnHafAngs[i], cappPressure, m_comn.oil().interfacialTen());
 
-			softAssert(outerApexDist>0);
+			ensure(outerApexDist>0);
 
-			softAssert(outerApexDist < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
-			softAssert(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
+			ensure(outerApexDist < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
+			ensure(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
 
             double dlTotCornerArea = dimLessCornerArea(m_crnHafAngs[i], PI-outerConAng);
             double areaCornerTot = outerApexDist * outerApexDist * dlTotCornerArea;
@@ -326,7 +326,7 @@ void Polygon::calcR_waterWithOilLayers(double cappPressure)
             
             if(i < 2) 
             { 
-				softAssert( oilApexBaseLengths <=  baseLength*1.01);
+				ensure( oilApexBaseLengths <=  baseLength*1.01);
 			}
 
             //double innerConAng(conAng), innerCornerApexDist(0.0);
@@ -341,7 +341,7 @@ void Polygon::calcR_waterWithOilLayers(double cappPressure)
 			
             double dlWatCornerArea = dimLessCornerArea(m_crnHafAngs[i], innerConAng);
             double areaWater = innerCornerApexDist * innerCornerApexDist * dlWatCornerArea;
-            softAssert(outerApexDist > innerCornerApexDist);
+            ensure(outerApexDist > innerCornerApexDist);
             if (outerApexDist <=  innerCornerApexDist)
             {
 				cout<<int(m_elem.isTrappedWat(bulkBlob))<<"  ";
@@ -363,7 +363,7 @@ void Polygon::calcR_waterWithOilLayers(double cappPressure)
 				exit(-1);
 			}
             
-			softAssert(waterCond > 0.0);
+			ensure(waterCond > 0.0);
 
             cornerAreaWat += areaWater;
             cornerCondWat += waterCond;
@@ -378,7 +378,7 @@ void Polygon::calcR_waterWithOilLayers(double cappPressure)
 			double apexDist;// = m_oilLayer[i].getApexDistance(cappPressure,currentConAng,m_crnHafAngs[i],  m_comn.oil().interfacialTen());
 			m_oilLayer[i].getCAApexDist(apexDist,currentConAng,m_crnHafAngs[i], cappPressure, m_comn.oil().interfacialTen());
 			
-			softAssert(apexDist>0);
+			ensure(apexDist>0);
 
 
             double dlCornerArea = dimLessCornerArea(m_crnHafAngs[i], PI-currentConAng);
@@ -400,7 +400,7 @@ void Polygon::calcR_waterWithOilLayers(double cappPressure)
 	  }
     }
 
-    softAssert(layerAreaOil > 0.0 || cornerAreaOil > 0.0);
+    ensure(layerAreaOil > 0.0 || cornerAreaOil > 0.0);
 
 
     m_SatWater = 1.0 - (cornerAreaOil + layerAreaOil)/m_area;
@@ -409,11 +409,11 @@ void Polygon::calcR_waterWithOilLayers(double cappPressure)
     double watSat((m_area-cornerAreaOil-layerAreaOil-cornerAreaWat) / m_area);
 
     double centerWatCond = SPConductance(m_area, m_comn.water().viscosity()) * watSat;
-    softAssert(m_comn.debugMode==0 || (watSat > 0.0 && watSat < 1.0));
+    ensure(m_comn.debugMode==0 || (watSat > 0.0 && watSat < 1.0));
 
     if(m_hasDisConectedCentreWCornerW)
     {
-        softAssert(cornerCondWat > 0.0);
+        ensure(cornerCondWat > 0.0);
         
         m_conductanceWater.first = cornerCondWat;
         m_conductanceWater.second = centerWatCond;

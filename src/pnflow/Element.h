@@ -263,7 +263,7 @@ public:
 	int ffaz() const;  ///. Viz only
 
 	///valid for throats only
-    mutable double   m_conductance[3]; ///. Viz only
+    mutable double   m_conductance[5]; ///. Viz only
 	void setPoreToPoreCond(double cond, const Fluid *fluid, int resistiv) {m_poreToPoreCond = cond; m_conductance[int(fluid->isOil())+2*resistiv]=cond; }
 	double saturation() const ;
 protected:
@@ -555,7 +555,7 @@ inline int Element::trappingIndexWat(FluidBlob blob) const
 
 inline void Element::setWatFilmTrappingFromBulk()
 {
-    softAssert(m_trappingIndexWatBulk.first == -1);
+    ensure(m_trappingIndexWatBulk.first == -1);
     m_trappingIndexWatFilm = m_trappingIndexWatBulk;
 }
 

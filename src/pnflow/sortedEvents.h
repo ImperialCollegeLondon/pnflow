@@ -15,13 +15,13 @@ public:
     virtual bool remove(Type elm) = 0;
     virtual void sortEvents() = 0;
     Type pop()	{
-		softAssert(!m_sortedContainer.empty());
+		ensure(!m_sortedContainer.empty());
 		Type elem = m_sortedContainer.back();
 		m_sortedContainer.pop_back();
 		return elem;
 	};
     Type peek() const	{
-		softAssert(!m_sortedContainer.empty());
+		ensure(!m_sortedContainer.empty());
 		return m_sortedContainer.back();
 	};
     bool present(Type elem) const	{
@@ -31,7 +31,7 @@ public:
 		return false;
 	};
     Type at(size_t pos) const	{
-		softAssert(m_sortedContainer.size() > pos);
+		ensure(m_sortedContainer.size() > pos);
 		return m_sortedContainer[pos];
 	};
     size_t size() const {return m_sortedContainer.size();}
@@ -65,7 +65,7 @@ class SortedEvents  : public SortedEventsBase<Type>
 public:
 
     void insert(Type elem){
-		//softAssert(!checkIfThere(elem));    // Only enable for emergency debugging  => EXTREMELY expensive
+		//ensure(!checkIfThere(elem));    // Only enable for emergency debugging  => EXTREMELY expensive
 		 //if (checkIfThere(elem))
 		 //{ cout<<"reins"<<elem->isInWatFloodVec()<<" ";cout.flush(); //return;
 			//// ((Type*)(&elem))[1000000000]=0;

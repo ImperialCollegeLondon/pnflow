@@ -6,5 +6,3 @@ all:
 
 clean: 
 	./AllClean
-
-

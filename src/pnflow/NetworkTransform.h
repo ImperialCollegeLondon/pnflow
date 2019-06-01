@@ -522,7 +522,7 @@ template<class ET, typename T, T> class Correlate;
 		}
 
 		double radiusScale;
-		if (input.getType(radiusScale,"scaleRadius"))
+		if (input.getVar(radiusScale,"scaleRadius"))
 		{
 			m_out<<" scalling radius "<<endl;
 			WeibalParam  wbdist;
@@ -549,7 +549,7 @@ template<class ET, typename T, T> class Correlate;
 				transform(trot, scaleFact);
 			}
 		}
-		if (input.getType(radiusScale,"scaleRadiusMICP"))
+		if (input.getVar(radiusScale,"scaleRadiusMICP"))
 		{
 			m_out<<"scaleMICP: ToBeImplemented"<<endl;
 		}

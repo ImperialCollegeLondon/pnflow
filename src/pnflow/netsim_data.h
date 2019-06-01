@@ -33,11 +33,11 @@ public:
 		cout<<"creating flowData"<<endl;
 
 		m_circWatCondMultFact = 0.0;
-		input.getType(m_circWatCondMultFact,"SURFACE_FILM_COND_FACT");
+		input.getVar(m_circWatCondMultFact,"SURFACE_FILM_COND_FACT");
 		input.gravityConst(m_gravConstX, m_gravConstY, m_gravConstZ);
 		input.poreFillWgt(m_poreFillWeights);
 		input.poreFillAlg(m_poreFillAlg);
-		input.getType(debugMode,"debugLevel");
+		input.getVar(debugMode,"debugLevel");
 		m_floodingCycle = 0;
 		//m_imbibitionCycle = 1;
 		m_maxPcLastDrainCycle = 0.0;
@@ -52,21 +52,21 @@ public:
 		double interfacTen, watDens(1000.0), oilDens(1000.0) , watVisc, oilVisc, watResist, oilResist;
 		input.fluid(interfacTen, watVisc, oilVisc, watResist, oilResist, watDens, oilDens);
 		double clayResistivity(watResist), surfaceResistivity(1.0e12);
-		input.getType(clayResistivity, "clayResistivity");
-		input.getType(surfaceResistivity, "surfaceResistivity");
+		input.getVar(clayResistivity, "clayResistivity");
+		input.getVar(surfaceResistivity, "surfaceResistivity");
 
-		m_solveSP=false; input.getType(m_solveSP, "solveSP");
+		m_solveSP=false; input.getVar(m_solveSP, "solveSP");
 		m_SwPowerStreamCond = 1.0;
 		double epsilonW(80.1*8.854e-12), zetaW(0.061), zetaW_OW(0.061), epsilonO(80.1*8.854e-12*0.0001), zetaOW(-0.061), zetaO(0.0);
 		
 		if (m_solveSP)
 		{
-			if (!input.getType(epsilonW, "epsilonW")) { cout<< "Error missing keyword epsilonW";    }
-			if (!input.getType(zetaW, "zetaW")) { cout<< "Error missing keyword zetaW";   }
-			if (!input.getType(zetaW_OW, "zetaW_OW")) { cout<< "Error missing keyword zetaW_OW";   }
-			if (!input.getType(epsilonO, "epsilonO")) { cout<< "Error missing keyword epsilonO";   }
-			if (!input.getType(zetaOW, "zetaOW")) { cout<< "Error missing keyword zetaOW";   }
-			if (!input.getType(m_SwPowerStreamCond, "SwPowerStreamCond")) { cout<< "Error missing keyword SwPowerStreamCond";   }
+			if (!input.getVar(epsilonW, "epsilonW")) { cout<< "Error missing keyword epsilonW";    }
+			if (!input.getVar(zetaW, "zetaW")) { cout<< "Error missing keyword zetaW";   }
+			if (!input.getVar(zetaW_OW, "zetaW_OW")) { cout<< "Error missing keyword zetaW_OW";   }
+			if (!input.getVar(epsilonO, "epsilonO")) { cout<< "Error missing keyword epsilonO";   }
+			if (!input.getVar(zetaOW, "zetaOW")) { cout<< "Error missing keyword zetaOW";   }
+			if (!input.getVar(m_SwPowerStreamCond, "SwPowerStreamCond")) { cout<< "Error missing keyword SwPowerStreamCond";   }
 
 			cout<< endl << endl;
 			cout<< " epsilonW " << epsilonW << endl;

@@ -5,7 +5,7 @@
 
 void Circle::finitWaterInjection(double cappPrs)
 {
-    //softAssert(m_elem.connectionNum() > 0, "23");
+    //ensure(m_elem.connectionNum() > 0, "23");
     //m_elem.resetFillingEventRecord();
     //m_elem.setInWatFloodVec(false);
     //m_elem.setInOilFloodVec(false);
@@ -20,7 +20,7 @@ void Circle::finitWaterInjection(double cappPrs)
 
 void Circle::initWaterInjection(double cappPrs)
 {
-    softAssert(m_elem.connectionNum() > 0);
+    ensure(m_elem.connectionNum() > 0);
     m_elem.resetFillingEventRecord();
     m_elem.setInWatFloodVec(false);
     //m_elem.setInOilFloodVec(false);
@@ -63,7 +63,7 @@ double Circle::centreEntryPrsWatInj()
                 ++iEvent;
             }
         }
-        //softAssert(iEvent == m_elem.connectionNum()-num_WatCentreFeederNeis, "Failed on circle imb I Events");
+        //ensure(iEvent == m_elem.connectionNum()-num_WatCentreFeederNeis, "Failed on circle imb I Events");
         if(poreBodyFillAlg == "blunt2")
             entryPres = m_comn.oil().interfacialTen()*
                                   (2.0*cos(m_cntAngAdv)/m_R - radSum);
@@ -115,7 +115,7 @@ void Polygon::finitWaterInjection(double cappPrs)
 			}
 			else if (m_oilLayer[i].exists())
 			{
-				softAssert(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
+				ensure(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
 			}
 
         }
@@ -129,7 +129,7 @@ void Polygon::finitWaterInjection(double cappPrs)
 */
 void Polygon::initWaterInjection(double cappPrs)
 {
-    softAssert(m_elem.connectionNum() > 0);
+    ensure(m_elem.connectionNum() > 0);
     m_elem.resetFillingEventRecord();
     m_elem.setInWatFloodVec(false);
     for(int j = 0; j < m_numCorners; ++j)
@@ -368,7 +368,7 @@ double Polygon::Pc_pistonType_ImbHingCLine() const
 				m_waterInCorner[i].getCApexDistConAng(meniscusApexDist, hingConAng, oldPc, m_crnHafAngs[i], m_comn.oil().interfacialTen(),true,true);
 
 				double partus(meniscusApexDist * sin(m_crnHafAngs[i]) * oldPc/tension);
-				softAssert(partus >= -1.0 && partus <=  1.0);
+				ensure(partus >= -1.0 && partus <=  1.0);
 				if(!(partus >= -1.0 && partus <=  1.0))
 				{
 					cout<<partus<<" = "<<meniscusApexDist<<" * sin(" <<m_crnHafAngs[i]<<") / "<<tension/oldPc<<endl;
@@ -487,7 +487,7 @@ bool Polygon::waterLayer_UntrappedCorner_PcLsnapPc(double cappPrs) const
 ///. Warning also called during Oil Injection, when decreasing oil pressure due to coalescence 
 double Polygon::Pc_pin_disconnectOilLayer(int cor)  ///rare
 {
-    softAssert(m_oilConnection && m_numLayers>0);    
+    ensure(m_oilConnection && m_numLayers>0);    
 	LayerApex& oilLayer = m_oilLayer[cor];
     double layerPc(oilLayer.layerCollPc());
 	double tension =  m_comn.oil().interfacialTen();
@@ -503,11 +503,11 @@ double Polygon::Pc_pin_disconnectOilLayer(int cor)  ///rare
 
     oilLayer.removeLayer();
     --m_numLayers;
-	softAssert(m_numLayers >= 0 && m_numLayers < m_numCorners);
+	ensure(m_numLayers >= 0 && m_numLayers < m_numCorners);
 
     if(!m_numLayers)
     {
-        softAssert(!m_hasDisConectedCentreWCornerW);
+        ensure(!m_hasDisConectedCentreWCornerW);
         m_oilConnection = false;
         if (!containCOil() && m_elem.isTrappedOil()) {cout<<" axsj ";m_elem.unTrapOil();}
     }

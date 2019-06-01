@@ -5,8 +5,8 @@
 
 void Circle::finitOilInjection(double cappPrs)
 {
-	//softAssert(m_elem.connectionNum() > 0, "20");
-	//softAssert(m_elem.connectionNum() > 0, "20");
+	//ensure(m_elem.connectionNum() > 0, "20");
+	//ensure(m_elem.connectionNum() > 0, "20");
 	m_elem.resetFillingEventRecord();
 	//m_elem.setInWatFloodVec(false);
 	m_elem.setInOilFloodVec(false);
@@ -23,10 +23,10 @@ void Circle::finitOilInjection(double cappPrs)
  
 void Circle::initOilInjection(double cappPrs)
 {
-	softAssert(m_elem.connectionNum() > 0);
+	ensure(m_elem.connectionNum() > 0);
 	//m_elem.resetFillingEventRecord();
 	//m_elem.setInWatFloodVec(false);
-	 softAssert(!m_elem.isInOilFloodVec());
+	 ensure(!m_elem.isInOilFloodVec());
 
 	if(m_bulkFluid == &m_comn.oil()) return;
  
@@ -66,7 +66,7 @@ double Circle::centreEntryPrsOilInj()
 				++iEvent;
 			}
 		}
-		softAssert(iEvent == m_elem.connectionNum()-num_OilCentreFeederNeis);
+		ensure(iEvent == m_elem.connectionNum()-num_OilCentreFeederNeis);
 		if(poreBodyFillAlg == "blunt2")
 			entryPres = m_comn.oil().interfacialTen()*(2.0*cos(conAng)/m_R - radSum);
 		else
@@ -112,7 +112,7 @@ void Polygon::finitOilInjection(double cappPrs)
 			}
 			else
 			{
-				softAssert(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
+				ensure(m_oilLayer[i].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
 			}
 
 		}
@@ -127,10 +127,10 @@ void Polygon::finitOilInjection(double cappPrs)
 */
 void Polygon::initOilInjection(double cappPrs)
 {
-	softAssert(m_elem.connectionNum() > 0);
+	ensure(m_elem.connectionNum() > 0);
 	m_elem.resetFillingEventRecord();
 	//m_elem.setInWatFloodVec(false);
-	 softAssert(!m_elem.isInOilFloodVec());
+	 ensure(!m_elem.isInOilFloodVec());
 
 	for(int j = 0; j < m_numCorners; ++j)
 	{
@@ -157,7 +157,7 @@ void Polygon::initOilInjection(double cappPrs)
 
 	if(m_bulkFluid == &m_comn.oil()) 
 	{
-		m_Pc_pistonTypeRec = m_comn.oil().interfacialTen()*(2.0*cos(m_cntAngRec)) / m_R;	 
+		m_Pc_pistonTypeRec = m_comn.oil().interfacialTen()*(2.0*cos(m_cntAngRec)) / m_R;
 		if (cappPrs > m_Pc_pistonTypeAdv)
 		{
 			m_Pc_pistonTypeRec = cappPrs * cos(m_cntAngRec) / cos(m_cntAngRec); ///. Warning risk of division by zero 
@@ -176,7 +176,7 @@ void Polygon::initOilInjection(double cappPrs)
 		if(m_oilLayer[i].exists(/*st ab le*/)) angSum += cos(m_cntAngAdv - m_crnHafAngs[i]);
 	}
 
-	double rhsMaxRecConAng = (4.0*m_shapeFactor*angSum)								 
+	double rhsMaxRecConAng = (4.0*m_shapeFactor*angSum)
 		/ (normThresPress-cos(m_cntAngAdv)-12.0*m_shapeFactor*sin(m_cntAngAdv));
 	rhsMaxRecConAng = min(max(rhsMaxRecConAng, -1.0), 1.0);  //Prevent falling out of range [1, -1]. This is only applicable when r is very small  and these elems are probably not drained.
 	m_maxConAngSpont = acos(rhsMaxRecConAng);
@@ -221,7 +221,7 @@ double Polygon::centreEntryPrsOilInj()
 			}
 		}
 
-		softAssert(iEvent == m_elem.connectionNum()-num_OilCentreFeederNeis);
+		ensure(iEvent == m_elem.connectionNum()-num_OilCentreFeederNeis);
 		if(poreBodyFillAlg == "blunt2")
 			pistonEntryPrs = m_comn.oil().interfacialTen()*(2.0*cos(conAng)/m_R - radSum);
 		else if(poreBodyFillAlg == "blunt1" || poreBodyFillAlg == "oren1")
@@ -251,7 +251,7 @@ double Polygon::centreEntryPrsOilInj()
 	{
 	  double snapOffPrs = calcSnapOffPressureDrain();
 	  
-	  if(	m_oilLayer[0].freeAtPrs(snapOffPrs)
+	  if(    m_oilLayer[0].freeAtPrs(snapOffPrs)
 		 &&( num_OilCentreFeederNeis == 0 || pistonEntryPrs > snapOffPrs )
 		)
 	  {
@@ -328,10 +328,10 @@ double Polygon::Pc_pistonType_DrainHing() const
 					double hingConAng(m_cntAngRec);// = m_oilLayer[j].hingingConAngUntraped(tension/oldRad, m_cntAngRec, m_crnHafAngs[j], tension, true);
 					double meniscusApexDist;// = m_oilLayer[j].getApexDistanceUntraped(tension/oldRad, hingConAng, m_crnHafAngs[j], tension, true);
 					m_oilLayer[j].getCAApexDistUntraped(meniscusApexDist,hingConAng, m_crnHafAngs[j], tension/oldRad, tension, true);
-							softAssert(meniscusApexDist>0);
+							ensure(meniscusApexDist>0);
 
 					double partus(-meniscusApexDist * sin(m_crnHafAngs[j])/oldRad);
-					softAssert(partus >= -1.0 && partus <=  1.0);
+					ensure(partus >= -1.0 && partus <=  1.0);
   
 					sumOne += meniscusApexDist*cos(hingConAng);
 					sumTwo += hingConAng-m_crnHafAngs[j]-PI/2.0;
@@ -352,8 +352,8 @@ double Polygon::Pc_pistonType_DrainHing() const
 	}
 
 	cerr << "\n Error: failed to obtain valid value for threshold radius of curvature" 
-		 << "\n   in piston type displacement during drainage."   << "\n   Err  " << err << "		Con ang " << m_cntAngRec*180.0/PI 
-		 << "\n   Radius " << m_R << "   G " << m_shapeFactor  << "\n   Iteration " << itr << endl ;	exit(-1);
+		 << "\n   in piston type displacement during drainage."   << "\n   Err  " << err << "        Con ang " << m_cntAngRec*180.0/PI 
+		 << "\n   Radius " << m_R << "   G " << m_shapeFactor  << "\n   Iteration " << itr << endl ;    exit(-1);
 
 
 	return 0.0;
@@ -375,8 +375,8 @@ bool Polygon::hasOilLayer_TrappedOutside_PcHsnapPc(double cappPrs) const
 bool Polygon::Pc_growStableOilLayerDrain_UseLess(double Pc, int corner)
 {///. oil film growth
 	LayerApex& oilLayer = m_oilLayer[corner];
-	softAssert(!containCOil());
-	softAssert(!oilLayer.exists());
+	ensure(!containCOil());
+	ensure(!oilLayer.exists());
 	
 
 	
@@ -384,13 +384,13 @@ bool Polygon::Pc_growStableOilLayerDrain_UseLess(double Pc, int corner)
 	
 	if (m_oilLayer[corner].createOLayer(Pc,m_cntAngRec,m_cntAngAdv, m_maxConAngSpont, m_crnHafAngs[corner],  m_comn.oil().interfacialTen(),true))
 	{
-		softAssert(m_oilLayer[corner].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
+		ensure(m_oilLayer[corner].pinnedApexDist() < (m_R*(1.0/tan(m_crnHafAngs[0])+1.0/tan(m_crnHafAngs[1]))));
 		
 		
 		
 		m_oilConnection = true;
 		++m_numLayers;
-		softAssert(m_numLayers > 0 && m_numLayers <=  m_numCorners);
+		ensure(m_numLayers > 0 && m_numLayers <=  m_numCorners);
 		
 		m_hasDisConectedCentreWCornerW = m_numLayers == m_numCorners;
 	}

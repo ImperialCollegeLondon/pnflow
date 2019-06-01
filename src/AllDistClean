@@ -10,9 +10,9 @@ if [ -z "$psInstall" ] ; then
  exit
 fi
 
-(cd $psInstall/bin  && rm -f  voxelImageConvert voxelImageProcess  nelmToFoamPar  Ufraw2Uc  gnextract*  gnflow*  pnextract*  pnflow* gncompare  gnconvert rawToFoam*)
+(cd $psInstall/bin  && rm -f  voxelImageConvert voxelImageProcess  nelmToFoamPar  Ufraw2Uc  gnextract*  gnflow*  pnextract*  pnflow* gncompare  gnconvert voxelToFoam*)
 (cd $psInstall/bin  && rm -rf porefoam-*/)
-rm -rf  ./build/gncompare/  ./build/gnconvert/  ./build/gnextract/  ./build/gnflow/  ./build/pnextract/  ./build/pnflow/ 
+rm -rf  ./build/gncompare/  ./build/gnconvert/  ./build/gnextract/  ./build/gnflow/  ./build/pnextract/  ./build/pnflow/
 rm -f log.AllMake*
 
 

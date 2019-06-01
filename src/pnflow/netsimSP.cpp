@@ -59,7 +59,7 @@ void Netsim::recordRes(bool wantRelPerm, bool wantResIdx)
 		m_resultOilMass.push_back((m_totalFlowVolume + m_totalClayVolume)*(1 - m_satWater)*m_oil.density());
 	}
 
-	m_vtkWriter.vtuWrite(reinterpret_cast<const std::vector<Element const *>*>(&m_elemans), m_numPores, m_cappPress, m_oil.interfacialTen());
+	m_vtkWriter.vtuWrite(reinterpret_cast<const std::vector<Element const *>*>(&m_rockLattice), m_numPores, m_cappPress, m_oil.interfacialTen());
 
 }
 

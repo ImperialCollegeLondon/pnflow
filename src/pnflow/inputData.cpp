@@ -965,7 +965,7 @@ void InputData::loadPoreData()
                 >> poreProp->z
                 >> poreProp->connNum;
 
-            softAssert(idx == poreProp->index);
+            ensure(idx == poreProp->index);
 
             connThroats = new int[poreProp->connNum];
             connPores = new int[poreProp->connNum];
@@ -1002,12 +1002,12 @@ void InputData::findBoundaryPores()
     for(int i = 0; i < nDir; ++i)
     {
         double xPos = xStep/2.0 + i*xStep;
-        softAssert(xPos < m_origXDim);
+        ensure(xPos < m_origXDim);
         for(int j = 0; j < nDir; ++j)
         {
             double yPos = yStep/2.0 + j*yStep;
             double zPos = zStep/2.0 + j*zStep;
-            softAssert(xPos < m_origXDim && yPos < m_origYDim && zPos < m_origZDim);
+            ensure(xPos < m_origXDim && yPos < m_origYDim && zPos < m_origZDim);
             vector< ThreeSome< double, double, double > > positonData;
             ThreeSome< double, double, double > xyMinus(xPos, yPos, 0.0);
             positonData.push_back(xyMinus);
@@ -1077,7 +1077,7 @@ void InputData::getOutletData(MapItr itr, int numNetsInFront, int& throatIdx, in
     }
     else if(throatToInlet)
     {
-        softAssert(m_reverseThroatHash[hashedIdx-1] != DUMMY_INDEX);
+        ensure(m_reverseThroatHash[hashedIdx-1] != DUMMY_INDEX);
         hashedIdx = m_reverseThroatHash[hashedIdx-1] +
             (numNetsInFront+1)*m_origNumThroats - numNetsInFront*m_connectionsRemoved;
     }
@@ -1199,7 +1199,7 @@ void InputData::loadThroatData()
                 >> throatProp->volume
                 >> throatProp->clayVol;
 
-            softAssert(idx == throatProp->index);
+            ensure(idx == throatProp->index);
         }
         m_throatData[i] = throatProp;
         lenSumThroat += throatProp->lenThroat;
@@ -1331,7 +1331,7 @@ int InputData::findClosestPore(const vector< ThreeSome< PoreStruct*, int*, int* 
             index = pores[i].first()->index;
         }
     }
-    softAssert(index != DUMMY_INDEX);
+    ensure(index != DUMMY_INDEX);
     return index;
 }
 
@@ -1397,7 +1397,7 @@ void InputData::poreData(int idx, double& xPos, double& yPos, double& zPos, int&
         {
             if(numNetsInFront < m_numNetInSeries-1 && connPores[j] == 0)
             {
-                softAssert(itr != mapConns.second);
+                ensure(itr != mapConns.second);
                 getOutletData(itr, numNetsInFront, connThroats[j], connPores[j]);
 
                 //++numHookedUp;
@@ -1405,7 +1405,7 @@ void InputData::poreData(int idx, double& xPos, double& yPos, double& zPos, int&
             }
             else if(numNetsInFront > 0 && connPores[j] == -1)
             {
-                softAssert(itr != mapConns.second);
+                ensure(itr != mapConns.second);
                 getInletData(itr, numNetsInFront, connThroats[j], connPores[j]);
                 //++numHookedUp;
                 ++itr;

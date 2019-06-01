@@ -8,11 +8,11 @@ all: directories Linux
 # "c:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64_x86\vcvarsamd64_x86.bat"
 # nmake
 
-USE_HYPRE=1
+USE_HYPRESEQ=1
 psDir ?= $(abspath ..)
 include  $(psDir)/Makefile.in
 
-#COPTS     = -g  -Wall  -fno-inline 
+#COPTS     = -g    -fno-inline 
 COPTS     = -O3 -Wall -std=c++11
 
 
@@ -29,7 +29,8 @@ psCXX 		?= g++
 
 #EXTRACFLAGS= -Wall -pedantic
 #MMD is for creating dependancy
-psCFLAGS +=  -IporeModel -I. -IpostProcess 
+psCFLAGS +=  -IporeModel -I. -IpsPrc 
+
 
 
 srcs =  \
@@ -37,10 +38,10 @@ srcs =  \
 	poreModel/polygon.cpp  poreModel/polygon_calcR.cpp  \
 	poreModel/polygonDrain.cpp  poreModel/polygonImb.cpp \
 	ElementConstSolver.cpp  ElementPore.cpp    elem_Model.cpp  \
-	postProcess/netStatistics.cpp Element.cpp  \
+	psPrc/netStatistics.cpp Element.cpp  \
 	ElementThroat.cpp    \
 	inputData.cpp   netsimSP.cpp  netsim.cpp  netsim_drain.cpp   \
-	netsim_imbibe.cpp   utility.cpp   hypre.cpp pnflow.cpp  postProcess/vtuWriter.cpp
+	netsim_imbibe.cpp   utility.cpp   hypre.cpp pnflow.cpp  psPrc/vtuWriter.cpp
 
 
 objs = $(addprefix $(BuildDir)/,$(subst /,__,$(srcs:.cpp=.o)))
@@ -69,10 +70,12 @@ clean:
 
 Hypre:
 	echo Hypre
-	(cd $(psDir)/../thirdparty && make hypre)
+###	(cd $(psDir)/../thirdparty && make hypreSeq)
 
 
 
+# "c:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64_x86\vcvarsamd64_x86.bat"
+# nmake
 winVS:
 	@cl -I..\libf2c /nologo /MT /EHsc /Ox  $(srcs) ..\..\bin\vcf2c.lib  /link -LARGEADDRESSAWARE /out:..\bin\pnflow.exe
 	@del *.obj

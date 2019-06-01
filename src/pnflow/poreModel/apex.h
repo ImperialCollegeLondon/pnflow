@@ -59,7 +59,6 @@ public:
 
 protected:
 
-    //inline void assure(bool cond, const std::string errorMsg = "Shit") const;
 
     static const double             PI;
     static const double             INF_NEG_NUM;

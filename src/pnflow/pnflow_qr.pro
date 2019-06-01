@@ -13,7 +13,7 @@ CONFIG += debug_and_release
 
 DESTDIR = ./../../bin
 #LIBS += -L/usr/local/lib -lmath
-INCLUDEPATH = ./poreModel/ ./postProcess/ ./  ./../../include/
+INCLUDEPATH = ./poreModel/ ./psPrc/ ./  ./../../include/
 LIBS += -L./../../lib -lHYPRE
 
 # The following define makes your compiler emit warnings if you use
@@ -34,8 +34,8 @@ SOURCES += \
     ./poreModel/polygon_calcR.cpp \
     ./poreModel/polygonDrain.cpp \
     ./poreModel/polygonImb.cpp \
-    ./postProcess/netStatistics.cpp \
-    ./postProcess/vtuWriter.cpp \
+    ./psPrc/netStatistics.cpp \
+    ./psPrc/vtuWriter.cpp \
     ./elem_Model.cpp \
     ./Element.cpp \
     ./ElementConstSolver.cpp \
@@ -62,9 +62,9 @@ HEADERS += \
     ./poreModel/cornerApex.h \
     ./poreModel/layerApex.h \
     ./poreModel/polygon.h \
-    ./postProcess/netStatistics.h \
-    ./postProcess/typses.h \
-    ./postProcess/vtuWriter.h \
+    ./psPrc/netStatistics.h \
+    ./psPrc/typses.h \
+    ./psPrc/vtuWriter.h \
     ./compareFuncs.h \
     ./elem_Model.h \
     ./Element.h \

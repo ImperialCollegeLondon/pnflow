@@ -11,30 +11,12 @@
 #include <functional>
 #include <map>
 #include <string>
-#include <typses.h>
+#include "typses.h"
 
 using namespace std;
 
 
-inline void softAssert2(bool cond, const std::string errorMsg = "!")
-{
-    if(!(cond)) 
-    {       
-        std::cout<< " Em: " << errorMsg << endl;     
-	}
-}
-
-#ifdef _debugCompile_
-#define softAssert(cond) \
-    if(!(cond))  \
-    {       \
-        std::cout<< " Error in "<<__FILE__<<":"<< __LINE__ <<"  "<<#cond<<"  "; std::cout.flush();     \
-	}
-#else
-#define softAssert(cond) {}
-#endif
-
-
+// For compatibility with old codes, use the InputFile instead from include directory if you can
 
 
 template < typename T > string myto_string( const T& n )
@@ -44,47 +26,6 @@ template < typename T > string myto_string( const T& n )
 	return stm.str() ;
 }
 
-
-
-inline bool safeGetline(std::istream& is, std::string& t)
-{
-    t.clear();
-
-    // The characters in the stream are read one-by-one using a std::streambuf.
-    // That is faster than reading them one-by-one using the std::istream.
-    // Code that uses streambuf this way must be guarded by a sentry object.
-    // The sentry object performs various tasks,
-    // such as thread synchronization and updating the stream state.
-	bool continueReading=true;
-    std::istream::sentry se(is, true);
-    std::streambuf* sb = is.rdbuf();
-
-    for(;;) {
-        int c = sb->sbumpc();
-        switch (c) {
-        case '\n':
-            return continueReading;
-        case '\r':
-            if(sb->sgetc() == '\n')
-                sb->sbumpc();
-            return continueReading;
-        case EOF:
-            // Also handle the case when the last line has no line ending
-            if(t.empty())
-                is.setstate(std::ios::eofbit);
-            return false;
-		case '#':
-            t += (char)c;
-            return false;
-		case ';':
-            return false;
-		case ',':
-            t += '\t';
-        default:
-            t += (char)c;
-        }
-    }
-}
 
 #define outD OnDemandStream::dbgFile
 ///. class to write .dbg  file for debugging
@@ -102,7 +43,7 @@ class OnDemandStream
 	void close() {if (opened) {prtFile.close(); opened=false;}};
 	void flush() {prtFile.flush();};
 
-	static  OnDemandStream    dbgFile;
+	static  OnDemandStream    dbgFile;//thread_local
 
 };
 
@@ -132,6 +73,43 @@ inline OnDemandStream::~OnDemandStream() { outD<<"\nend"<<endl;}
 
 class InputFile
 {
+
+	static bool safeGetline(std::istream& is, std::string& sr)
+	{
+		sr.clear();
+		bool continueReading=true;
+		std::istream::sentry se(is, true);
+		std::streambuf* sb = is.rdbuf();
+
+		for(;;) {
+		    int c = sb->sbumpc();
+		    switch (c) {
+		    case '\n':
+		        return continueReading;
+		    case '\r':
+		        if(sb->sgetc() == '\n')
+		            sb->sbumpc();
+		        return continueReading;
+		    case EOF:
+		        // Also handle the case when the last line has no line ending
+		        if(sr.empty())
+		            is.setstate(std::ios::eofbit);
+		        return false;
+			case '#':
+		        sr += (char)c;
+		        return false;
+			case ';':
+		        return false;
+			case ',':
+			case ':':
+		        sr += '\t';
+		    default:
+		        sr += (char)c;
+		    }
+		}
+	}
+
+
 public:
 
     InputFile(const std::string& fileName)
@@ -158,8 +136,8 @@ public:
 				size_t beginKey=std::min(bufferStr.find_first_not_of(" \n\r\t"), bufferStr.size());
 				size_t keyEnding=std::min(bufferStr.find_first_of("%"), bufferStr.size());
 				size_t endKey=std::min(bufferStr.find_last_of(":="), keyEnding);
-				if (endKey < keyEnding) endKey = std::min(bufferStr.find_last_not_of(" :=", endKey)+1, endKey); 
-				else endKey = std::min(bufferStr.find_first_of(" \n\r\t", beginKey+1), endKey); 
+				if (endKey < keyEnding) endKey = std::min(bufferStr.find_last_not_of(" :=", endKey)+1, endKey);
+				else endKey = std::min(bufferStr.find_first_of(" \n\r\t", beginKey+1), endKey);
 
 				keyword = bufferStr.substr(beginKey, endKey-beginKey);
 				if(keyword.empty() || keyword[0] == '%' || keyword[0] == '#' || keyword[0] == ';') continue ;
@@ -226,18 +204,18 @@ public:
 				<< m_parsedData[i].second   << endl
 				<< endl;
 	};
-    
+   
     inline const std::string& keywordData(const std::string& keyword) const;
-    
+   
     template<typename T>
-    bool getType(T& var, const string& keyword) const
+    bool getVar(T& var, const string& keyword) const
     {
 		istringstream data;
 		if(getData(data, keyword))	{	data>>var;	if (verbose) std::cout<<" "<<keyword<<" = "<<var<<";"<<endl; return true;	}
 		else										return false;
 	}
 	
-    bool getType(bool& var, const string& keyword) const
+    bool getVar(bool& var, const string& keyword) const
     {
 		istringstream data;
 		if(getData(data, keyword))	{ char varC;	data>>varC;	var = (varC == 'T' || varC == 't' || varC == 'Y' || varC == 'y' || varC == '1'); cout<<keyword<<" = "<<var<<";"<<endl; return true; 	}
@@ -270,7 +248,7 @@ protected:
 		std::string::iterator itr;
 		itr = std::find(data.begin(), data.end(), '%');
 		if(itr != data.end()) data.erase(itr,data.end());
-	};  
+	};
 
 
     std::vector< std::pair< std::string, std::string > >         m_parsedData;
