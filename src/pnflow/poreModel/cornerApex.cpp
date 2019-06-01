@@ -132,7 +132,8 @@ void CornerApex::initCornerApex(double pc, double conAngRec, double conAngAdv, d
 void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double pc, double halfAng, double intfacTen, bool overidetrapping, bool accurat, bool debug) const
 {
     double delta = accurat ? 0.0: SMALL_NUM;
-		ensure(m_inited || m_trappedCL.first>-1 || m_parentShape->eleman()->isTrappedOil() || m_outerLayerApex->trappingCL().first>-1);
+		bool Warning_ensure_deactivated=True;
+		ensure(True || m_inited || m_trappedCL.first>-1 || m_parentShape->eleman()->isTrappedOil() || m_outerLayerApex->trappingCL().first>-1);
 		ensure(m_exists);
 
 	if(!m_exists)	{ apexDist = MOLECULAR_LENGTH;  return; }
