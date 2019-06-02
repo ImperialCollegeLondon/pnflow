@@ -193,7 +193,7 @@ void Netsim::init(InputData& input)
 	{  // m_elemans is not used much yet, it will  replace m_rockLattice
 		m_elemans.resize(m_rockLattice.size());
 		                              m_elemans[0]=m_rockLattice[0];    m_elemans[1]=m_rockLattice[1+m_numPores];
-		for(size_t el = 1; el < 1+m_numPores; ++el)		                m_elemans[el+1]=m_rockLattice[el];
+		for(int el = 1; el < 1+m_numPores; ++el)		                m_elemans[el+1]=m_rockLattice[el];
 		for(size_t el = 2+m_numPores; el < m_rockLattice.size(); ++el)	m_elemans[el]=m_rockLattice[el];
 	}
 
@@ -381,7 +381,6 @@ void Netsim::initNetwork(InputData& input)
 	}
 	
 	m_out <<  " Number of singlets removed:				" << numSingletsRemoved							 << endl;
-
 
 	for(size_t elem = 0; elem < m_rockLattice.size(); ++elem)
 	{
@@ -1661,18 +1660,17 @@ void Netsim::writeResultData(bool relPermIncluded, bool resIdxIncluded)
 		if(matlabFormat) extension = ".m";
 		else if(excelFormat) extension = ".csv";
 
-		ofstream resStream;
-		resStream.open((resFileName.str()+extension).c_str());
+		ofstream of((resFileName.str()+extension).c_str());
 
-		if(!resStream)
+		if(!of)
 		{
 			cerr << "\n\n *** Error: Could not open " << (resFileName.str()+extension) << " for writing ***\n\n"  << endl;		exit(-1);
 		}
 
-		resStream << out.str();
+		of << out.str();
 		for(size_t j = 0; j < m_results.size(); ++j)
-			resStream << m_results[j] << endl;
-		if(matlabFormat) resStream << "];" << endl;
+			of << m_results[j] << endl;
+		if(matlabFormat) of << "];" << endl;
 	}
 
 
@@ -1682,12 +1680,12 @@ void Netsim::writeResultData(bool relPermIncluded, bool resIdxIncluded)
 		if(MCPMode)
 		{
 			string mcpFilename=m_baseFileName+"_upscaled.dat";
-			ofstream resmcpStream;
+			ofstream of;
 			if(cycle==1)
 			{
-				resmcpStream.open(mcpFilename.c_str());
+				of.open(mcpFilename.c_str());
 
-				resmcpStream<<endl<<"\nhomogeneous: \t"<<m_baseFileName<<";"<<endl<<endl;
+				of<<endl<<"\nhomogeneous: \t"<<m_baseFileName<<";"<<endl<<endl;
 
 				double absPermeability = (m_singlePhaseWaterQ * m_water.viscosity() * m_xSize * (m_solverBoxEnd-m_solverBoxStart))
 					/ (m_ySize * m_zSize * (m_inletSolverPrs - m_outletSolverPrs));
@@ -1695,23 +1693,23 @@ void Netsim::writeResultData(bool relPermIncluded, bool resIdxIncluded)
 					/ (m_water.resistivity() * (m_singlePhaseCurrent+1.0e-200) * m_xSize * (m_solverBoxEnd-m_solverBoxStart));
 					
 
-				resmcpStream<<endl<<m_baseFileName<<"_permeability: \t" <<absPermeability<<";"<<endl;
+				of<<endl<<m_baseFileName<<"_permeability: \t" <<absPermeability<<";"<<endl;
 
-				resmcpStream<<endl<<m_baseFileName<<"_porosity: \t"   <<m_totalFlowVolume / m_satBoxVolume<<";"<<endl;
+				of<<endl<<m_baseFileName<<"_porosity: \t"   <<m_totalFlowVolume / m_satBoxVolume<<";"<<endl;
 
-				resmcpStream<<endl<<m_baseFileName<<"_formationfactor: \t" <<formationFactor<<";"<<endl<<endl;
+				of<<endl<<m_baseFileName<<"_formationfactor: \t" <<formationFactor<<";"<<endl<<endl;
 			}
 			else
-				resmcpStream.open(mcpFilename.c_str(), std::ios_base::app);
+				of.open(mcpFilename.c_str(), std::ios_base::app);
 
-			resmcpStream<<"\n\n\n"<<m_baseFileName<<"_SwPcKrwKroRI_cycle"<<cycle<<endl;
-			resmcpStream << "%"<< legend  << endl;
-			resmcpStream << "%Sw	  \t   Pc(Pa)   \t   Krw	   \t   Kro	   \t   RI"<<endl;
+			of<<"\n\n\n"<<m_baseFileName<<"_SwPcKrwKroRI_cycle"<<cycle<<endl;
+			of << "%"<< legend  << endl;
+			of << "%Sw	  \t   Pc(Pa)   \t   Krw	   \t   Kro	   \t   RI"<<endl;
 
 			for(size_t j = 0; j < m_results.size(); ++j)
-				resmcpStream << m_results[j] << endl;
-			resmcpStream << "#\n\n" << endl;
-			resmcpStream.close();
+				of << m_results[j] << endl;
+			of << "\n\n" << endl;
+			of.close();
 
 		}
 

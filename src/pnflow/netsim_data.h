@@ -32,8 +32,7 @@ public:
 	{
 		cout<<"creating flowData"<<endl;
 
-		m_circWatCondMultFact = 0.0;
-		input.getVar(m_circWatCondMultFact,"SURFACE_FILM_COND_FACT");
+		m_circWatCondMultFact = input.getOr(0.0,"SURFACE_FILM_COND_FACT");
 		input.gravityConst(m_gravConstX, m_gravConstY, m_gravConstZ);
 		input.poreFillWgt(m_poreFillWeights);
 		input.poreFillAlg(m_poreFillAlg);
