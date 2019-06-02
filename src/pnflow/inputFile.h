@@ -222,6 +222,9 @@ public:
 		else										return false;
 	}
 
+    template<typename Type>
+	Type getOr(Type var, const std::string& keyword)	 const {  getVar(var, keyword);  return var;  }
+
     inline void errorMsg(const std::string& keyword) const;
     inline void missingDataErr(const std::string& keyword) const;
     inline void errorInDataCheck(std::istringstream& data, const std::string& keyword) const;
