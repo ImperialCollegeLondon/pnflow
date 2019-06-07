@@ -1,6 +1,6 @@
 ---------------------- -*- Markdown -*- -------------------------
     Classical pore-network flow simulation code  -  pnflow     
-        See the file pnflow.cpp for the copyright notice
+        See the file main.cpp for the copyright notice
 
 --------------------------------------------------------------------
 ChangeLog,  a summary of main changes and updates:
@@ -11,6 +11,10 @@ ChangeLog,  a summary of main changes and updates:
 
 
 
+2019  Ali Raeini
+	Further cleanup, outlet index changed to 0, to fix visualization.
+	inputFile.h format ditched in favor of InputFile.h C/Json-style 
+	dictionary format.
 
 2017     	Tom Bultreys and Ali Raeini
 	Validation:
@@ -55,8 +59,8 @@ List of source code files 2019:
 	hypre.h
 	inputData.cpp
 	inputData.h
-	inputFile.h
-	pnflow.cpp
+	InputFile.h
+	main.cpp
 	Makefile
 	netsim.cpp
 	netsim_data.h
@@ -94,7 +98,7 @@ psPrc:
 	netStatistics.h
 	typses.h
 	vtuWriter.cpp
-	vtuWriter.h
+	results3D.h
 
 
 (poreflow): [http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/software/two-phase-network-modelling-code]

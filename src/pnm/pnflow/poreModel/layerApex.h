@@ -42,7 +42,7 @@ public:
     inline void set_m_exists(bool isIt){ m_exists = isIt; }
     inline bool freeAtPrs(double pc) const;
     inline bool forcedSnapOff(double prs) const;
-	inline int index() const {return m_subIndex;};
+	//inline int index() const {return m_subIndex;};
 
     void advConAng(double conAng) {m_advConAng = conAng;}
     inline bool stablePinnedInLastCycle(double minPcLastCycle) const {return (exists(/*st ab le*/) && /*pinned () &&*/ m_advancingPc == minPcLastCycle);}

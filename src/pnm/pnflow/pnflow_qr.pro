@@ -43,7 +43,7 @@ SOURCES += \
     ./ElementThroat.cpp \
     ./hypre.cpp \
     ./inputData.cpp \
-    ./pnflow.cpp \
+    ./main.cpp \
     ./netsim.cpp \
     ./netsim_drain.cpp \
     ./netsim_imbibe.cpp \

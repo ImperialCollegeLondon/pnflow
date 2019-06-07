@@ -4,7 +4,7 @@
 
 // Convinience vector classes used by network extraction, flow simulation 
 // and other codes developed by Ali Qaseminejad Raeini.
-// Main classes defined here: var3, var2, piece and lazyvec 
+// Main template classes defined here: var3, var2, piece and lazyvec 
 
 
 
@@ -279,7 +279,7 @@ template<class T>	lazyvec<T>             operator /(double t, const piece<T>& di
 
 
 //! lazyvec but with a defult value to hold a uniform vector
-//! a name and transformation information, used in svg_plot only for now
+//! a name and transformation information, used in #svplot only for now
 template<class T>
 class varsORv: public lazyvec<T>
 {
@@ -384,10 +384,10 @@ template<class T>// error add dbg ize checks
 double sumdbl(const piece<T>& ps, const piece<T>& ws)  { double sm=1.0e-300; const T* p = ps.d-1, *w=ws.d-1; while(++p<ps.dn){ sm += *w * *(++p);}  return sm; }
 inline double sumdbl(const dbl3& ps, const dbl3& ws)  { return ps.x+ws.x + ps.y+ws.y + ps.z+ws.z; }
 inline double sumdbl(const dbl3& ps)  { return ps.x+ ps.y+ ps.z; }
-template<class T>//! Note: can be made more efficient if assuming non-zero vec
-T sumvars(const piece<T>& ps)  { T sm; sm*=0.0; const T* p = ps.d-1; while(++p<ps.dn){ sm += *p;}  return sm; }
-template<class T>//! Note: can be made more efficient if assuming non-zero vec
-T sumvars(const piece<T>& ps, const piece<T>& ws)  { T sm; sm*=0.0; const T* p = ps.d-1, *w=ws.d-1; while(++p<ps.dn){ sm += *(++w) * *p;}  return sm; }
+template<class T>//! Note: can be made more efficient if assuming non-empty vec
+T sumvars(const piece<T>& ps)  { T sm=0.0; const T* p = ps.d-1; while(++p<ps.dn){ sm += *p;}  return sm; }
+template<class T>//! Note: can be made more efficient if assuming non-empty vec
+T sumvars(const piece<T>& ps, const piece<T>& ws)  { T sm=0.0; const T* p = ps.d-1, *w=ws.d-1; while(++p<ps.dn){ sm += *(++w) * *p;}  return sm; }
 //inline double sumdbl(const piece<double> ps, const piece<double> ws)  { double sm=1.0e-300; double* p = ps.d-1,  *w=ws.d-1;
 	 //while(++p<ps.dn){ sm += *w * *(++p);}  return sm; }
 
@@ -501,6 +501,12 @@ inline std::string replaceFromTo(std::string  str, const std::string& frm, std::
     return str;
 }
 
+inline std::string baseName(const std::string& fName)
+{
+    if(fName.find_last_of('.') != std::string::npos)
+        return fName.substr(0,fName.find_last_of('.'));
+    return fName;
+}
 
 
 
@@ -548,7 +554,7 @@ TableIO<T,C1,C2> tableIO(const C1<C2<T> >& vecvec, std::vector<std::string> hdrs
 template<typename T, template<typename ...> class C1, template<typename ...> class C2>
 std::ostream & operator<< (std::ostream & out, const TableIO<T,C1,C2>& tbl)
 {
-	if(tbl.hds_.size()==tbl.vss_.size()) for (size_t j=0; j<tbl.vss_.size();++j) out << tbl.hds_[j]<<tbl.sep_;     	out<<'\n';
+	if(tbl.hds_.size()==tbl.vss_.size()) { for (size_t j=0; j<tbl.vss_.size();++j) out << tbl.hds_[j]<<tbl.sep_;  }   	out<<'\n';
 	for (size_t i=0; i<tbl.vss_[0].size();++i)
 	{ for (size_t j=0; j<tbl.vss_.size();++j) out<<std::setw(12)<<std::left<< tbl.vss_[j][i]<<tbl.sep_;   out<<'\n'; }
 	out << '\n';

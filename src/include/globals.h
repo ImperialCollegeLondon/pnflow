@@ -47,8 +47,8 @@ inline void _cerr_(std::string msg="", bool xit=false) // for debugger breakpoin
  #define ERR_HDR(isOk) " Error  "+std::string("in ")+ std::string(__FUNCTION__)+", " \
                        +std::string(__FILE__)+":"+toStr(__LINE__) +std::string(":  ")+std::string(#isOk)
  #define ensure1(isOk)           if(!(isOk)) _cerr_(ERR_HDR(isOk))
- #define ensure2(isOk, msg)      if(!(isOk)) _cerr_(ERR_HDR(isOk)+" \\\n *** "+msg+" *** \n")
- #define ensure3(isOk, msg, xit) if(!(isOk)) _cerr_(ERR_HDR(isOk)+" \\\n *** "+msg+" *** \n", xit)
+ #define ensure2(isOk, msg)      if(!(isOk)) _cerr_(ERR_HDR(isOk)+"\n\n  ***    "+msg+"    *** \n")
+ #define ensure3(isOk, msg, xit) if(!(isOk)) _cerr_(ERR_HDR(isOk)+"\n\n  ***    "+msg+"    *** \n", xit)
  #define GET_MACRO3(_1,_2,_3,NAME,...) NAME
 
 //! Validation/production phase ensure/assert. Usage:

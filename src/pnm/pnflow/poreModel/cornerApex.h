@@ -25,7 +25,7 @@ public:
     inline void removeCorner();
     void getCApexDistConAng(double& apxDist, double& conA, double pc, double halfA, double ten, bool trapOveride = false, bool accurat = false, bool debug = false) const;
     inline void markTrappingCorner(const std::pair< int, double >& trpInside, double pc, double conAngRec, double conAngAdv, double halfAng, double intfacTen, bool injOil);
-	inline int index() const {return m_subIndex;};
+	//inline int index() const {return m_subIndex;};
 
     void updatePcsForDisconnectedOilLayer(double pc, double conAngRec, double conAngAdv, double halfAng, double intfacTen);
     bool cornerExists() const {return m_exists;}

@@ -194,7 +194,7 @@ public:
 					{	sr.clear(); is.seekg(begl);
 						return false;
 					}
-					sr += '\t';	break;
+					sr += '\t';	return true;;
 				case ',':  sr += '\t';	break;
 
 				case EOF: // Also handle the case when the last line has no line ending
@@ -257,12 +257,16 @@ public:
 				beginKey=bufferStr.find_first_not_of(" \t",endKey);
 		
 				if (beginKey != std::string::npos) dataString = bufferStr.substr(beginKey, keyEnding-beginKey);
+
+				if (keyword=="end")					break;
+
+				if(keyword.size() < 1 || keyword.size() > 100)	{
+					std::cerr << "\n\nError: Data file contains errors after keyword: " << prevKeyword << endl << bufferStr<< endl;
+					std::cerr << "beginKey: " << beginKey << endl;
+					std::cerr << "endKey: "   << beginKey << endl;
+					exit(-1);}
 			}
 
-			if (keyword=="end")					break;
-
-			if(keyword.size()<1 || keyword.size()>100)	{std::cerr << "\n\nError: Data file contains errors after keyword: " << prevKeyword << endl << bufferStr;	exit(-1);}
-			else
 			{
 				while(oktocontinue)
 				{
@@ -312,6 +316,7 @@ public:
 		Assert(importance<1, keyword, "missing keyword", importance>1);
 		return _parsedData[_parsedData.size()-1].second;//. empty string
 	}
+
 	bool getData(std::istringstream& data, const std::string& keyword, int importance=0) const
 	{
 		data.clear();
@@ -437,7 +442,7 @@ class OnDemandStream
 	void close() {if (opened) {prtFile.close(); opened=false;}};
 	void flush() {if (opened) {prtFile.flush();} cout.flush(); };
 
-	thread_local static OnDemandStream    dbgFile;
+	 static OnDemandStream    dbgFile; //thread_local
 
 };
 

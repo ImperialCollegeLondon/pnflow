@@ -33,7 +33,6 @@ public:
     const std::pair<int, double>& trappingCL() const {return m_trappedCL;}
 
 	inline int subIndex() const {return m_subIndex;};
-	virtual int index() const =0;
 	ElemModel*  parentModel() const {return m_parentModel;};
     double gravCorrectedEntryPress() const {return m_entryPc+m_gravityCorrection;}
     double gravityCorrection() const {return m_gravityCorrection;}

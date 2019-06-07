@@ -28,7 +28,7 @@ endif
 USE_ZLIB=1
 USE_TIFF=1
 USE_VXLIMG=1
-psDir ?= $(abspath ..)
+psDir ?= $(abspath ../..)
 include  $(psDir)/Makefile.in
 
 

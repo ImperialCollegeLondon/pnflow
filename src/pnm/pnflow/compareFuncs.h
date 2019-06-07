@@ -273,7 +273,7 @@ class throatIndexCompare
 public:
     bool operator() (pair<const Element*, double> thOne, pair<const Element*, double> thTwo) const
     {
-        return (thOne.first->orenIndex() < thTwo.first->orenIndex());
+        return (thOne.first->indexOren() < thTwo.first->indexOren());
     }
 };
 

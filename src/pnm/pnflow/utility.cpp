@@ -43,7 +43,7 @@ using namespace std;
 
 void printInfo(Element & elem)
 {
-	cout<<" index: "<<elem.orenIndex() <<"lattice index: "<<elem.latticeIndex()<<endl;
+	cout<<" index: "<<elem.indexOren() <<"lattice index: "<<elem.latticeIndex()<<endl;
 }
 
 

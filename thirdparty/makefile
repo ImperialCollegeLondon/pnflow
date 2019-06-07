@@ -1,4 +1,6 @@
 
+
+#note hypreSeq should be bult before hypre, in case
 all: hypreSeq zlib  tiff 
 
 psInstall ?= $(abspath ..)
