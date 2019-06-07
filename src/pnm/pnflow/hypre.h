@@ -51,7 +51,7 @@ private:
 	const string                                       m_matrixFileName;
 	const vector<Element*>&                              m_inPores;
 	const vector<Element*>&                              m_outPores;
-	const int                                               m_numPoresp1;
+	const int                                               m_numPoresp2;
 
 
 

@@ -86,9 +86,9 @@ double                  hypreSolver::TOLERANCE = 1.0E-29;
 // all pores contain the fluid for which the flowrate is going to be obtained.
 */
 hypreSolver::hypreSolver(const vector<Element*>& network, const vector<Element*>& inlet, const vector<Element*>& outlet,
-               int outletIdx, int debugMode, string matFileName, bool matlabFormat) 
- : m_debugMode(debugMode), m_netelems(network), m_inPores(inlet), m_outPores(outlet), m_numPoresp1(outletIdx), 
-   m_matrixFileName(matFileName),    m_poreiRows(outletIdx+1,-1) // m_probSize(outletIdx-1),
+               int nPors, int debugMode, string matFileName, bool matlabFormat) 
+ : m_debugMode(debugMode), m_netelems(network), m_inPores(inlet), m_outPores(outlet), 
+   m_matrixFileName(matFileName),   m_numPoresp2(nPors+2),  m_poreiRows(nPors+2,-1) // m_probSize(nPors-1),
 
 {
 
@@ -186,9 +186,9 @@ double hypreSolver::flowrate(double inletPrs, double outletPrs, const Fluid &flu
    //- iupper = iupper - 1;
    //- /* How many rows do I have? */
    //- local_size = iupper - ilower + 1;
-   vector<int> rowSizes(m_numPoresp1,0);
+   vector<int> rowSizes(m_numPoresp2,0);
    	m_rowedPores.resize(0);
-	for(int poreIdx = 1; poreIdx < m_numPoresp1; ++poreIdx)
+	for(int poreIdx = 2; poreIdx < m_numPoresp2; ++poreIdx)
     {
         if(m_netelems[poreIdx]->canBePassedToSolver(&fluid) && m_netelems[poreIdx]->isInsideSolverBox())
         {
@@ -698,7 +698,7 @@ void hypreSolver::fillMatrixHypre(HYPRE_IJMatrix AAA, HYPRE_IJVector bbb, HYPRE_
 	int row(0), poreIdx, conn;
 	m_networkOutlets.clear();                               // Ensure we don't have left over soliutions from before
 	m_networkInlets.clear();
-	for(poreIdx = 1; poreIdx < m_numPoresp1; ++poreIdx)
+	for(poreIdx = 2; poreIdx < m_numPoresp2; ++poreIdx)
 	{
 		Pore *currPore = dynamic_cast<Pore*>(m_netelems[poreIdx]);
 		if(currPore == NULL)

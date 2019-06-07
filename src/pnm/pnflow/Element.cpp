@@ -59,6 +59,8 @@ Element::Element(CommonData& common, const Oil& oil, const Water& water, double 
     m_isWBulkTouchedInSearch = false;
     m_isOBulkTouchedInSearch = false;
 
+    m_conductance[0]=0.0;   m_conductance[1]=0.0;   m_conductance[2]=0.0; // visualization needs this
+
 
     m_poreToPoreCond = 0.0;
     m_fillingEventRecord = -2;
@@ -136,7 +138,7 @@ void Element::checkConnections() const
             cout<< "==================================="         << endl
                 << "Error: Missing network connecetions"          << endl
                 << "Interanl pointer remains NULL      "          << endl
-                << "Element index: " << orenIndex()               << endl
+                << "Element index: " << indexOren()               << endl
                 << "Element type: " << typeid(*this).name()       << endl
                 << "Connection: " << conn                         << endl
                 << "Total connection number: " << m_connectionNum << endl
@@ -157,10 +159,10 @@ void Element::checkConnections() const
             cout<< "==================================="                               << endl
                 << "Error: Missing network connecetions"                                << endl
                 << "Interanal links do not match up    "                                << endl
-                << typeid(*this).name() <<" index: " << orenIndex()                     << endl
+                << typeid(*this).name() <<" index: " << indexOren()                     << endl
                 << "Connection: " << conn                                               << endl
                 //<< "Element type: " << typeid(*this).name()                             << endl
-                << "Neighbouring " <<typeid(*nextElem).name() << " index: " << nextElem->orenIndex()    << endl
+                << "Neighbouring " <<typeid(*nextElem).name() << " index: " << nextElem->indexOren()    << endl
                 //<< "Opposing type: " << typeid(*nextElem).name()                        << endl
                 //<< "Total connection number: " <<                        << endl
                 << "Neighbouring " <<typeid(*nextElem).name() << "  number of connections: " << nextElem->connectionNum()    << endl
@@ -182,7 +184,7 @@ void Element::checkConnections() const
 void Element::findMarkTrappedOilGanglia(double prs, vector<Element*>& trappingStorageOil,
                                    double& elapsed, TrappingCriteria criteria)
 {
-    if(!m_isExitRes && !m_isEntryRes && m_elemModel->conductsAnyOil())
+    if(!isEntryOrExitRes() && m_elemModel->conductsAnyOil())
     {
         clock_t startTrapRoutine(clock());
         if(criteria == escapeToBoth)
@@ -316,7 +318,7 @@ bool Element::foundEscapePathOil_trapOtherwise(double pc, vector<Element*>& trap
 void Element::findMarkTrappedWaterGanglia(double prs, FluidBlob startPt, vector< pair<Element*,FluidBlob> >& trappingStorageWat,
                                    double& elapsed, TrappingCriteria criteria)
 {
-    if(!m_isExitRes && !m_isEntryRes && m_elemModel->conductAnyWaterBlob(startPt))
+    if(!isEntryOrExitRes() && m_elemModel->conductAnyWaterBlob(startPt))
     {
         clock_t startTrapRoutine(clock());
         if(criteria == escapeToBoth)
@@ -540,7 +542,7 @@ void Element::severConnection(Element* connection)
 */
 double Element::updateSat_calcR(double cappPrs)
 {
-    if(m_isEntryRes || m_isExitRes) return 0.0;
+    if(isEntryOrExitRes()) return 0.0;
 
     m_waterSaturation = m_elemModel->calcR(cappPrs);
 

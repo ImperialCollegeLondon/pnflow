@@ -94,10 +94,8 @@ InOutBoundaryPore::InOutBoundaryPore(CommonData& common, Node *node, const Oil& 
 
     m_waterSaturation = 0.5;
 
-    if(node->isExitRes())
-        m_isExitRes = true;
-    else
-        m_isEntryRes = true;
+    if(node->isExitRes())        m_isExitRes = true;
+    else                         m_isEntryRes = true;
 
     m_isConnectedToExit = m_isExitRes;
     m_isConnectedToEntry = m_isEntryRes;
@@ -228,7 +226,7 @@ void Pore::writeNetworkData(ostream& outOne, ostream& outTwo) const
     outTwo.flags(ios::showpoint);
     outTwo.flags(ios::scientific);
 
-    outOne << setw(7)  << orenIndex()
+    outOne << setw(7)  << indexOren()
         << *m_node
         << setw(5) << m_connectionNum;
 
@@ -240,17 +238,17 @@ void Pore::writeNetworkData(ostream& outOne, ostream& outTwo) const
         if(nextPore->isEntryRes()) connToIn = true;
         if(nextPore->isExitRes()) connToOut = true;
 
-        outOne << setw(7) << nextPore->orenIndex();                                 // Connecting nodes
+        outOne << setw(7) << nextPore->indexOren();                                 // Connecting nodes
     }
 
     outOne << setw(7) << connToIn << setw(7) << connToOut;                          // In and outlet?
 
     for(i = 0; i < m_connections.size(); ++i)
-        outOne << setw(7) << m_connections[i]->orenIndex();                     // Connecting throats
+        outOne << setw(7) << m_connections[i]->indexOren();                     // Connecting throats
 
     outOne << endl;
 	
-    outTwo << setw(7) << orenIndex()
+    outTwo << setw(7) << indexOren()
         << setw(15) << m_flowVolume* (m_iRockType>0 ? 1.0/m_elemModel->porosity() : 1.0)
         << setw(15) << m_elemModel->radius()
         << setw(15) << m_elemModel->shapeFactor()
@@ -261,7 +259,7 @@ void Pore::writeNetworkData(ostream& outOne, ostream& outTwo) const
 void Pore::writeNetworkDataBinary(ostream& out) const
 {
     PoreStruct Prop;
-    Prop.index = orenIndex();
+    Prop.index = indexOren();
     Prop.x = m_node->xPos();
     Prop.y = m_node->yPos();
     Prop.z = m_node->zPos();
@@ -276,12 +274,12 @@ void Pore::writeNetworkDataBinary(ostream& out) const
     {
         const Throat* throat = dynamic_cast< Throat* >(m_connections[i]);
         assert(throat);
-        int idx = throat->neighbouringPore(this)->orenIndex();
+        int idx = throat->neighbouringPore(this)->indexOren();
         out.write((char *)(&idx), sizeof(int));
     }
     for(size_t j = 0; j < m_connections.size(); ++j)
     {
-        int idx = m_connections[j]->orenIndex();
+        int idx = m_connections[j]->indexOren();
         out.write((char *)(&idx), sizeof(int));
     }
 
@@ -310,7 +308,7 @@ double Pore::snapOfLongitCurvature() const
         //const Element* nextPore = throat->neighbouringPore(this);
         //if(nextPore->isEntryRes()) connToIn = true;
         //if(nextPore->isExitRes()) connToOut = true;
-        //outOne << setw(7) << nextPore->orenIndex();                                 // Connecting nodes
+        //outOne << setw(7) << nextPore->indexOren();                                 // Connecting nodes
     //}
     
 		return 0.0;

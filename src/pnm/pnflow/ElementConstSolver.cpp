@@ -477,7 +477,7 @@ void Element::clearAllOSolverFlag() const
 */
 bool Element::connectedToOutlet(const Fluid* fluid) const
 {
-    if(!m_elemModel->conductsAny(fluid) && !m_isEntryRes && !m_isExitRes) return false;
+    if(!m_elemModel->conductsAny(fluid) && !isEntryOrExitRes()) return false;
 
 
 	if(dynamic_cast<const Water*>(fluid))

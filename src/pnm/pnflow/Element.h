@@ -17,6 +17,7 @@ class Fluid;
 class ElemModel;
 class Polygon;
 
+#define OutPorInd  1
 
 #include "netsim_data.h"
  
@@ -44,20 +45,15 @@ public:
 	Node(int index, int numPores, double xPos, double yPos, double zPos, double networkLength)
 	: m_xPos(xPos), m_yPos(yPos), m_zPos(zPos),m_index(index),  m_networkLength(networkLength)	  //m_optimizedIndex(-1), //m_numPores(numPores),  //m_oldIndex(index),
 	{
-		m_isOutsideLattice = false;            
+		//m_isOutsideLattice = false;            
 		m_isEntryRes = false;
 		m_isExitRes = false;    
 
 		if(m_index == 0)       					     m_isEntryRes = true;   // We are at inlet face
-		else if(m_index == numPores + 1)             m_isExitRes = true;     // We are at outlet face
-		else if(m_index < 0 || m_index > numPores+1) m_isOutsideLattice = true;// We are outside lattice
+		else if(m_index == OutPorInd)             m_isExitRes = true;     // We are at outlet face
+		//else if(m_index < 0 || m_index > numPores+1) m_isOutsideLattice = true;// We are outside lattice
 	};
 	Node(){};
-    bool operator==(const Node& rhs) const {return m_index == rhs.index();}
-    bool operator>=(const Node& rhs) const {return m_index >= rhs.index();}
-    bool operator<=(const Node& rhs) const {return m_index <= rhs.index();}
-    bool operator>(const Node& rhs) const {return m_index > rhs.index();}
-    bool operator<(const Node& rhs) const {return m_index < rhs.index();}
 
     inline bool optimizedIndex(int& optimizedIdx);
     int index() const {return m_index;}
@@ -69,7 +65,7 @@ public:
 	int indexOren() const	{
 		if(m_isEntryRes)        return -1;
 		else if(m_isExitRes)    return 0;
-		else   			        return m_index;
+		else   			        return m_index-1;
 	};
     double xPos() const {return m_xPos;}///. shifted to left by half of curtailed fraction
     double yPos() const {return m_yPos;}
@@ -81,7 +77,7 @@ public:
         return m_xPos >= m_networkLength*boxStart &&  m_xPos <=  m_networkLength*boxEnd;
     }
 
-    bool isOutsideLattice() const {return m_isOutsideLattice;}
+    //bool isOutsideLattice() const {return m_isOutsideLattice;}
     bool isEntryRes() const {return m_isEntryRes;}
     bool isExitRes() const {return m_isExitRes;}
     bool isEntryOrExitRes() const {return m_isEntryRes || m_isExitRes;}
@@ -96,7 +92,7 @@ private:
     int                         m_index;                    // Single consecutive index
     double                      m_networkLength;
     bool                        m_isEntryRes, m_isExitRes;  // Is the node inlet or outlet node
-    bool                        m_isOutsideLattice;         // Is node outside lattice
+    //bool                        m_isOutsideLattice;         // Is node outside lattice
     //int                         m_optimizedIndex;            // In order to reduce bandwidth
 
 };
@@ -131,7 +127,7 @@ public:
     virtual Node* node() = 0;
     virtual bool crossesPlaneAt(double location) const = 0;
     virtual int latticeIndex() const = 0;
-    virtual int orenIndex() const = 0;
+    virtual int indexOren() const = 0;
     virtual int index2p() const = 0;
     virtual void addConnections(Element* first, Element* second, double inBdr, double outBdr,  bool moveBdr) = 0;
     virtual bool prevSolvrRes(const Fluid* fluid, int resistSolve, double loc, double& res, double& flowRate) const = 0;
@@ -143,6 +139,7 @@ public:
     
     virtual double snapOfLongitCurvature() const = 0 ;
 
+	virtual int index() const =0;
 
     inline void adjustVolume(double newNetVol, double newClayVol, double& netVolSum, double& clayVolSum);
 
@@ -328,8 +325,7 @@ protected:
     bool                                    m_isInsideSatBox;
     bool                                    m_isOnInletSlvrBdr;
     bool                                    m_isOnOutletSlvrBdr;
-    bool                                    m_isExitRes;
-    bool                                    m_isEntryRes;
+    bool                                    m_isEntryRes,  m_isExitRes;
 
     mutable bool                m_canWFilmBePassedToSolver;
 	mutable bool                m_canWBulkBePassedToSolver;
@@ -379,7 +375,7 @@ public:
     virtual bool crossesPlaneAt(double location) const {return false;}
     virtual int index() const {return m_node->index();}
     virtual int latticeIndex() const {return m_node->index();}
-    virtual int orenIndex() const {return m_node->indexOren();}
+    virtual int indexOren() const {return m_node->indexOren();}
     virtual int index2p() const {return m_node->indexOren()+1;}
     virtual void addConnections(Element* first, Element* second, double inBdr, double outBdr, bool moveBdr);
     virtual bool prevSolvrRes(const Fluid* fluid, int resistSolve, double loc, double& res, double& flowRate) const;
@@ -448,7 +444,7 @@ public:
     virtual int index() const {return m_latticeIndex;}
     virtual int index2p() const {return m_latticeIndex;}
     virtual int latticeIndex() const {return m_latticeIndex;}
-    virtual int orenIndex() const {return m_latticeIndex-m_comn.numPores()-1;}
+    virtual int indexOren() const {return m_latticeIndex-m_comn.numPores()-1;}
     virtual void addConnections(Element* first, Element* second, double inletBdr, double outletBdr, bool moveBoundary);
     virtual bool prevSolvrRes(const Fluid* fluid, int resistSolve, double loc, double& res, double& flowRate) const;
     virtual void calcVolume_CheckIntegrity(double& vTot, double& vcTot, int& maxNonO, int& isoSum) const;

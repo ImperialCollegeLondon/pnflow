@@ -186,17 +186,17 @@ void Throat::writeNetworkData(ostream& outOne, ostream& outTwo) const
             << "============================================" << endl;        exit(-1);
     }
 
-    outOne << setw(7)   << orenIndex()
-        << setw(7)      << m_connections[0]->orenIndex()
-        << setw(7)      << m_connections[1]->orenIndex()
+    outOne << setw(7)   << indexOren()
+        << setw(7)      << m_connections[0]->indexOren()
+        << setw(7)      << m_connections[1]->indexOren()
         << setw(15)     << m_elemModel->radius()
         << setw(15)     << m_elemModel->shapeFactor()
         << setw(15)     << lenTotal
         << endl;
 
-    outTwo << setw(7)   << orenIndex()
-        << setw(7)      << m_connections[0]->orenIndex()
-        << setw(7)      << m_connections[1]->orenIndex()
+    outTwo << setw(7)   << indexOren()
+        << setw(7)      << m_connections[0]->indexOren()
+        << setw(7)      << m_connections[1]->indexOren()
         << setw(15)     << lenPoreOne
         << setw(15)     << lenPoreTwo
         << setw(15)     << lenThroat
@@ -218,9 +218,9 @@ void Throat::writeNetworkDataBinary(ostream& out) const
     }
 
     ThroatStruct Prop;
-    Prop.index = orenIndex();
-    Prop.poreOne = m_connections[0]->orenIndex();
-    Prop.poreTwo = m_connections[1]->orenIndex();
+    Prop.index = indexOren();
+    Prop.poreOne = m_connections[0]->indexOren();
+    Prop.poreTwo = m_connections[1]->indexOren();
 
     Prop.radius = m_elemModel->radius();
     Prop.shapeFact = m_elemModel->shapeFactor();
@@ -257,7 +257,20 @@ void Throat::addConnections(Element* first, Element* second, double inletBdr, do
 	m_node.m_yPos=0.5*(second->node()->m_yPos + first->node()->m_yPos);
 	m_node.m_zPos=0.5*(second->node()->m_zPos + first->node()->m_zPos);
 
+	if(first->isEntryOrExitRes())
+	{
+		//m_node.m_xPos= second->node()->m_xPos ;
+		m_node.m_yPos= second->node()->m_yPos ;
+		m_node.m_zPos= second->node()->m_zPos ;
+	}
 	
+	if(second->isEntryOrExitRes())
+	{
+		//m_node.m_xPos= first->node()->m_xPos ;
+		m_node.m_yPos= first->node()->m_yPos ;
+		m_node.m_zPos= first->node()->m_zPos ;
+		
+	}
 	
     if(first->isEntryRes() || first->isExitRes())
         /*m_elemModel->*/setGravityCorrection(second->node());
