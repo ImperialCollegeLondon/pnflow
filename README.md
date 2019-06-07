@@ -12,7 +12,13 @@ A recent validation of the pnflow and [pnextract] codes is published by [Bultrey
 
 
 
+### Notice:
+* USE `;` to mark the end of input_pnflow.dat keyword data. 
+  `#` can not be used for this purpose any-more.
+
+
 ### Instructions
+
 Instructions for extracting a network from a micro-CT image are given in
 the doc folder; see also the [pnextract] github page.
 
