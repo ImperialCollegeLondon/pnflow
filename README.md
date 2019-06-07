@@ -13,8 +13,8 @@ A recent validation of the pnflow and [pnextract] codes is published by [Bultrey
 
 
 ### Notice:
-* USE `;` to mark the end of input_pnflow.dat keyword data. 
-  `#` can not be used for this purpose any-more.
+* USE `;` (or double empty lines) to mark the end of input_pnflow.dat keyword data. 
+  `#` can not be used for this purpose any more. 
 
 * Previous code has been moved to branch [bu20190607] (discontinued) 
 
@@ -68,5 +68,5 @@ or send me an email:   a.qaseminejad-raeini09@imperial.ac.uk
 [Raeini, Bijeljic and Blunt 2018]: https://doi.org/10.1103/PhysRevE.97.023308
 [Hypre]: https://github.com/LLNL/hypre
 [TOTAL]: https://www.total.com
-[pnextract]:  (https://github.com/aliraeini/pnextract)
-[bu20190607]:  (https://github.com/aliraeini/pnflow/tree/bu20190607)
+[pnextract]:  https://github.com/aliraeini/pnextract
+[bu20190607]:  https://github.com/aliraeini/pnflow/tree/bu20190607
