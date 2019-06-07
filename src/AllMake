@@ -61,9 +61,6 @@ done
 
 echo "bin directory: $psBinDir"
 if ! [ -n "$SetedpsDir" ]; then
-	echo " ";	echo " ";
-	echo " variable psDir is not permanently set"
-	echo " please set in your ~/.bashrc file by adding new line:"
-	echo "source $psDir/bashrc"
-	echo " ";
+	printf "\n\nCompilation finished.  To install, add in your ~/.bashrc file:\n"
+	printf "source $psDir/bashrc\n\n"
 fi

@@ -65,7 +65,7 @@ ifndef PS3rdParty
    PS3rdParty := $(psDir)/../thirdparty
   endif
  endif
- $(info PS3rdParty set to $(PS3rdParty))
+ #$(info PS3rdParty set to $(PS3rdParty))
 endif
 
 

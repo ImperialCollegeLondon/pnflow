@@ -10,6 +10,7 @@
  #define __DATE__  "2016"
 #endif 
 
+#include "globals.cpp"
 int main(int argc, char *argv[])
 {
 

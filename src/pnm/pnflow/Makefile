@@ -9,23 +9,23 @@ all: directories Linux
 # nmake
 
 USE_HYPRESEQ=1
-psDir ?= $(abspath ..)
+psDir ?= $(abspath ../..)
 include  $(psDir)/Makefile.in
 
 #COPTS     = -g    -fno-inline 
 COPTS     = -O3 -Wall -std=c++11
 
+#psCXXWin 		= i686-w64-mingw32-g++
+psCXXWin 	?= x86_64-w64-mingw32-g++-6
+psCXX 		?= g++
 
-psBinDir ?= ../../bin
-BuildDir ?= ../../build/pnflow
+psBinDir ?= $(psDir)/../bin
+BuildDir ?= $(psDir)/../build/pnflow
 
 directories:
 	@mkdir -p $(psBinDir)
 	@mkdir -p $(BuildDir)
 
-#psCXXWin 		= i686-w64-mingw32-g++
-psCXXWin 	?= x86_64-w64-mingw32-g++-6
-psCXX 		?= g++
 
 #EXTRACFLAGS= -Wall -pedantic
 #MMD is for creating dependancy
@@ -33,15 +33,15 @@ psCFLAGS +=  -IporeModel -I. -IpsPrc
 
 
 
-srcs =  \
+srcs = \
 	poreModel/layerApex.cpp  poreModel/cornerApex.cpp  \
 	poreModel/polygon.cpp  poreModel/polygon_calcR.cpp  \
 	poreModel/polygonDrain.cpp  poreModel/polygonImb.cpp \
 	ElementConstSolver.cpp  ElementPore.cpp    elem_Model.cpp  \
 	psPrc/netStatistics.cpp Element.cpp  \
-	ElementThroat.cpp    \
+	ElementThroat.cpp    main.cpp \
 	inputData.cpp   netsimSP.cpp  netsim.cpp  netsim_drain.cpp   \
-	netsim_imbibe.cpp   utility.cpp   hypre.cpp pnflow.cpp  psPrc/vtuWriter.cpp
+	netsim_imbibe.cpp   utility.cpp   hypre.cpp  psPrc/vtuWriter.cpp
 
 
 objs = $(addprefix $(BuildDir)/,$(subst /,__,$(srcs:.cpp=.o)))

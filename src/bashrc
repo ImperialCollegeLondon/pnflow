@@ -28,6 +28,7 @@ else
 	fi
 	if ! [ -d $psIncDir ]; then
 		 mkdir -p $psIncDir
+		 cp $psDir/include/*  $psIncDir
 	fi
 fi
 
