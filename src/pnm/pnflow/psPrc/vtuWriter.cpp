@@ -20,7 +20,7 @@ using namespace std;
 
 
 #include "typses.h"
-#include "vtuWriter.h"
+#include "results3D.h"
 #include "netsim.h"
 
 #define _pi   3.14159265359
@@ -38,46 +38,46 @@ using namespace std;
 
 
 
-vtuWriter::vtuWriter(const string& KeywordData,const Netsim * netsim, const string title_res): m_comn(netsim), m_fileNamePrefix("res3D"),m_rScaleFactor(1.0),iWrite(0)
+results3D::results3D(const string& KeywordData,const Netsim * netsim, const string title_res): m_comn(netsim), fileNamePrefix_("res3D"),rScaleFactor_(1.0),iWrite(0)
 {
-	for (int i = 0;i<3;i++) m_visualise[i] = false;
+	for (int i = 0;i<3;i++) visualise_[i] = false;
 
 	if (!KeywordData.empty())
 	{ 
-		m_FullOrLight ="Light";
+		FullOrLight_ ="Light";
 		cout<<"Initialising VTK visualization";
 		stringstream data;
 		data<<KeywordData;
-		data>>m_FullOrLight>>m_rScaleFactor ;
-		m_fileNamePrefix=title_res;
-		if (*m_fileNamePrefix.rbegin()=='/' || *m_fileNamePrefix.rbegin()=='\\')
+		data>>FullOrLight_>>rScaleFactor_ ;
+		fileNamePrefix_=title_res;
+		if (*fileNamePrefix_.rbegin()=='/' || *fileNamePrefix_.rbegin()=='\\')
 		{
-				cout<<"creating folder: "<<m_fileNamePrefix
+				cout<<"creating folder: "<<fileNamePrefix_
 				#if defined(_WIN32)
-					<< mkdir(m_fileNamePrefix.c_str()) // check also _mkdir
+					<< mkdir(fileNamePrefix_.c_str()) // check also _mkdir
 				#else 
-					<< mkdir(m_fileNamePrefix.c_str(), 0733) // notice that 777 is different than 0777
+					<< mkdir(fileNamePrefix_.c_str(), 0733) // notice that 777 is different than 0777
 				#endif
 				<<endl;
 		}
-		data>>m_thetaResulution;
-		if (m_thetaResulution<3 )
-			cout<< "\n\n   Error: not sufficient angular resolution"<<m_thetaResulution<<"\n\n"<<endl;
-		else if (m_thetaResulution>18 )
+		data>>thetaResulution_;
+		if (thetaResulution_<3 )
+			cout<< "\n\n   Error: not sufficient angular resolution"<<thetaResulution_<<"\n\n"<<endl;
+		else if (thetaResulution_>18 )
 			cout<< "\n\n   Warning: too high resolution, visualization files will be too large\n\n"<<endl;
 
 		for (int i = 0;i<4;i++)
 		{
 			string tmp;
 			data>>tmp;
-			if (tmp[0] == 'T' || tmp[0] == 't')        m_visualise[i] = true;
-			else if (tmp[0] == 'F' || tmp[0] == 'f')	m_visualise[i] = false;
+			if (tmp[0] == 'T' || tmp[0] == 't')        visualise_[i] = true;
+			else if (tmp[0] == 'F' || tmp[0] == 'f')	visualise_[i] = false;
 			else cout<< "\n\nError :  wrong data in input file \"" << tmp
 			<<"\".  Only T(rue) or F(alse) is accepted\n\n"<<endl;
 		}
 
-		if ((m_rScaleFactor<0.99 || m_rScaleFactor>1.01) && m_visualise[0])
-			cout<< "\n\n  Info: pore and throat radii will be multiplied by "<<m_rScaleFactor<<" in visualization files \n"<<endl;
+		if ((rScaleFactor_<0.99 || rScaleFactor_>1.01) && visualise_[0])
+			cout<< "\n\n  Info: pore and throat radii will be multiplied by "<<rScaleFactor_<<" in visualization files \n"<<endl;
 
 
 		iWrite = 0;
@@ -89,24 +89,24 @@ vtuWriter::vtuWriter(const string& KeywordData,const Netsim * netsim, const stri
 }
 
 
-void vtuWriter::vtuWrite( const vector<Element const *> *  elems, size_t nPors, double pc, double tension)
+void results3D::vtuWrite( const vector<Element const *> *  elems, size_t nPors, double pc, double tension)
 {
 
 	string suffix;
 	if      (!iWrite)
-	{	if (!m_visualise[0] )return ;
+	{	if (!visualise_[0] ) return ;
 		else suffix = toStr(m_comn->floodingCycle())+"_Init";
 	}else if (m_comn->oilInjection() )
-	{	if (!m_visualise[1] )return ;
+	{	if (!visualise_[1] ) return ;
 		else suffix = toStr(m_comn->floodingCycle())+"_OInj";
 	}else if ( ! m_comn->oilInjection() )
-	{	if (!m_visualise[2] )return ;
+	{	if (!visualise_[2] ) return ;
 		else suffix = toStr(m_comn->floodingCycle())+"_WInj";
 	}else suffix = "Cycle";
 
 
 	cout<<" visua";cout.flush();
-	if(m_FullOrLight[0]=='T')
+	if(FullOrLight_[0]=='T')
 	{
 	vtuWritePores( suffix+"Pore",  elems, nPors);
 	cout<<"liza";cout.flush();
@@ -400,7 +400,7 @@ void getThroatSolverResults
 
 
 
- string vtuWriter::start(size_t nPoints, size_t nCells)
+ string results3D::start(size_t nPoints, size_t nCells)
 	{
 		stringstream  str;
 		str<<"<?xml version = \"1.0\"?>\n"
@@ -409,7 +409,7 @@ void getThroatSolverResults
 		   <<"	<Piece NumberOfPoints = \""<<nPoints<<"\" NumberOfCells = \""<<nCells<<"\" >\n";
 		return str.str();
 	}
-	 string  vtuWriter::finish()
+	 string  results3D::finish()
 	{
 		stringstream  str;
 		str<<"	</Piece>\n"
@@ -508,7 +508,7 @@ void addSpherePoreMesh
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void vtuWriter::vtuWritePores(string suffix, const vector<Element const *> *  elems, size_t nPors)
+void results3D::vtuWritePores(string suffix, const vector<Element const *> *  elems, size_t nPors)
 {
 
 	vector<dbl3> points;
@@ -529,15 +529,15 @@ void vtuWriter::vtuWritePores(string suffix, const vector<Element const *> *  el
 
     for(size_t i = 0; i <  nPors+2; ++i)
     {
-        addSpherePoreMesh(elems,i,points,tags,elmInds,ffaz,cellPoints,/*facePoints,cellFaces,faceCells,*/m_rScaleFactor, m_thetaResulution);
+        addSpherePoreMesh(elems,i,points,tags,elmInds,ffaz,cellPoints,/*facePoints,cellFaces,faceCells,*/rScaleFactor_, thetaResulution_);
     }
 
 
 	stringstream fileNamepp;
-    fileNamepp<< m_fileNamePrefix<<suffix<<"_"<<100+vtuWriter::iWrite<<".vtu";
+    fileNamepp<< fileNamePrefix_<<suffix<<"_"<<100+results3D::iWrite<<".vtu";
     ofstream outp(fileNamepp.str().c_str());
 
-	outp<<vtuWriter::start(points.size(),tags.size());
+	outp<<results3D::start(points.size(),tags.size());
 
 
 
@@ -607,7 +607,7 @@ void vtuWriter::vtuWritePores(string suffix, const vector<Element const *> *  el
 
 
 
-    outp<<vtuWriter::finish();
+    outp<<results3D::finish();
     outp.close();
 }
 
@@ -784,7 +784,7 @@ void addThroatMesh(
 
 
 
-void vtuWriter::vtuWriteThroats(string suffix, const vector<Element const *> *  elems, size_t nPors, double pc, double tension)
+void results3D::vtuWriteThroats(string suffix, const vector<Element const *> *  elems, size_t nPors, double pc, double tension)
 {
 
 	vector<dbl3> points;
@@ -803,15 +803,15 @@ void vtuWriter::vtuWriteThroats(string suffix, const vector<Element const *> *  
 
     for(size_t i = nPors+2; i < (*elems).size(); ++i)
     {
-			addThroatMesh(elems,i,points,tags,elmInds,ffaz,cellPoints,m_rScaleFactor,m_visualise[3],m_thetaResulution/2, pc, tension);
+			addThroatMesh(elems,i,points,tags,elmInds,ffaz,cellPoints,rScaleFactor_,visualise_[3],thetaResulution_/2, pc, tension);
     }
 
 
 	stringstream fileNamepp;
-	fileNamepp<< m_fileNamePrefix<<suffix<<"_"<<100+vtuWriter::iWrite<<".vtu";
+	fileNamepp<< fileNamePrefix_<<suffix<<"_"<<100+results3D::iWrite<<".vtu";
 	ofstream outp(fileNamepp.str().c_str());
 
-	outp<<vtuWriter::start(points.size(),tags.size());
+	outp<<results3D::start(points.size(),tags.size());
 
 	outp<<"      <Points>\n";
 	outp<<"        <DataArray type = \"Float32\" NumberOfComponents = \"3\" format = \"ascii\">\n";
@@ -883,7 +883,7 @@ void vtuWriter::vtuWriteThroats(string suffix, const vector<Element const *> *  
 	outp<<"	  </CellData>\n"; /////////////////////////////////////////////////////////
 
 
-    outp<<vtuWriter::finish();
+    outp<<results3D::finish();
     outp.close();
 }
 
@@ -900,30 +900,31 @@ void vtuWriter::vtuWriteThroats(string suffix, const vector<Element const *> *  
 
 
 /// ////////////////////////////////////   throat lines   ///////////////////////////////////////////////////////
-void vtuWriter::vtuWriteThroatLines(string fName, const vector<Element const *> & elems, size_t nPors, double pc, double tension)
+void results3D::vtuWriteThroatLines(string fName, const vector<Element const *> & elems, size_t nPors, double pc, double tension)
 {
 
 	#define bcncs elems[ib]->connections()
 
 	stringstream fileNamepp;
-	fileNamepp<< m_fileNamePrefix<<fName<<100+vtuWriter::iWrite<<".vtu";
+	fileNamepp<< fileNamePrefix_<<fName<<100+results3D::iWrite<<".vtu";
 	ofstream outp(fileNamepp.str().c_str());
 
 
 	size_t i, ib;
 	vector<array<short,2> > btrotcpis(elems.size(),{{-1,-1}});
 
-	outp<<vtuWriter::start(elems.size()+elems[0]->connections().size()+elems[1]->connections().size(),elems.size()-(nPors+2));
+	outp<<results3D::start(elems.size()+elems[0]->connections().size()+elems[1]->connections().size(),elems.size()-(nPors+2));
 
 
 	outp<<"	  <Points>\n";
 	{	outp<<"		<DataArray type = \"Float32\" NumberOfComponents = \"3\" format = \"ascii\">\n";
 		double Dx[2] = {0.05*(elems[0]->node()->xPos() - elems[1]->node()->xPos()), 0.05*(elems[1]->node()->xPos() - elems[0]->node()->xPos())};
 		for(i=0; i<elems.size(); ++i)
-		{	dbl3 p(elems[i]->node()->xPos(),elems[i]->node()->yPos(),elems[i]->node()->zPos()); outp<<p<< " ";		if (!((i+1)%20))	 outp<<'\n';	btrotcpis[i][0]=-1;btrotcpis[i][1]=-1;}
+		{	dbl3 p(elems[i]->node()->xPos(),elems[i]->node()->yPos(),elems[i]->node()->zPos()); outp<<p<< " ";		if (!((i+1)%20))	 outp<<'\n';	
+			btrotcpis[i][0]=-1;btrotcpis[i][1]=-1;}
 		for(ib=0; ib<2; ++ib)
 		 for(i=0; i<bcncs.size(); ++i)
-		 {	dbl3 p(bcncs[i]->node()->xPos(),bcncs[i]->node()->yPos(),bcncs[i]->node()->zPos()); p.x=elems[ib]->node()->xPos()+Dx[ib]; outp<<p<< " ";		if (!((i+1)%20)) outp<<'\n';	btrotcpis[bcncs[i]->index()][ib]=i;}
+		 {	dbl3 p(bcncs[i]->node()->xPos(),bcncs[i]->node()->yPos(),bcncs[i]->node()->zPos()); p.x=elems[ib]->node()->xPos(); outp<<p<< " ";		if (!((i+1)%20)) outp<<'\n';	btrotcpis[bcncs[i]->index()][ib]=i;}
 		outp<<"\n		</DataArray>\n";
 	}outp<<"	  </Points>\n";
 
@@ -1154,7 +1155,7 @@ void vtuWriter::vtuWriteThroatLines(string fName, const vector<Element const *> 
 
 
 
-	outp<<vtuWriter::finish();
+	outp<<results3D::finish();
 	outp.close();
 }
 
