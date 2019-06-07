@@ -18,7 +18,7 @@ A recent validation of the pnflow and [pnextract] codes is published by [Bultrey
 
 * Previous code has been moved to branch [bu20190607] (discontinued) 
 
-### Instructions
+### Instructions:
 
 Instructions for extracting a network from a micro-CT image are given in
 the doc folder; see also the [pnextract] github page.
@@ -45,12 +45,12 @@ The compilation can be done in Linux by running './AllMake' bash script.
 The './AllMakeMinGW' bash script compiles the code for Windows machines.
 Run './AllClean' beforhand, to avoid mixing the intermidiate Linux and Windows object files.
 
-###  Dependencies
+###  Dependencies:
 The pnflow code depends on the [Hypre] library, used to solve the linear system of equations 
 for viscous pressure drop. This library, along with [pnextract] dependencies, is included in 
 the thirdparty folder. 
 
-###  Licence
+###  Licence:
 
 The code is release as a free, using a zlib-style licence, see the file 
 src/pnflow/netsim.h for a copy of the licence.
