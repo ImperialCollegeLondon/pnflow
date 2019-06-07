@@ -25,7 +25,6 @@ EQUIL_CON_ANG   1  45 45  0.2   3.0   rand   0.0 ;
 
 RES_FORMAT   upscaling ; % Excel, Matlab or upscaling (text) output format
 
-REL_PERM_DEF   single  F ;
 
 %              min      Memory Scaling    Solver    Verbose  Conductance
 %           tolerance      Factor         output    Solver    cut-off
