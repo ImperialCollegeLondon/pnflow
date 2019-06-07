@@ -16,6 +16,7 @@ A recent validation of the pnflow and [pnextract] codes is published by [Bultrey
 * USE `;` to mark the end of input_pnflow.dat keyword data. 
   `#` can not be used for this purpose any-more.
 
+* Previous code has been moved to branch [bu20190607] (discontinued) 
 
 ### Instructions
 
@@ -68,3 +69,4 @@ or send me an email:   a.qaseminejad-raeini09@imperial.ac.uk
 [Hypre]: https://github.com/LLNL/hypre
 [TOTAL]: https://www.total.com
 [pnextract]:  (https://github.com/aliraeini/pnextract)
+[bu20190607]:  (https://github.com/aliraeini/pnflow/tree/bu20190607)
