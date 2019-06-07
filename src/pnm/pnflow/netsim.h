@@ -59,51 +59,10 @@ class ElemModel;
 #include "layerApex.h"
 #include "compareFuncs.h"
 #include "sortedEvents.h"
-#include "vtuWriter.h"
+#include "results3D.h"
 #include "utility.h"
 #include "netsim_data.h"
 
-
-///. class to write both to std::cout, and .prt file
-class mstream
-{
-	public:
-	ofstream prtFile;
-	mstream(string fileName){ if (!fileName.empty()) prtFile.open(fileName.c_str()); };
-	~mstream(void){};
-	mstream& operator<<(ostream& (*pfun)(ostream&)) {pfun(prtFile); pfun(std::cout); return *this;}
-	ofstream& fileStream() {return prtFile;};
-};
-
-template <class T>
-mstream& operator<< (mstream& st, T val)
-{
-  (st.prtFile) << val;
-  std::cout<< val;
-  return st;
-}
-
-///. class to write .dbg  file for debugging
-//class dbgstream
-//{
-	//public:
-	//ofstream prtFile;
-	//dbgstream(string fileName,int dbgMode) : debugMode(dbgMode) { if (dbgMode && !fileName.empty()) prtFile.open(fileName.c_str()); };
-	//~dbgstream(void){};
-	//dbgstream& operator<<(ostream& (*pfun)(ostream&)) {pfun(prtFile); return *this;}
-	//void flush() {prtFile.flush();};
-	//int debugMode;
-//};
-
-//template <class T>
-//dbgstream& operator<< (dbgstream& st, T val)
-//{
-	//if (st.debugMode)
-		//(st.prtFile) << val;
-  //return st;
-//}
- //#define dbgstream OnDemandStream
- //#define dbgFile OnDemandStream::dbgFile
 
 
 
@@ -122,7 +81,7 @@ class Netsim
 {
 public:
 
-    Netsim(InputData & input);
+    Netsim(InputFile & input);
     //Netsim(const Netsim& net);
     ~Netsim();
 
@@ -130,7 +89,7 @@ public:
 
     void initializeDrainage(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, bool wantRelPerm, bool wantResIdx, bool entreL, bool entreR, bool exitL, bool exitR);
     int  floodingCycle() const {return m_comn.floodingCycle();}
-	void Drainage(InputData& input, double& Sw, double& Pc, double requestedFinalSw, double requestedFinalPc,
+	void Drainage(const InputData& input, double& Sw, double& Pc, double requestedFinalSw, double requestedFinalPc,
               double deltaSw, double deltaPc, double deltaPcIncFactor, bool calcKr, bool calcI, bool entreL, bool entreR, bool exitL, bool exitR, bool swOut);
     void finaliseDrainage();
    
@@ -148,6 +107,7 @@ public:
 
 	int  dispCycle() const {return m_comn.floodingCycle();}
 	bool isDrainage() const {return m_comn.isDrainageCycle();}
+    InputData&   input()  { return m_input;}
 
 
 private:
@@ -162,10 +122,8 @@ private:
         vector<Element*>& inT, vector<Element*>& outT, const vector< pair< int, double > >& insidePoreHashs,
         vector< int >& insideThroatHashs, int newNumPores);
     void writeNetworkToFile(const InputData& input) const;
-    void readAndCreatePores(InputData& input, /*vector< pair<int, int> >& connectingPores,
-        const vector< pair< int, double > >& insidePoreHashs,*/ const vector< int >& insideThroatHashs, int newNumPores);
+    void readAndCreatePores(InputData& input,  const vector< int >& insideThroatHashs, int newNumPores);
     void createInAndOutletPore(int index, double xPos, double yPos, double zPos, vector<Element*>& connThroats);
-    int reIndex(int index) const;
     void modifyConnNum_removeConnectionsFromNetwork(InputData& input);
 
     void createMatlabLocationData() const;
@@ -244,7 +202,7 @@ private:
     static const double                             MAX_FLOW_ERR;
     static const int                                DUMMY_IDX;
 
-    const InputData&                                m_input;
+    InputData                                m_input;
     CommonData                                      m_comn;
    
 
@@ -262,7 +220,6 @@ private:
     vector<Element*>                              m_krInletBoundary;
     vector<Element*>                              m_krOutletBoundary;
     int                                             m_sourceNode;
-    vector<const Element*>                        m_elemans;  // duplicate, for merging
 
     vector< double >                                m_pressurePlanesLoc;
     vector< vector<Element*> >                    m_pressurePlanes;
@@ -386,7 +343,7 @@ private:
 	double                                          m_cpuTimeResIdx;
     double                                          m_cpuTimeTrapping;
 
-    vtuWriter                                       m_vtkWriter;
+    results3D                                       m_vtkWriter;
     bool 											useHypre;				
 };
 

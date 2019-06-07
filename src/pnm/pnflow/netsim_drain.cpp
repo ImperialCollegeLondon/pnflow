@@ -23,14 +23,12 @@ using namespace std;
 
 
 
-
-
 /**
  * Continue injecting oil until a target saturation is reached, draiange queue is empty
  * or capillary pressure target is reached. Writing results to output file. Oil injection
  * needs to occur at least at one face.
  */
-void Netsim::Drainage(InputData& input, double& Sw, double& Pc, double requestedFinalSw, double requestedFinalPc,
+void Netsim::Drainage(const InputData& input, double& Sw, double& Pc, double requestedFinalSw, double requestedFinalPc,
               double deltaSw, double deltaPc, double deltaPcIncFactor, bool calcKr, bool calcI,
 			  bool entreL, bool entreR, bool exitL, bool exitR, bool swOut)
 {
@@ -42,9 +40,9 @@ void Netsim::Drainage(InputData& input, double& Sw, double& Pc, double requested
 
 
     //if (useHypre)
-     m_solver = new hypreSolver(m_rockLattice, m_krInletBoundary, m_krOutletBoundary, m_numPores+1, m_comn.debugMode, "solverDrain", m_writeSlvMatrixAsMatlab);
+     m_solver = new hypreSolver(m_rockLattice, m_krInletBoundary, m_krOutletBoundary, m_numPores, m_comn.debugMode, "solverDrain", m_writeSlvMatrixAsMatlab);
     //else
-     //m_solver = new amg_solver(m_rockLattice, m_krInletBoundary, m_krOutletBoundary, m_numPores+1, m_maxNonZeros, m_comn.debugMode,
+     //m_solver = new amg_solver(m_rockLattice, m_krInletBoundary, m_krOutletBoundary, OutPorInd, m_maxNonZeros, m_comn.debugMode,
 		//m_matrixFileName + "_draincycle_"+to_string(m_comn.floodingCycle()), m_writeSlvMatrixAsMatlab);
 
 
@@ -54,8 +52,8 @@ void Netsim::Drainage(InputData& input, double& Sw, double& Pc, double requested
 	if (m_comn.debugMode>100)
 	{	cout<<m_rockLattice[0]->model()->Pc_pistonTypeAdv()<<"  ";
 		cout<<m_rockLattice[0]->model()->Pc_pistonTypeRec()<<endl;
-		cout<<m_rockLattice[m_numPores+1]->model()->Pc_pistonTypeAdv()<<"  ";
-		cout<<m_rockLattice[m_numPores+1]->model()->Pc_pistonTypeRec()<<endl;
+		cout<<m_rockLattice[OutPorInd]->model()->Pc_pistonTypeAdv()<<"  ";
+		cout<<m_rockLattice[OutPorInd]->model()->Pc_pistonTypeRec()<<endl;
 	}
 
 
@@ -75,7 +73,7 @@ void Netsim::Drainage(InputData& input, double& Sw, double& Pc, double requested
 
 		double krw = m_watFlowRate / (m_singlePhaseWaterQ+1.0e-200);
 		double kro = m_oilFlowRate / (m_singlePhaseOilQ+1.0e-200);;
-		//double resIdx = m_resistivityIdx;
+
         Sw = m_satWater;
         Pc = m_cappPress;
         if(satCompress && calcKr && compressOil && kro > krThreshold) dSw = deltaSw;
@@ -403,11 +401,11 @@ void Netsim::initializeDrainage(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, boo
 	///. initialize inlet and outlets
     if(m_injAtRightRes)       ///. Right
     {
-        ((InOutBoundaryPore*)m_rockLattice[m_numPores+1])->fillElemCentreWithOilRemoveLayersIO(m_cappPress-0.1);        ///.  inlet BC
+        ((InOutBoundaryPore*)m_rockLattice[OutPorInd])->fillElemCentreWithOilRemoveLayersIO(m_cappPress-0.1);        ///.  inlet BC
 	}
     else if(!m_injAtRightRes)
     {
-		((InOutBoundaryPore*)m_rockLattice[m_numPores+1])->fillElemCentreWithWaterCreateLayersIO(m_cappPress+1000000000.1);             ///.  outlet BC
+		((InOutBoundaryPore*)m_rockLattice[OutPorInd])->fillElemCentreWithWaterCreateLayersIO(m_cappPress+1000000000.1);             ///.  outlet BC
 	}
 
     if(m_injAtLeftRes)    ///. Left
@@ -433,7 +431,7 @@ void Netsim::initializeDrainage(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, boo
             m_rockLattice[i]->ChModel()->initOilInjection(m_cappPress-m_rockLattice[i]->model()->rhogh());
         }
     }
-    for(int i = 1; i <=  m_numPores; ++i)
+    for(int i = 2; i <  m_numPores+2; ++i)
     {
         if(m_rockLattice[i]->connectedToNetwork())
         {
@@ -442,9 +440,9 @@ void Netsim::initializeDrainage(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, boo
     }
    
 
-    for(int i = 1; i < int(m_rockLattice.size()); ++i)
+    for(int i = 2; i < int(m_rockLattice.size()); ++i)
     {
-        if(i != m_numPores + 1 && m_rockLattice[i]->connectedToNetwork())
+        if(m_rockLattice[i]->connectedToNetwork())
         {
             if(m_rockLattice[i]->canBeAddedToEventVec(&m_oil))
             {
@@ -477,9 +475,9 @@ void Netsim::initializeDrainage(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, boo
 //
     //if(m_injAtRightRes)
     //{
-        //for(int outT = 0; outT < m_rockLattice[m_numPores+1]->connectionNum(); ++outT)
+        //for(int outT = 0; outT < m_rockLattice[OutPorInd]->connectionNum(); ++outT)
         //{
-            //Netsim::untrap_OilGanglia(m_eventsCh, m_rockLattice[m_numPores+1]->connection(outT));
+            //Netsim::untrap_OilGanglia(m_eventsCh, m_rockLattice[OutPorInd]->connection(outT));
         //}
     //}
 //
@@ -505,12 +503,12 @@ void Netsim::initializeDrainage(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, boo
         m_drainListOut << "% The backbone identifies which pores/throats are oil filled at the start of drainage." << endl
             << "% The first row is pore/throat index, followed by 1 for pores and 0 for thoats." << endl;
         m_drainListOut << "backbone = [";
-        for(size_t i = 0; i < m_rockLattice.size(); ++i)
+        for(size_t i = 2; i < m_rockLattice.size(); ++i)
         {
-            if(!m_rockLattice[i]->isEntryOrExitRes() && m_rockLattice[i]->model()->containCOil())
+            if(m_rockLattice[i]->model()->containCOil())
             {
                 bool isAPore(dynamic_cast< Pore* >(m_rockLattice[i]) != 0);
-                m_drainListOut << m_rockLattice[i]->orenIndex() << ", ";
+                m_drainListOut << m_rockLattice[i]->indexOren() << ", ";
                 m_drainListOut << isAPore << "; ..." << endl;
             }
         }
@@ -556,7 +554,7 @@ void Netsim::popUpdateOilInj(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, bool& 
 		if(m_writeDrainList)
 		{
 			bool isAPore(dynamic_cast< Pore* >(currElemCh) != 0);
-			m_drainListOut << currElemCh->orenIndex() << ", ";
+			m_drainListOut << currElemCh->indexOren() << ", ";
 			m_drainListOut << isAPore << "; ..." << endl;
 		}
 		
@@ -731,9 +729,6 @@ void Netsim::finaliseDrainage()
         m_amottOilIdx = (m_amottDataDrainage[0]-m_amottDataDrainage[1])/
             (m_amottDataDrainage[0]-m_amottDataDrainage[2]);
     }
-    //if(m_cappPress < 0.0 ) 		m_amottOilIdx = 1.0;
-    //else 						m_amottOilIdx = 0.0;
-
 
     if(m_comn.floodingCycle() > 1)
     {
@@ -760,9 +755,9 @@ void Netsim::finaliseDrainage()
     //}
 
 
-    for(int i = 1; i < int(m_rockLattice.size()); ++i)
+    for(int i = 2; i < int(m_rockLattice.size()); ++i)
     {
-        if(i != m_numPores + 1 && m_rockLattice[i]->connectedToNetwork())
+        if(m_rockLattice[i]->connectedToNetwork())
         {
             m_rockLattice[i]->ChModel()->finitOilInjection(m_cappPress-m_rockLattice[i]->model()->rhogh());       
         }
@@ -887,6 +882,7 @@ void Netsim::untrap_WaterGanglia(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, El
 
 			{const Fluid* OldInv=invadingFluid; invadingFluid=retreatingFluid; retreatingFluid=OldInv;}
 			m_comn.injectant(invadingFluid); //=================================================
+			
 			for(size_t elm = 0; elm < newElems.size(); ++elm)
 			{
 				newElems[elm].first->ChModel()->finitOilInjection(localPc-newElems[elm].first->ChModel()->rhogh());
@@ -905,7 +901,6 @@ void Netsim::untrap_WaterGanglia(SortedEvents<Apex*,PceDrainCmp>& m_eventsCh, El
 					polyShape->insertWatSnapEvent_IfSnapPcHgPc(waterFillingEvents, m_cappPress-polyShape->rhogh());   //  => insert water snap off + oil layer collapse
 				}
 			}
-
 
 			if (!waterFillingEvents.empty())                                  // have been identified it's time to increase/reduce
 			{   //do the events                                               // pressure in the blob. Dropping pressure will in fact be

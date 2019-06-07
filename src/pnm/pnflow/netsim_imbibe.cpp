@@ -24,6 +24,194 @@ using namespace std;
 
 
 
+/**
+* Inject water (imbibition) until target water saturation is reached or alternatively that the queue
+* containing elements to be popped is empty. After drainage throats connected to the outlets have a
+* maximum of one oil neighbour. If all elements were drained water injection will then occur at both
+* faces. We can remove an injection face by increasing the oil neighbour count in throats connected to
+* that that face. If we remove both faces and all elements were previously drained, the firts imbibition
+* event will be a snap off.
+ */
+void Netsim::Imbibition(InputData& input, double& Sw, double& Pc, double requestedFinalSw, double requestedFinalPc,
+              double deltaSw, double deltaPc, double deltaPcIncFactor, bool calcKr, bool calcI,
+			  bool entreL, bool entreR, bool exitL, bool exitR, bool swOut)
+{
+
+	m_out << "\n********************* Water-injection --  cycle "<<m_comn.floodingCycle()+1<<" *********************"<<endl;
+
+    SortedEvents<Apex*,PceImbCmp>    m_eventsCh;
+
+	//if (useHypre)
+     m_solver = new hypreSolver(m_rockLattice, m_krInletBoundary, m_krOutletBoundary, m_numPores, m_comn.debugMode, "solverImbibe", m_writeSlvMatrixAsMatlab);
+    //else
+     //m_solver = new amg_solver(m_rockLattice, m_krInletBoundary, m_krOutletBoundary, OutPorInd, m_maxNonZeros, m_comn.debugMode,
+		//m_matrixFileName + "_imbcycle_"+to_string(m_comn.floodingCycle()), m_writeSlvMatrixAsMatlab);
+
+
+
+    Netsim::initializeImbibition(m_eventsCh, calcKr, calcI, entreL, entreR, exitL, exitR, input);
+
+
+	if (m_comn.debugMode>100)
+	{	cout<<m_rockLattice[0]->model()->Pc_pistonTypeAdv()<<"  ";
+		cout<<m_rockLattice[0]->model()->Pc_pistonTypeRec()<<endl;
+		cout<<m_rockLattice[OutPorInd]->model()->Pc_pistonTypeAdv()<<"  ";
+		cout<<m_rockLattice[OutPorInd]->model()->Pc_pistonTypeRec()<<endl;
+	}
+
+
+    bool satCompress(false), compressWat(false), compressOil(false);
+    double krThreshold, newDeltaSw, dSw(deltaSw);
+    input.relPermCompression(satCompress, krThreshold, newDeltaSw, compressWat, compressOil);
+    if(satCompress && calcKr && compressWat) dSw = newDeltaSw;
+    double SwTarget = min(requestedFinalSw, Sw + dSw*0.5);
+    double PcTarget = max(requestedFinalPc, Pc - (deltaPc+abs(Pc)*deltaPcIncFactor)*0.1);
+    bool residualSat(false);
+
+
+    while(/*!residualSat &&*/ Sw <=  requestedFinalSw && Pc > requestedFinalPc)
+    {
+
+		Netsim::singleImbibeStep(m_eventsCh, SwTarget, PcTarget, residualSat);
+
+		double krw = m_watFlowRate / (m_singlePhaseWaterQ+1.0e-200);
+		double kro = m_oilFlowRate / (m_singlePhaseOilQ+1.0e-200);;
+		//double resIdx = m_resistivityIdx;
+
+        Sw = m_satWater;
+        Pc = m_cappPress;
+        if(satCompress && calcKr && compressWat && krw > krThreshold) dSw = deltaSw;
+        if(satCompress && calcKr && compressOil && kro < krThreshold) dSw = newDeltaSw;
+        SwTarget = min(requestedFinalSw+1.0e-15, round((m_satWater + 0.75*dSw)/dSw)*dSw);
+        PcTarget = max(requestedFinalPc-1.0e-7, Pc - (deltaPc+abs(Pc)*deltaPcIncFactor+1.0e-16));
+        //if(swOut) Netsim::recordWaterSatMap();
+
+    }
+
+    Netsim::writeResultData(m_wantRelPerm, m_wantResIdx);
+
+	m_solver=NULL;
+    Netsim::finaliseImbibition();
+}
+
+
+
+/**
+ * Do a single displacement with water and recalculate saturation and relative permeability.
+ * We do not allow for empty filling Vec as this just might create a mess in imbibition. The
+ * reason is that as Pc increases (negatively) more and more regions might get trapped as oil
+ * layers collapse, and we don't want to spend huge amounts of time checking on this.
+ */
+void Netsim::singleImbibeStep(SortedEvents<Apex*,PceImbCmp>& m_eventsCh, double SwTarget, double& PcTarget, bool& residualSat)
+{	
+
+	clock_t startClock(clock());
+
+
+	if(SwTarget < m_satWater || PcTarget > m_cappPress)
+	{
+		m_out << "================================================="              << endl
+			<< "Nothing to be done:"                                            << endl;
+		if(SwTarget < m_satWater)			m_out << "Target water saturation (" << SwTarget << ")   is lower than current saturation (" << m_satWater << ")"   << endl;
+		else			m_out << "Target capillary pressure (" << PcTarget << ")    is higher than current pressure (" << m_cappPress << ")"  << endl;
+		m_out << "=================================================="             << endl;
+
+		return;
+	}
+
+
+	double lastStepWaterSat = m_satWater;
+	
+	//m_out << "Sw = "<< setw(6) << m_satWater << " -> ";
+
+    int numSteps(0), totNumFill(0);
+    int fillTarget = max(m_minNumFillings,
+						int(m_initStepSize*(m_numPores+m_numThroats)*(SwTarget-m_satWater)));
+	double oldCappPress(m_cappPress);
+
+    while(m_satWater <= SwTarget && m_cappPress > PcTarget-1.0e-32 /*&& !m_eventsCh.empty()*/)
+    {
+        double oldWaterSat(m_satWater);
+        int numInv(0), invInsideBox(0);
+        bool insideBox(false);
+
+		outD<<"\n Sw = "<<m_satWater<<":"<<"  Pc = "<<m_cappPress<<": ";outD.flush();
+
+        while(invInsideBox < fillTarget && !m_eventsCh.empty() && nextCentrInjPc(m_eventsCh) >= PcTarget)
+        {
+            Netsim::popUpdateWaterInj(m_eventsCh,insideBox, m_cappPressCh, PcTarget);
+            m_comn.GuessCappPress(m_cappPress);                   // Use local maxima for Pc
+            ++numInv;
+            if(insideBox) ++invInsideBox;
+            if(m_cappPress==0.0 || m_cappPress*oldCappPress < 0.0)
+            {
+
+                Netsim::checkUntrapOilIfUnstableConfigsImb(m_eventsCh);
+				oldCappPress=m_cappPress-1.0e-12;
+				updateSatAndConductances(m_cappPress);
+                m_out << "Pc cross over at Sw = " << setw(6) << m_satWater << "; ";
+                m_amottDataImbibition[1] = m_satWater;//Netsim::recordAmottData(false);
+                Netsim::solve_forRelPermResIndex(m_wantRelPerm, m_wantResIdx);
+                Netsim::recordRes(m_wantRelPerm, m_wantResIdx);
+               	m_out << endl;
+            }
+
+		///. Third inner loop, only when option m_StableFilling, until no layer ready for pop(?)
+            if(m_StableFilling)
+             while(nextCentrInjPc(m_eventsCh) >= m_cappPress-1.0e-32)
+                {	//cout<<" StableFilling ";
+                    Netsim::popUpdateWaterInj(m_eventsCh, insideBox, m_cappPressCh, PcTarget);
+                    ++numInv;
+                    if(insideBox) ++invInsideBox;
+                 }
+        }
+
+        if (nextCentrInjPc(m_eventsCh) < PcTarget && (m_cappPress > PcTarget) )	
+        {
+			m_cappPressCh = PcTarget;
+			
+			Netsim::updateSatAndConductances(m_cappPress);
+			//if (m_satWater < SwTarget)
+				//m_cappPressCh = satTrack->predictPc( m_cappPress,m_satWater,PcTarget,SwTarget, m_comn.floodingCycle()-1); ///. Warning hardcopied iCycle
+
+			if(m_cappPress==0.0 || m_cappPress*oldCappPress < 0.0)
+			{
+				m_out << "Pc cross over at Sw = " << setw(6) << m_satWater << "\n";
+				m_amottDataImbibition[1] = m_satWater;//Netsim::recordAmottData(false);
+				oldCappPress=m_cappPress-1.0e-12;
+			}
+
+		}
+
+        Netsim::checkUntrapOilIfUnstableConfigsImb(m_eventsCh);
+		Netsim::updateSatAndConductances(m_cappPress);
+
+		Netsim::recordUSBMData(false);
+        fillTarget = max(m_minNumFillings, (int)min((fillTarget*m_maxFillIncrease),
+            (m_extrapCutBack*(invInsideBox/(m_satWater-oldWaterSat))*(SwTarget-m_satWater)) )  );
+        totNumFill += numInv;
+        ++numSteps;
+    }
+
+    residualSat = m_eventsCh.empty();
+    m_minCycleCappPress = min(m_cappPress, m_minCycleCappPress);
+
+	cout.precision(3);
+	m_out << "Sw: " << setw(8) << std::left << m_satWater << " Pc: " << setw(10) << round(m_cappPress)  << " ";
+    m_out << setw(2) << std::right << numSteps << " steps " << setw(5) << totNumFill << " invasions " ;
+
+    Netsim::solve_forRelPermResIndex(m_wantRelPerm, m_wantResIdx);
+    m_totNumFillings += totNumFill;
+
+	Netsim::recordRes(m_wantRelPerm, m_wantResIdx);
+
+
+	m_out << endl;
+	m_cpuTimeTotal += cpuTimeElapsed(startClock);
+}
+
+
+
 inline void Netsim::insertReCalcImbibeEntryPrs(SortedEvents<Apex*,PceImbCmp>& m_eventsCh, Element* elem, double cappPrs)
 {
 	if(elem->isInWatFloodVec())
@@ -107,79 +295,6 @@ inline void Netsim::clearTrappedOilFromEvents(SortedEvents<Apex*,PceImbCmp>&    
 
 
 /**
-* Inject water (imbibition) until target water saturation is reached or alternatively that the queue
-* containing elements to be popped is empty. After drainage throats connected to the outlets have a
-* maximum of one oil neighbour. If all elements were drained water injection will then occur at both
-* faces. We can remove an injection face by increasing the oil neighbour count in throats connected to
-* that that face. If we remove both faces and all elements were previously drained, the firts imbibition
-* event will be a snap off.
- */
-void Netsim::Imbibition(InputData& input, double& Sw, double& Pc, double requestedFinalSw, double requestedFinalPc,
-              double deltaSw, double deltaPc, double deltaPcIncFactor, bool calcKr, bool calcI,
-			  bool entreL, bool entreR, bool exitL, bool exitR, bool swOut)
-{
-
-	m_out << "\n********************* Water-injection --  cycle "<<m_comn.floodingCycle()+1<<" *********************"<<endl;
-
-    SortedEvents<Apex*,PceImbCmp>    m_eventsCh;
-
-	//if (useHypre)
-     m_solver = new hypreSolver(m_rockLattice, m_krInletBoundary, m_krOutletBoundary, m_numPores+1, m_comn.debugMode, "solverImbibe", m_writeSlvMatrixAsMatlab);
-    //else
-     //m_solver = new amg_solver(m_rockLattice, m_krInletBoundary, m_krOutletBoundary, m_numPores+1, m_maxNonZeros, m_comn.debugMode,
-		//m_matrixFileName + "_imbcycle_"+to_string(m_comn.floodingCycle()), m_writeSlvMatrixAsMatlab);
-
-
-
-    Netsim::initializeImbibition(m_eventsCh, calcKr, calcI, entreL, entreR, exitL, exitR, input);
-
-
-	if (m_comn.debugMode>100)
-	{	cout<<m_rockLattice[0]->model()->Pc_pistonTypeAdv()<<"  ";
-		cout<<m_rockLattice[0]->model()->Pc_pistonTypeRec()<<endl;
-		cout<<m_rockLattice[m_numPores+1]->model()->Pc_pistonTypeAdv()<<"  ";
-		cout<<m_rockLattice[m_numPores+1]->model()->Pc_pistonTypeRec()<<endl;
-	}
-
-
-    bool satCompress(false), compressWat(false), compressOil(false);
-    double krThreshold, newDeltaSw, dSw(deltaSw);
-    input.relPermCompression(satCompress, krThreshold, newDeltaSw, compressWat, compressOil);
-    if(satCompress && calcKr && compressWat) dSw = newDeltaSw;
-    double SwTarget = min(requestedFinalSw, Sw + dSw*0.5);
-    double PcTarget = max(requestedFinalPc, Pc - (deltaPc+abs(Pc)*deltaPcIncFactor)*0.1);
-    bool residualSat(false);
-
-
-    while(/*!residualSat &&*/ Sw <=  requestedFinalSw && Pc > requestedFinalPc)
-    {
-
-		Netsim::singleImbibeStep(m_eventsCh, SwTarget, PcTarget, residualSat);
-
-		double krw = m_watFlowRate / (m_singlePhaseWaterQ+1.0e-200);
-		double kro = m_oilFlowRate / (m_singlePhaseOilQ+1.0e-200);;
-		//double resIdx = m_resistivityIdx;
-
-        Sw = m_satWater;
-        Pc = m_cappPress;
-        if(satCompress && calcKr && compressWat && krw > krThreshold) dSw = deltaSw;
-        if(satCompress && calcKr && compressOil && kro < krThreshold) dSw = newDeltaSw;
-        SwTarget = min(requestedFinalSw+1.0e-15, round((m_satWater + 0.75*dSw)/dSw)*dSw);
-        PcTarget = max(requestedFinalPc-1.0e-7, Pc - (deltaPc+abs(Pc)*deltaPcIncFactor+1.0e-16));
-        //if(swOut) Netsim::recordWaterSatMap();
-
-    }
-
-    Netsim::writeResultData(m_wantRelPerm, m_wantResIdx);
-
-	m_solver=NULL;
-    Netsim::finaliseImbibition();
-}
-
-
-
-
-/**
  * At the end of draiange imbibition displacement is initialized as max Pc is set. This
  * involves determening entry pressures for all elements.
  */
@@ -234,9 +349,8 @@ void Netsim::initializeImbibition(SortedEvents<Apex*,PceImbCmp>& m_eventsCh, boo
 
 
     if(m_comn.floodingCycle() == 2)
-    {
 		Netsim::applyFWettabilityChange(input);
-	}
+
 
 
     if(!m_wantRelPerm) solve_forRelPermResIndex(wantRelPerm, false);     // Create starting points if not previously
@@ -249,11 +363,11 @@ void Netsim::initializeImbibition(SortedEvents<Apex*,PceImbCmp>& m_eventsCh, boo
 	///. initialize inlet and outlets
     if(m_injAtRightRes)       ///. Right
     {
-        ((InOutBoundaryPore*)m_rockLattice[m_numPores+1])->fillElemCentreWithWaterCreateLayersIO(m_cappPress+0.1);      ///.  inlet BC
+        ((InOutBoundaryPore*)m_rockLattice[OutPorInd])->fillElemCentreWithWaterCreateLayersIO(m_cappPress+0.1);      ///.  inlet BC
 	}
     else if(!m_injAtRightRes)
     {
-      ((InOutBoundaryPore*)m_rockLattice[m_numPores+1])->fillElemCentreWithOilRemoveLayersIO(m_cappPress-1000000000.1);     ///.  outlet BC
+      ((InOutBoundaryPore*)m_rockLattice[OutPorInd])->fillElemCentreWithOilRemoveLayersIO(m_cappPress-1000000000.1);     ///.  outlet BC
 	}
 
     if(m_injAtLeftRes)    ///. Left
@@ -279,7 +393,7 @@ void Netsim::initializeImbibition(SortedEvents<Apex*,PceImbCmp>& m_eventsCh, boo
             m_rockLattice[i]->ChModel()->initWaterInjection(m_cappPress-m_rockLattice[i]->model()->rhogh());
         }
     }
-    for(int i = 1; i <=  m_numPores; ++i)
+    for(int i = 2; i <  m_numPores+2; ++i)
     {
         if(m_rockLattice[i]->connectedToNetwork())
         {
@@ -289,9 +403,9 @@ void Netsim::initializeImbibition(SortedEvents<Apex*,PceImbCmp>& m_eventsCh, boo
 
 
 	int nInWaterFlood0 = 0;
-    for(int i = 1; i < int(m_rockLattice.size()); ++i)
+    for(int i = 2; i < int(m_rockLattice.size()); ++i)
     {
-        if(i != m_numPores + 1 && m_rockLattice[i]->connectedToNetwork())
+        if(m_rockLattice[i]->connectedToNetwork())
         {
             if(m_rockLattice[i]->canBeAddedToEventVec(&m_water))
             {
@@ -315,9 +429,9 @@ void Netsim::initializeImbibition(SortedEvents<Apex*,PceImbCmp>& m_eventsCh, boo
 
 
 	int nInWaterFlood = 0, count1WF = 0, nNotInWaterFlood = 0, count1NIWF = 0;
-	for(int i = 1; i < int(m_rockLattice.size()); ++i)
+	for(int i = 2; i < int(m_rockLattice.size()); ++i)
     {
-        if(i != m_numPores + 1 && m_rockLattice[i]->connectedToNetwork())
+        if(m_rockLattice[i]->connectedToNetwork())
         {   register Element* elem = m_rockLattice[i];
             if(elem->iRockType() == 0)
             {
@@ -351,10 +465,10 @@ void Netsim::initializeImbibition(SortedEvents<Apex*,PceImbCmp>& m_eventsCh, boo
 //
     //if(m_injAtRightRes)
     //{
-        //for(int outT = 0; outT < m_rockLattice[m_numPores+1]->connectionNum(); ++outT)
+        //for(int outT = 0; outT < m_rockLattice[OutPorInd]->connectionNum(); ++outT)
         //{
-            //Netsim::untrap_WaterGanglia(m_eventsCh, m_rockLattice[m_numPores+1]->connection(outT), filmBlob);
-            //Netsim::untrap_WaterGanglia(m_eventsCh, m_rockLattice[m_numPores+1]->connection(outT), bulkBlob);
+            //Netsim::untrap_WaterGanglia(m_eventsCh, m_rockLattice[OutPorInd]->connection(outT), filmBlob);
+            //Netsim::untrap_WaterGanglia(m_eventsCh, m_rockLattice[OutPorInd]->connection(outT), bulkBlob);
         //}
     //}
 //
@@ -381,12 +495,12 @@ void Netsim::initializeImbibition(SortedEvents<Apex*,PceImbCmp>& m_eventsCh, boo
         m_imbListOut << "% The backbone identifies which pores/throats are water filled at the start of water flooding." << endl
             << "% The first row is pore/throat index, followed by 1 for pores and 0 for thoats." << endl;
         m_imbListOut << "backbone = [";
-        for(size_t i = 0; i < m_rockLattice.size(); ++i)
+        for(size_t i = 2; i < m_rockLattice.size(); ++i)
         {
-            if(!m_rockLattice[i]->isEntryOrExitRes() && !m_rockLattice[i]->model()->containCOil())
+            if(!m_rockLattice[i]->model()->containCOil())
             {
                 bool isAPore(dynamic_cast< Pore* >(m_rockLattice[i]) != 0);
-                m_imbListOut << m_rockLattice[i]->orenIndex() << ", ";
+                m_imbListOut << m_rockLattice[i]->indexOren() << ", ";
                 m_imbListOut << isAPore << "; ..." << endl;
             }
         }
@@ -405,122 +519,6 @@ void Netsim::initializeImbibition(SortedEvents<Apex*,PceImbCmp>& m_eventsCh, boo
 
 }
 
-
-
-
-/**
- * Do a single displacement with water and recalculate saturation and relative permeability.
- * We do not allow for empty filling Vec as this just might create a mess in imbibition. The
- * reason is that as Pc increases (negatively) more and more regions might get trapped as oil
- * layers collapse, and we don't want to spend huge amounts of time checking on this.
- */
-void Netsim::singleImbibeStep(SortedEvents<Apex*,PceImbCmp>& m_eventsCh, double SwTarget, double& PcTarget, bool& residualSat)
-{	
-
-	clock_t startClock(clock());
-
-
-	if(SwTarget < m_satWater || PcTarget > m_cappPress)
-	{
-		m_out << "================================================="              << endl
-			<< "Nothing to be done:"                                            << endl;
-		if(SwTarget < m_satWater)			m_out << "Target water saturation (" << SwTarget << ")   is lower than current saturation (" << m_satWater << ")"   << endl;
-		else			m_out << "Target capillary pressure (" << PcTarget << ")    is higher than current pressure (" << m_cappPress << ")"  << endl;
-		m_out << "=================================================="             << endl;
-
-		return;
-	}
-
-
-	double lastStepWaterSat = m_satWater;
-	
-	//m_out << "Sw = "<< setw(6) << m_satWater << " -> ";
-
-    int numSteps(0), totNumFill(0);
-    int fillTarget = max(m_minNumFillings,
-						int(m_initStepSize*(m_numPores+m_numThroats)*(SwTarget-m_satWater)));
-	double oldCappPress(m_cappPress);
-
-    while(m_satWater <= SwTarget && m_cappPress > PcTarget-1.0e-32 /*&& !m_eventsCh.empty()*/)
-    {
-        double oldWaterSat(m_satWater);
-        int numInv(0), invInsideBox(0);
-        bool insideBox(false);
-
-		outD<<"\n Sw = "<<m_satWater<<":"<<"  Pc = "<<m_cappPress<<": ";outD.flush();
-
-        while(invInsideBox < fillTarget && !m_eventsCh.empty() && nextCentrInjPc(m_eventsCh) >= PcTarget)
-        {
-            Netsim::popUpdateWaterInj(m_eventsCh,insideBox, m_cappPressCh, PcTarget);
-            m_comn.GuessCappPress(m_cappPress);                   // Use local maxima for Pc
-            ++numInv;
-            if(insideBox) ++invInsideBox;
-            if(m_cappPress==0.0 || m_cappPress*oldCappPress < 0.0)
-            {
-
-                Netsim::checkUntrapOilIfUnstableConfigsImb(m_eventsCh);
-				oldCappPress=m_cappPress-1.0e-12;
-				updateSatAndConductances(m_cappPress);
-                m_out << "Pc cross over at Sw = " << setw(6) << m_satWater << "; ";
-                m_amottDataImbibition[1] = m_satWater;//Netsim::recordAmottData(false);
-                Netsim::solve_forRelPermResIndex(m_wantRelPerm, m_wantResIdx);
-                Netsim::recordRes(m_wantRelPerm, m_wantResIdx);
-               	m_out << endl;
-            }
-
-///. Third inner loop, only when option m_StableFilling, until no layer ready for pop(?)
-            if(m_StableFilling)
-             while(nextCentrInjPc(m_eventsCh) >= m_cappPress-1.0e-32)
-                {	//cout<<" StableFilling ";
-                    Netsim::popUpdateWaterInj(m_eventsCh, insideBox, m_cappPressCh, PcTarget);
-                    ++numInv;
-                    if(insideBox) ++invInsideBox;
-                 }
-        }
-
-        if (nextCentrInjPc(m_eventsCh) < PcTarget && (m_cappPress > PcTarget) )	
-        {
-			m_cappPressCh = PcTarget;
-			
-			Netsim::updateSatAndConductances(m_cappPress);
-			//if (m_satWater < SwTarget)
-				//m_cappPressCh = satTrack->predictPc( m_cappPress,m_satWater,PcTarget,SwTarget, m_comn.floodingCycle()-1); ///. Warning hardcopied iCycle
-
-			if(m_cappPress==0.0 || m_cappPress*oldCappPress < 0.0)
-			{
-				m_out << "Pc cross over at Sw = " << setw(6) << m_satWater << "\n";
-				m_amottDataImbibition[1] = m_satWater;//Netsim::recordAmottData(false);
-				oldCappPress=m_cappPress-1.0e-12;
-			}
-
-		}
-
-        Netsim::checkUntrapOilIfUnstableConfigsImb(m_eventsCh);
-		Netsim::updateSatAndConductances(m_cappPress);
-
-		Netsim::recordUSBMData(false);
-        fillTarget = max(m_minNumFillings, (int)min((fillTarget*m_maxFillIncrease),
-            (m_extrapCutBack*(invInsideBox/(m_satWater-oldWaterSat))*(SwTarget-m_satWater)) )  );
-        totNumFill += numInv;
-        ++numSteps;
-    }
-
-    residualSat = m_eventsCh.empty();
-    m_minCycleCappPress = min(m_cappPress, m_minCycleCappPress);
-
-	cout.precision(3);
-	m_out << "Sw: " << setw(8) << std::left << m_satWater << " Pc: " << setw(10) << round(m_cappPress)  << " ";
-    m_out << setw(2) << std::right << numSteps << " steps " << setw(5) << totNumFill << " invasions " ;
-
-    Netsim::solve_forRelPermResIndex(m_wantRelPerm, m_wantResIdx);
-    m_totNumFillings += totNumFill;
-
-	Netsim::recordRes(m_wantRelPerm, m_wantResIdx);
-
-
-	m_out << endl;
-	m_cpuTimeTotal += cpuTimeElapsed(startClock);
-}
 
 
 
@@ -549,7 +547,7 @@ void Netsim::popUpdateWaterInj(SortedEvents<Apex*,PceImbCmp>& m_eventsCh, bool& 
 		if(m_writeImbList)
 		{
 			bool isAPore(dynamic_cast< Pore* >(currElemCh) != 0);
-			m_imbListOut << currElemCh->orenIndex() << ", ";
+			m_imbListOut << currElemCh->indexOren() << ", ";
 			m_imbListOut << isAPore << "; ..." << endl;
 		}
 		
@@ -704,11 +702,11 @@ void Netsim::finaliseImbibition()
     vector< int > sumfillingEventsP(6);
     vector< int > imbEventT(3);
 
-    for(int elm = 1; elm < static_cast< int >(m_rockLattice.size()); ++elm)
+    for(int elm = 2; elm < static_cast< int >(m_rockLattice.size()); ++elm)
     {
         int fillingEventRecord = m_rockLattice[elm]->fillingEventRecord();
 
-        if(elm <=  m_numPores)
+        if(elm <  m_numPores+2)
         {
             if(fillingEventRecord == -1) ++sumfillingEventsP[0];
             else if(fillingEventRecord == 0 || fillingEventRecord == 1) ++sumfillingEventsP[1];
@@ -717,7 +715,7 @@ void Netsim::finaliseImbibition()
             else if(fillingEventRecord > 3) ++sumfillingEventsP[4];
             else ++sumfillingEventsP[5];
         }
-        else if (elm > m_numPores+1)
+        else if (elm >= m_numPores+2)
         {
             if(fillingEventRecord == -1) ++imbEventT[0];
             else if(fillingEventRecord == 0 || fillingEventRecord == 1) ++imbEventT[1];
@@ -796,14 +794,13 @@ m_out << endl
     //}
 
 
-    for(int i = 1; i < int(m_rockLattice.size()); ++i)
+    for(int i = 2; i < int(m_rockLattice.size()); ++i)
     {
-        if(i != m_numPores + 1 && m_rockLattice[i]->connectedToNetwork())
+        if(m_rockLattice[i]->connectedToNetwork())
         {
             m_rockLattice[i]->ChModel()->finitWaterInjection(m_cappPress-m_rockLattice[i]->model()->rhogh());
         }
     }
-
 
 	m_out<<"\n:/"<<endl<<endl;
 

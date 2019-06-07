@@ -77,8 +77,8 @@ using namespace std;
 
 const int       InputData::DUMMY_INDEX = -99;
 
-InputData::InputData(const string& inputFileName)
-:InputFile(inputFileName)
+InputData::InputData(const InputFile& inputFile)
+:InputFile(inputFile,inputFile.name())
 {
     m_workingSatEntry = 0;
     m_numInletThroats = 0;
@@ -92,30 +92,9 @@ InputData::InputData(const string& inputFileName)
 
 
 
-/**
-// All basic keywords are retived from the parsed storage. If not present the
-// default values are used.
-*/
-string InputData::title() const
-{
-    istringstream data;
-    
-	
-    if(getData(data, "TITLE"))
-    {
-        cout<< "Reading TITLE: "; cout.flush();
-		string baseFileName;
-        data >> baseFileName;
-        cout<< baseFileName << endl;
-        if(!data) errorMsg("TITLE");
-        errorInDataCheck(data, "TITLE");
-        return baseFileName;
-    }
-    else
-        return m_baseFileName;
-}
 
-int InputData::randSeed()
+
+int InputData::randSeed() const
 {	int seedNum;
     istringstream data;
     string keyword("RAND_SEED");
@@ -124,8 +103,7 @@ int InputData::randSeed()
     {
         if (verbose) cout<< "Reading " << keyword << endl;
         data >> seedNum;
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data,keyword);
     }
     else
         seedNum = (unsigned)time( NULL );
@@ -135,13 +113,13 @@ int InputData::randSeed()
 
 
 bool InputData::satTarget(double& requestedFinalSw, double& requestedFinalPc, double& deltaSw, double& deltaPc, double& deltaPcIncFactor,
-                         bool& calcKr, bool& calcI, bool& entreL, bool& entreR, bool& exitL, bool& exitR)
+                         bool& calcKr, bool& calcI, bool& entreL, bool& entreR, bool& exitL, bool& exitR)  const 
 {
     istringstream data;
     string keyword("SAT_CONTROL");
     char relPerm, resI,  entreLC, entreRC, exitLC, exitRC;
 
-    if(getData(data, keyword))
+    if(getData(data, keyword,1))
     {
         for(int i = 0; i < m_workingSatEntry; ++i)
         {
@@ -160,13 +138,11 @@ bool InputData::satTarget(double& requestedFinalSw, double& requestedFinalPc, do
             exitL = (exitLC == 'T' || exitLC == 't');
             exitR = (exitRC == 'T' || exitRC == 't');
             cout<<"Target Sw: "<<requestedFinalSw<<", Entry BC:" <<entreL << entreR<<", Exit BC: " <<exitL << exitR<<endl;
-            if(!data) errorMsg(keyword);
+            Assert(!data.fail(), keyword);
             ++m_workingSatEntry;
             return true;
         }
     }
-    else
-        missingDataErr(keyword);
 
     return false;
 }
@@ -185,8 +161,7 @@ void InputData::prsBdrs(bool& usePrsBdr, bool& reportPrsBdr, int& numPlanes) con
         reportPrsBdr = (numPl == 'T' || numPl == 't');
 
         if(!reportPrsBdr) numPlanes = 0;
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -208,8 +183,7 @@ void InputData::matBal(bool& reportMatBal) const
         data >> mb;
         reportMatBal = (mb == 'T' || mb == 't');
 
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -229,8 +203,7 @@ void InputData::apexPrs(bool& doApexAnalysis)const
         data >> apex;
         doApexAnalysis = (apex == 'T' || apex == 't');
 
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -248,8 +221,7 @@ bool InputData::sourceNode(int& sourceNode) const
         if (verbose) cout<< "Reading " << keyword << endl;
         data >> sourceNode;
 
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
         return true;
 
     }
@@ -271,8 +243,7 @@ void InputData::solverTune(double& eps, double& scaleFact, int& slvrOutput, bool
         if (verbose) cout<< "Reading " << keyword << endl;
         data >> eps >> scaleFact >> slvrOutput >> verb >> condCutOff;
         verbose = (verb == 'T' || verb == 't');
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -300,8 +271,7 @@ void InputData::poreFillWgt(vector< double >& weights) const
     {
         if (verbose) cout<< "Reading " << keyword ; cout.flush();
         data >> weights[0] >> weights[1] >> weights[2] >> weights[3] >> weights[4] >> weights[5];
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -327,8 +297,7 @@ void InputData::poreFillAlg(string& algorithm) const
     {
         if (verbose) cout<< "Reading " << keyword << endl;
         data >> algorithm;
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -347,8 +316,7 @@ void InputData::relPermDef(string& flowRef/*, bool& strictTrpCond*/) const
         if (verbose) cout<< "Reading " << keyword << endl;
         data >> flowRef ;
         //strictTrpCond = (cond == 't' || cond == 'T');
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -372,8 +340,7 @@ void InputData::getModifyRadDistOptions(int& throatModel, int& poreModel, string
         data >> maintainAR >> toFile >> numPtsRDist;
         writeDistToFile = (toFile == 't' || toFile == 'T');
         maintainLtoR = (maintainAR == 't' || maintainAR == 'T');
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -398,8 +365,7 @@ void InputData::getModifyGDist(int& throatModel, int& poreModel, string& throatO
         getRadDist(data, poreModel, poreOptions);
         data >> toFile >> numPts;
         writeDistToFile = (toFile == 't' || toFile == 'T');
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
    }
     else
     {
@@ -418,8 +384,7 @@ void InputData::getModifyPoro(double& netPoroTrgt, double& clayPoroTrgt) const
     {
         if (verbose) cout<< "Reading " << keyword << endl;
         data >> netPoroTrgt >> clayPoroTrgt;
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     //else
     //{
@@ -437,8 +402,7 @@ void InputData::modifyConnNum(double& targetConnNum, string& model)const
     {
         if (verbose) cout<< "Reading " << keyword << endl;
         data >> targetConnNum >> model;
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -455,8 +419,7 @@ void InputData::getModifyModelSize(double& scaleFactor) const
     {
         if (verbose) cout<< "Reading " << keyword << endl;
         data >> scaleFactor;
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
    }
     else
     {
@@ -518,8 +481,7 @@ void InputData::satConvergence(int& minNumFillings, double& initStepSize,
         if (verbose) cout<< "Reading " << keyword << endl;
         data >> minNumFillings >> initStepSize >> cutBack >> maxIncrFact >> stab;
         stable = (stab == 'T' || stab == 't');
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -571,8 +533,7 @@ void InputData::fillingList(bool& isDrainage, bool& imbibition, bool& location) 
         isDrainage = (drain == 'T' || drain == 't');
         imbibition = (imb == 'T' || imb == 't');
         location = (loc == 'T' || loc == 't');
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
    }
     else
     {
@@ -594,8 +555,7 @@ void InputData::output(bool& propOut, bool& swOut) const
         data >> prop >> sw;
         propOut = (prop == 'T' || prop == 't');
         swOut = (sw == 'T' || sw == 't');
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -622,8 +582,7 @@ void InputData::resFormat(bool& matlabFormat, bool& excelFormat, bool& mcpFormat
         else
 			mcpFormat = (resForm == "upscaling" || resForm == "UPSCALING");
         
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -641,8 +600,7 @@ void InputData::gravityConst(double& gravX, double& gravY, double& gravZ)const
     {
         if (verbose) cout<< "Reading " << keyword << endl;
         data >> gravX >> gravY >> gravZ;
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -662,8 +620,7 @@ void InputData::fluid(double& intfacTen, double& watVisc, double& oilVisc, doubl
     {
         if (verbose) cout<< "Reading " << keyword << endl;
         data >> intfacTen >> watVisc >> oilVisc >> watResist >> oilResist >> watDens >> oilDens;
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
 
         intfacTen *= 1.0E-3;                       // Get it into N/m
         watVisc *= 1.0E-3;                          // Get it into Pa.s
@@ -690,8 +647,7 @@ void InputData::aCloseShave(double& shaveSetting) const
     {
         if (verbose) cout<< "Reading " << keyword << endl;
         data >> shaveSetting;
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -713,8 +669,7 @@ void InputData::relPermCompression(bool& useComp, double& krThres,
         data >> krThres >> deltaSw >> wettP >> nonWettP;
         wettPhase = (wettP == 'T' || wettP == 't');
         nonWettPhase = (nonWettP == 'T' || nonWettP == 't');
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -724,25 +679,6 @@ void InputData::relPermCompression(bool& useComp, double& krThres,
     }
 }
 
-double InputData::clayEdit() const
-{
-	double clayEditFact;
-    istringstream data;
-    string keyword("CLAY_EDIT");
-
-    if(getData(data, keyword))
-    {
-        if (verbose) cout<< "Reading " << keyword << endl;
-        data >> clayEditFact;
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
-	}
-    else
-    {
-        clayEditFact = 0.0;
-    }
-    return clayEditFact;
-}
 
 void InputData::calcBox(double& inletBdr, double& outletBdr) const
 {
@@ -753,8 +689,7 @@ void InputData::calcBox(double& inletBdr, double& outletBdr) const
     {
         if (verbose) cout<< "Reading " << keyword << endl;
         data >> inletBdr >> outletBdr;
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
    }
     else
     {
@@ -774,8 +709,7 @@ void InputData::prsDiff(double& inletPrs, double& outletPrs, bool& useGravInKr) 
         if (verbose) cout<< "Reading " << keyword << endl;
         data >> inletPrs >> outletPrs >> grav;
         useGravInKr = (grav == 'T' || grav == 't');
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {
@@ -795,6 +729,7 @@ void InputData::network(int& numPores, int& numThroats, double& xDim, double& yD
     istringstream data, dataNet, dataPbc;
     //string m_m_netFileBase;
     string keyword("NETWORK");
+    string networkKey("networkFile");
     string keywordNet("NET_SERIES");
     string keywordPbc("PERIODIC_BC");
 
@@ -805,8 +740,7 @@ void InputData::network(int& numPores, int& numThroats, double& xDim, double& yD
         dataPbc >> usePbc >> avrLen;
         m_useAvrPbcThroatLen = (avrLen == 'T' || avrLen == 't');
         m_addPeriodicBC = (usePbc == 'T' || usePbc == 't');
-        if(!dataPbc) errorMsg(keywordPbc);
-        errorInDataCheck(dataPbc, keywordPbc);
+        checkEndOfData(dataPbc, keywordPbc);
     }
     else
     {
@@ -820,8 +754,7 @@ void InputData::network(int& numPores, int& numThroats, double& xDim, double& yD
         char avrLen;
         dataNet >> m_numNetInSeries >> avrLen >> m_networkSeparation;
         m_useAvrXOverThroatLen = (avrLen == 'T' || avrLen == 't');
-        if(!dataNet) errorMsg(keywordNet);
-        errorInDataCheck(dataNet, keywordNet);
+        checkEndOfData(dataNet, keywordNet);
     }
     else
     {
@@ -829,20 +762,19 @@ void InputData::network(int& numPores, int& numThroats, double& xDim, double& yD
         m_useAvrXOverThroatLen = false;
     }
 
-    char binFile;
-    if(getData(data, keyword))
-    {
+    m_binaryFiles = false;
+    if(!getData(data, m_netFileBase))
+     if(getData(data, keyword,2))
+     {
+		char binFile='F';
 		std::string line;
 		std::getline(data, line);
 	    std::istringstream iss(line);
         if (verbose) cout<< "Reading " << keyword << endl;
         iss >> binFile >> m_netFileBase;
         m_binaryFiles = (binFile == 'T' || binFile == 't');
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
-    }
-    else
-        missingDataErr(keyword);
+        checkEndOfData(data, keyword);
+     }
 
     if(m_binaryFiles)
     {
@@ -876,16 +808,17 @@ void InputData::network(int& numPores, int& numThroats, double& xDim, double& yD
         m_poreConn >> numPores >> xDim >> yDim >> zDim;
         m_throatConn >> numThroats;
     }
-		if (!m_poreProp || !m_throatProp || (!m_binaryFiles && (!m_poreConn || !m_throatConn)))
-		{
-			std::cout<< "======================================== " << std::endl
-				<<"Error: Unable to open network data files " << m_netFileBase << std::endl
-				<<" failed on !"<< bool(m_poreProp) <<"  || !"<< bool(m_throatProp)  <<" || (!"<< bool(m_binaryFiles) <<" && (!"<<bool(m_poreConn)<<" || !"<<bool(m_throatConn)<<"))" << std::endl
-				<<"            "<< !m_poreProp <<"  ||  "<< !m_throatProp  <<" || "<< (!m_binaryFiles && (!m_poreConn || !m_throatConn)) << std::endl
-				<< "======================================== " << endl;
-			exit( -1 );
-		}
-		outD<<"network:" << m_netFileBase <<(binFile?" binary ":" ascii ")<<" Nt:"<<numThroats<<" Np:"<<numPores<< std::endl;
+
+	if (!m_poreProp || !m_throatProp || (!m_binaryFiles && (!m_poreConn || !m_throatConn)))
+	{
+		std::cout<< "======================================== " << std::endl
+			<<"Error: Unable to open network data files " << m_netFileBase << std::endl
+			<<" failed on !"<< bool(m_poreProp) <<"  || !"<< bool(m_throatProp)  <<" || (!"<< bool(m_binaryFiles) <<" && (!"<<bool(m_poreConn)<<" || !"<<bool(m_throatConn)<<"))" << std::endl
+			<<"            "<< !m_poreProp <<"  ||  "<< !m_throatProp  <<" || "<< (!m_binaryFiles && (!m_poreConn || !m_throatConn)) << std::endl
+			<< "======================================== " << endl;
+		exit( -1 );
+	}
+	outD<<"network:" << m_netFileBase <<(m_binaryFiles?" binary ":" ascii ")<<" Nt:"<<numThroats<<" Np:"<<numPores<< std::endl;
     m_origNumPores = numPores;
     m_origNumThroats = numThroats;
     m_origXDim = xDim;
@@ -1615,15 +1548,14 @@ void InputData::initConAng(int& wettClass, double& min, double& max, double& del
     {
         if (verbose) cout<< "Reading " << keywordIni << endl;
         data >> wettClass >> min >> max >> delta >> eta;
-        if(!data) errorMsg(keywordIni);
+        Assert(!data.fail(), keywordIni);
 
         data >> distModel;                  // Maintain backward compatibility
         if(!data) distModel = "rand";       // by allowing both model and
                                             // separation angle not to be present
         data >> sepAng;
         if(!data) sepAng = 25.2;
-
-        errorInDataCheck(data, keywordIni);
+        else checkEndOfData(data, keywordIni);
 
         min *= acos(-1.0) / 180.0;
         max *= acos(-1.0) / 180.0;
@@ -1633,21 +1565,20 @@ void InputData::initConAng(int& wettClass, double& min, double& max, double& del
     {
         cout<< "Reading equilibrium contact angles from keyword " << keywordEqi << endl;
         data >> wettClass >> min >> max >> delta >> eta;
-        if(!data) errorMsg(keywordEqi);
+        Assert(!data.fail(),keywordEqi);
 
         data >> distModel;                  // Maintain backward compatibility
         if(!data) distModel = "rand";       // by allowing both model and
                                             // separation angle not to be present
         data >> sepAng;
         if(!data) sepAng = 25.2;
-
-        errorInDataCheck(data, keywordEqi);
+        else checkEndOfData(data, keywordEqi);
 
         min *= acos(-1.0) / 180.0;
         max *= acos(-1.0) / 180.0;
         sepAng *= acos(-1.0) / 180.0;
     }
-    else missingDataErr(keywordIni);
+    else Assert(false,keywordIni+" / "+keywordEqi+", both missing");
     //{
         //missingDataErr("neither" + keywordIni+" nor "+keywordEqi);
     //}
@@ -1750,8 +1681,7 @@ void InputData::writeNetwork(bool& writeNet, bool& writeBin, string& netName) co
         data >> inBinary >> netName;
         writeBin = (inBinary == 'T' || inBinary == 't');
         writeNet = true;
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
   }
     else
     {
@@ -1780,8 +1710,7 @@ void InputData::solverDebug(bool& watMat, bool& oilMat, bool& resMat, bool& watV
         resVel = (writeResVel == 'T' || writeResVel == 't');
         matlab = (mat == 'T' || mat == 't');
         initOnly = (forInit == 'T' || forInit == 't');
-        if(!data) errorMsg(keyword);
-        errorInDataCheck(data, keyword);
+        checkEndOfData(data, keyword);
     }
     else
     {

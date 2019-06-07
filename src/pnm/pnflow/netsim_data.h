@@ -5,7 +5,7 @@ class Element;
 class InputData;
 #undef max 
 #undef min
-#include "inputFile.h"
+#include "InputFile.h"
 #include "fluid.h"
 #include <algorithm>
 #include "inputData.h"
@@ -176,7 +176,7 @@ public:
     std::ofstream                        dbgOut;
     int                        debugMode;
     bool                    		m_solveSP; ///. TODO make const
-    
+
 private:
 
     void readDBGangles(const std::string& fileName);

@@ -1,7 +1,7 @@
 #ifndef INPUTDATA_H
 #define INPUTDATA_H
 
-#include "inputFile.h"
+#include "InputFile.h"
 #include "threeSome.h"
 
 
@@ -37,10 +37,10 @@ class InputData : public InputFile
 {
 public:
 
-    InputData(const string&);
+    InputData(const InputFile&);
 
     std::string title() const;
-    int randSeed();
+    int randSeed() const;
     void prsBdrs(bool& usePrsBdr, bool& reportPrsBdr, int& numPlanes) const;
     void solverTune(double& eps, double& scaleFact, int& slvrOutput, bool& verbose, double& condCutOff) const;
     void poreFillWgt(vector< double >& weights)            			const;
@@ -86,7 +86,7 @@ public:
     ///. non constant public member functions:
 
     bool satTarget(double& sw, double& pc, double& dSw, double& dPc,  double& dPcIncFact, 
-                   bool& kr, bool& I, bool& entreL, bool& entreR, bool& exitL, bool& exitR) ; //increment m_workingSatEntry
+                   bool& kr, bool& I, bool& entreL, bool& entreR, bool& exitL, bool& exitR)  const ; //increment m_workingSatEntry
 
     void network(int& numPores, int& numThroats, double& xDim, double& yDim, double& zDim);//. TODO document
     void poreData(int idx, double& x, double& y, double& z, int& n, vector< int >& throats,
@@ -137,7 +137,7 @@ private:
     int                                                     m_origNumPores;
     int                                                     m_origNumThroats;
     int                                                     m_numNetInSeries;
-    int                                                     m_workingSatEntry;
+    mutable int                                             m_workingSatEntry;
     int                                                     m_numInletThroats;
     bool                                                    m_binaryFiles;
     bool                                                    m_useAvrXOverThroatLen;
