@@ -1,12 +1,12 @@
 % -*- LaTeX -*- style pnflow keywords:
 
-TITLE:  Berea;  % base name for the output files
+TITLE  Berea;  % base name for the output files
 
-NETWORK:   F Berea;   % the base name for of the network file, without _link1.dat, _link2, _pore1
+NETWORK   F Berea;   % the base name for of the network file, without _link1.dat, _link2, _pore1
 
 
 
-SAT_CONTROL:  % this keyword replaces SAT_TARGET in poreflow code
+SAT_CONTROL  % this keyword replaces SAT_TARGET in poreflow code
 % finalSat   maxPc    deltaSw   minDeltaPc   deltaPcFraction   calcKr  calcI  Inject from   Escape to
 % -------------------------------------------------------------------------   Left Right    Left Right 
     0.0      100000    0.05      10000.0        0.15           T       T        T    F         F   T       
@@ -14,26 +14,26 @@ SAT_CONTROL:  % this keyword replaces SAT_TARGET in poreflow code
     0.00     100000.0  0.05      10000.0        0.15           T       T        T    F         F   T       
 ;
 
-CALC_BOX:   0.15 1.0;
+CALC_BOX   0.15 1.0;
 
-INIT_CONT_ANG:  1  0 0  0.2   3.0   rand   0.0;
+INIT_CONT_ANG  1  0 0  0.2   3.0   rand   0.0;
 
-EQUIL_CON_ANG:   1  45 45  0.2   3.0   rand   0.0;
+EQUIL_CON_ANG   1  45 45  0.2   3.0   rand   0.0;
 
 % Mixed wettability:
 %FRAC_CON_ANG   0.7 T  120 150  0.2   3.0  corr 7;  
 
-RES_FORMAT:   upscaling; % Excel, Matlab or upscaling (text) output format
+RES_FORMAT   upscaling; % Excel, Matlab or upscaling (text) output format
 
 
 %              min      Memory Scaling    Solver    Verbose  Conductance
 %           tolerance      Factor         output    Solver    cut-off
-SOLVER_TUNE:  1.0E-30         8              0         F         0.0;
+SOLVER_TUNE  1.0E-30         8              0         F         0.0;
 
 
 %          calc kr using   record press    num press
 %           avg press        profiles      profiles
-PRS_BDRS:         F              F             20;
+PRS_BDRS         F              F             20;
 
 % PORE_FILL_ALG    blunt2;
 % PORE_FILL_WGT     0.0  0.5  1.0  2.0  5.0  10.0;
@@ -42,10 +42,10 @@ PRS_BDRS:         F              F             20;
 %   interfacial   water       oil       water          oil        water     oil
 %    tension    viscosity  viscosity  resistivity   resistivity  density  density
 %     (mN/m)      (cp)       (cp)      (Ohm.m)       (Ohm.m)     (kg/m3)  (kg/m3)
-FLUID:  30.0         1.0       1.0         1.2         1000.0      1000.0   1000.0;
+FLUID  30.0         1.0       1.0         1.2         1000.0      1000.0   1000.0;
 
 
-SAT_COVERGENCE:
+SAT_COVERGENCE
 %  minNumFillings   initStepSize   cutBack   maxIncr   stable disp
        10               0.1          0.8       2.0          F;
 
@@ -61,9 +61,9 @@ SAT_COVERGENCE:
 %visualizeLight   L        F            F          T           F;
 
 
-RAND_SEED:        1002;
+RAND_SEED        1002;
 
 
 
-DRAIN_SINGLETS:     T;   % T for yes, F for no
+DRAIN_SINGLETS     T;   % T for yes, F for no
 
