@@ -14,7 +14,7 @@ pores and throats, published in [Bultreys et al. 2018].
 ### Instructions
 A sample input file, Image.mhd, is provided in the doc folder, in ascii 
 (text) format. Please use this file together with a 8-bit micro-CT 
-image, similar to the [Images on our website].
+image, similar to the [images on our website].
 
 To extract a pore network, decompress the pnextract.exe.7z and run, in a Windows Command Prompt:     
     pnextract.exe  Image.mhd
@@ -22,7 +22,7 @@ To extract a pore network, decompress the pnextract.exe.7z and run, in a Windows
 See the [pnextract wiki](https://github.com/aliraeini/pnextract/wiki/pnextract-FAQ) for more instructions!
 
 ###  Compiling
-The code is already compiled to bin/pnextract.exe, a Win64 executable, using MinGW compilers.
+The code is already compiled to bin/pnextract.exe, a Windows (win64) executable, using MinGW compilers.
 
 The compilation can be done in Linux by running ``make`` command in the top-level directory.
 
@@ -57,7 +57,7 @@ https://link.aps.org/doi/10.1103/PhysRevE.97.053104
 
 
 [Publications on our website]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/publications/
-[Images on our website]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/micro-ct-images-and-networks/
+[images on our website]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/micro-ct-images-and-networks/
 [Imperial College - pore-scale consortium]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling
 [Bultreys et al. 2018]: https://link.aps.org/doi/10.1103/PhysRevE.97.053104
 [Raeini, Bijeljic and Blunt 2017]: https://doi.org/10.1103/PhysRevE.96.013312
