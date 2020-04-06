@@ -60,6 +60,11 @@ In Windows, you just need to know how to run standalone exe files from Command P
 The pnflow code depends on the [Hypre] library which along with other [pnextract] dependencies are included in 
 the [thirdparty](thirdparty) folder. 
 
+
+Note, may need to install jpg nd lzma libraries, prerequisites of libtif and oxelImage/libvoxel libraries (to check...), for the make command above to succeed. In Ubuntu this can be installed by running the following commands:      
+
+    sudo apt install libjpeg-dev liblzma-dev
+      
 ###  Licence:
 
 The code is release as a free, using a zlib-style licence, see the file 
