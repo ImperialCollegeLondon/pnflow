@@ -18,37 +18,48 @@ A recent validation of the pnflow and [pnextract] codes is published by [Bultrey
 
 * Previous code has been moved to branch [bu20190607] (discontinued) 
 
-### Instructions:
+### Instructions for Windows:
 
 Instructions for extracting a network from a micro-CT image are given in
 the doc folder; see also the [pnextract] github page.
 
 To run a network flow simulation, copy the sample input file src/doc/input_pnflow.dat
-and the extracted networks (*_link1.dat, _link1.dat, _node1.dat, 
+and the extracted networks (with suffixes  _link1.dat, _link1.dat, _node1.dat and 
 _node2.dat) into a new folder.  Then edit the input_pnflow.dat file and set the NETWORK
 keyword and other flow parameters. Finally run, in a Windows Command Prompt: 
   
-   bin\pnflow.exe  input_pnflow.dat
+   PATH\TO\bin\pnflow.exe  input_pnflow.dat
 
-* You may need to modify the command above and provide the full path for the bin\pnflow.exe,
+* You may need to modify the command above and, instead of PATH\TO, provide the full path for the bin\pnflow.exe,
   if it exists in a different directory than your command prompt working directory.
 
 * To open a command-prompt in Windows, hold the *Shift* key and *right-click*
   into the folder where the input_pnflow.dat is copied and click on the *Open Command Window Here* menu.
 
-###  Build instructions:
+###  Compiling:
 The code is already compiled to bin/pnextract.exe and bin/pnflow.exe, Win64 
-executables (extract the bin.7z to see these files) using mingw compilers.
+executables (extract the bin.7z to see these files) using MinGW compilers.
 
-The compilation can be done in Linux by running './AllMake' bash script.
+The compilation can be done in Linux by running in the top-level directory (where this file is):    
 
-The './AllMakeMinGW' bash script compiles the code for Windows machines.
-Run './AllClean' beforhand, to avoid mixing the intermidiate Linux and Windows object files.
+    make -j
+
+"-j" flag is to compile in parallel and can be omitted. 
+
+Running ``make mgw`` instead cross-compiles the code for Windows machines, if MinGW compilers are ailable in your system and set in [src/AllMakeMinGW](src/AllMakeMinGW) script.
+Run `make clean` before switching between Windows and Linux compilations, to avoid mixing the intermidiate Linux and Windows object files.
+
+### Installation
+
+In Linux, you can source the src/bashrc file to set te paths to the compiled binaries:     
+
+     source PATH/TO/src/bashrc
+
+In Windows, you just need to know how to run standalone exe files from Command Prompt, as discussed above.
 
 ###  Dependencies:
-The pnflow code depends on the [Hypre] library, used to solve the linear system of equations 
-for viscous pressure drop. This library, along with [pnextract] dependencies, is included in 
-the thirdparty folder. 
+The pnflow code depends on the [Hypre] library which, along with other [pnextract] dependencies, is included in 
+the [thirdparty](thirdparty) folder. 
 
 ###  Licence:
 
