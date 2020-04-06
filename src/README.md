@@ -33,5 +33,5 @@ For contacts and references please see:
 http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling
 or contact Ali Q. Raeini, email: a.qaseminejad-raeini09@imperial.ac.uk
 
-More details are given in the apps/doc directory.
+More details are given in the ../doc directory.
 
