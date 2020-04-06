@@ -13,8 +13,8 @@ A recent validation of the pnflow and [pnextract] codes is published by [Bultrey
 
 
 ### Notice:
-* USE `;` (or double empty lines) to mark the end of input_pnflow.dat keyword data. 
-  `#` can not be used for this purpose any more. 
+* USE ``;`` (or double empty lines) to mark the end of input_pnflow.dat keyword data. 
+  ``#`` can not be used for this purpose any more. 
 
 * Previous code has been moved to branch [bu20190607] (discontinued) 
 
@@ -30,8 +30,7 @@ keyword and other flow parameters. Finally run, in a Windows Command Prompt:
   
    PATH\TO\bin\pnflow.exe  input_pnflow.dat
 
-* You may need to modify the command above and, instead of PATH\TO, provide the full path for the bin\pnflow.exe,
-  if it exists in a different directory than your command prompt working directory.
+* You may need to modify the command above and, instead of `` PATH\TO\bin\ ``, provide the full path to the pnflow.exe, if it exists in a different directory than your command prompt working directory.
 
 * To open a command-prompt in Windows, hold the *Shift* key and *right-click*
   into the folder where the input_pnflow.dat is copied and click on the *Open Command Window Here* menu.
@@ -47,7 +46,7 @@ The compilation can be done in Linux by running in the top-level directory (wher
 "-j" flag is to compile in parallel and can be omitted. 
 
 Running ``make mgw`` instead cross-compiles the code for Windows machines, if MinGW compilers are ailable in your system and set in [src/AllMakeMinGW](src/AllMakeMinGW) script.
-Run `make clean` before switching between Windows and Linux compilations, to avoid mixing the intermidiate Linux and Windows object files.
+Run ``make clean`` before switching between Windows and Linux compilations, to avoid mixing the intermidiate Linux and Windows object files.
 
 ### Installation
 
