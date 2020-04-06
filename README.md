@@ -1,4 +1,4 @@
-﻿##  pnflow - classical pore-network flow simulation
+﻿##  pnflow - classical pore-network (extraction and) flow simulation
 
 This repository included the classical network flow simulation code called pnflow. 
 [pnextract network extraction 
