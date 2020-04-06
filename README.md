@@ -1,8 +1,8 @@
 ﻿##  pnflow - classical pore-network flow simulation
 
 This repository included the classical network flow simulation code called pnflow. 
-[pnextract](https://github.com/aliraeini/pnextract) network extraction 
-code is also included for convenience.
+[pnextract network extraction 
+code](https://github.com/aliraeini/pnextract) is also included [here](src/pnm/pnextract) for convenience.
 
 These pnflow code is essentially a cleaned up version of the [poreflow code] by
 [Valvatne and Blunt (2004)].  The poreflow code was restructured with some 
@@ -21,7 +21,7 @@ A recent validation of the pnflow and [pnextract] codes is published by [Bultrey
 ### Instructions for Windows:
 
 Instructions for extracting a network from a micro-CT image are given in
-the doc folder; see also the [pnextract] github page.
+the doc folder; see also the [pnextract] README.
 
 To run a network flow simulation, copy the sample input file src/doc/input_pnflow.dat
 and the extracted networks (with suffixes  _link1.dat, _link1.dat, _node1.dat and 
@@ -57,7 +57,7 @@ In Linux, you can source the src/bashrc file to set te paths to the compiled bin
 In Windows, you just need to know how to run standalone exe files from Command Prompt, as discussed above.
 
 ###  Dependencies:
-The pnflow code depends on the [Hypre] library which, along with other [pnextract] dependencies, is included in 
+The pnflow code depends on the [Hypre] library which along with other [pnextract] dependencies are included in 
 the [thirdparty](thirdparty) folder. 
 
 ###  Licence:
@@ -78,5 +78,5 @@ or send me an email:   a.qaseminejad-raeini09@imperial.ac.uk
 [Raeini, Bijeljic and Blunt 2018]: https://doi.org/10.1103/PhysRevE.97.023308
 [Hypre]: https://github.com/LLNL/hypre
 [TOTAL]: https://www.total.com
-[pnextract]:  https://github.com/aliraeini/pnextract
+[pnextract]:  src/pnm/pnextract
 [bu20190607]:  https://github.com/aliraeini/pnflow/tree/bu20190607
