@@ -61,7 +61,7 @@ The pnflow code depends on the [Hypre] library which along with other [pnextract
 the [thirdparty](thirdparty) folder. 
 
 
-Note, may need to install jpg nd lzma libraries, prerequisites of libtif and oxelImage/libvoxel libraries (to check...), for the make command above to succeed. In Ubuntu this can be installed by running the following commands:      
+Note, may need to install jpg and lzma libraries, prerequisites of libtif and oxelImage/libvoxel libraries (to check...), for the make command above to succeed. In Ubuntu this can be installed by running the following commands:      
 
     sudo apt install libjpeg-dev liblzma-dev
       
