@@ -28,7 +28,7 @@ and the extracted networks (with suffixes  _link1.dat, _link1.dat, _node1.dat an
 _node2.dat) into a new folder.  Then edit the input_pnflow.dat file and set the NETWORK
 keyword and other flow parameters. Finally run, in a Windows Command Prompt: 
   
-   PATH\TO\bin\pnflow.exe  input_pnflow.dat
+    PATH\TO\bin\pnflow.exe  input_pnflow.dat
 
 * You may need to modify the command above and, instead of `` PATH\TO\bin\ ``, provide the full path to the pnflow.exe, if it exists in a different directory than your command prompt working directory.
 
