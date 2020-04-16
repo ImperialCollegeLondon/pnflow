@@ -12,7 +12,7 @@ A recent validation of the pnflow and [pnextract] codes is published by [Bultrey
 
 
 
-### Notice:
+### Recent changes:
 * USE ``;`` (or double empty lines) to mark the end of input_pnflow.dat keyword data. 
   ``#`` can not be used for this purpose any more. 
 
@@ -39,7 +39,7 @@ keyword and other flow parameters. Finally run, in a Windows Command Prompt:
 The code is already compiled to bin/pnextract.exe and bin/pnflow.exe, Win64 
 executables (extract the bin.7z to see these files) using MinGW compilers.
 
-The compilation can be done in Linux by running in the top-level directory (where this file is):    
+In Linux, the compilation can be done by running in the top-level directory (where this file is):    
 
     make -j
 
@@ -50,18 +50,18 @@ Run ``make clean`` before switching between Windows and Linux compilations, to a
 
 ### Installation
 
+In Windows, you just need to know how to run standalone exe files from Command Prompt, as explained above.
+
 In Linux, you can source the src/bashrc file to set te paths to the compiled binaries:     
 
      source PATH/TO/src/bashrc
-
-In Windows, you just need to know how to run standalone exe files from Command Prompt, as discussed above.
 
 ###  Dependencies:
 The pnflow code depends on the [Hypre] library which along with other [pnextract] dependencies are included in 
 the [thirdparty](thirdparty) folder. 
 
 
-Note, may need to install jpg and lzma libraries, prerequisites of libtif and oxelImage/libvoxel libraries (to check...), for the make command above to succeed. In Ubuntu this can be installed by running the following commands:      
+Note, you may need to install jpg and lzma libraries, prerequisites of libtif and oxelImage/libvoxel libraries (to check...), for the make command above to succeed. In Ubuntu this can be installed by running the following commands:      
 
     sudo apt install libjpeg-dev liblzma-dev
       
