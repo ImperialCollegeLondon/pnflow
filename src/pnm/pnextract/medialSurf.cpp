@@ -4,16 +4,6 @@
 #include "typses.h"
 
 
-class node
-{
-public:
- node():i(-32768), j(-32768), k(-32768){};
- node(const node& v) : i(v.i), j(v.j), k(v.k) {};
- node(const voxel& v) : i(v.i), j(v.j), k(v.k) {};
- node(int ii,int jj,int kk) : i(ii), j(jj), k(kk) {};
- void operator = (const node& v){i = v.i;j = v.j;k = v.k;}
- short i, j, k;
-};
 
 
 #include "medialRadius.cpp"
@@ -26,9 +16,16 @@ medialSurface::medialSurface(inputDataNE& cfg)//, double vmvLimRelF, double cros
 	nx = cfg.nx;
 	ny = cfg.ny;
 	nz = cfg.nz;
-	precision = cfg.precision;
 
-	nVxls = cfg.nVxlVs[0];
+	size_t nvoxls=0; // local copy for omp
+	OMPragma("omp parallel for reduction(+:nvoxls)")
+	for (short k = 0; k < nz; ++k)
+	 for (short j = 0; j < ny; ++j)
+ 	 {	const segments& s = cg_.segs_[k][j];
+		for (short ix = 0; ix<s.cnt; ++ix)
+			if (s.s[ix].value == 0) nvoxls+=s.s[ix+1].start-s.s[ix].start;
+	 }
+	nVxls = nvoxls;
 	invalidSeg.start=-10000;
 	invalidSeg.value=255;
 
@@ -44,8 +41,8 @@ void medialSurface::setDefaults(double avgR)
 	/// To extract a network that has a lower network coordination number, you can decrease the values of lenNf (e.g. 0.4), and vmvRadRelNf (e.g. 1.05) and increase the values of nRSmoothing (e.g. 9), RCorsf (e.g. 0.2) and RCors (e.g. 2.5).  You can also consider increasing minRPore (also named Rnoise) keyword to let say 2.0.     Every change you make you need to check that the network produces reasonable results as these are sensitive parameters and do not behave linearly. We should not be woried about the high coordination number as long as the network predicts the physical properties correctly, but not everybody agrees with me here!
 
 
-	_minRp=min(1.25, avgR*0.25)+0.5; 
-	if (cg_.getVar(_minRp, "Rnoise"+toStr(0)) || cg_.getVar(_minRp, "minRPore") || cg_.getVar(_minRp, "Rnoise")) cout<< " minimum pore radius: " << _minRp <<endl;
+	_minRp=min(1.25, avgR*0.25)+0.5;
+	if (cg_.getVar(_minRp, "Rnoise"+_s(0)) || cg_.getVar(_minRp, "minRPore") || cg_.getVar(_minRp, "Rnoise")) cout<< " minimum pore radius: " << _minRp <<endl;
 	else  cout<<" keyword \"minRPore\" not found, default value ("<<abs(_minRp)<<") will be used"<<endl;
 
 	_clipROutx=0.05;
@@ -60,7 +57,7 @@ void medialSurface::setDefaults(double avgR)
 
 
     std::istringstream keywrdData;
-    if (cg_.getData(keywrdData, "medialSurfaceSettings"+toStr(0)) || cg_.getData(keywrdData, "medialSurfaceSettings"))
+    if (cg_.getData(keywrdData, "medialSurfaceSettings"+_s(0)) || cg_.getData(keywrdData, "medialSurfaceSettings"))
 	{
 	 	keywrdData  >>_clipROutx >>_clipROutyz  >>_midRf >>_MSNoise  >>_lenNf >>_vmvRadRelNf >>_nRSmoothing >>_RCorsnf >>_RCorsn;
 	}
@@ -69,7 +66,7 @@ void medialSurface::setDefaults(double avgR)
 	if(_minRp<0.0) cout<<" Default setting, will be updated after distance map computation:\n";
 	cout<<"  minRPore     : "<< abs(_minRp)<<";\n";
 	cout<<"  medialSurfaceSettings: " << _clipROutx<<"  "<<_clipROutyz<<"  "<<_midRf<<"  "<<_MSNoise<<"  "<< _lenNf<<"  "<<_vmvRadRelNf<<"  "<<_nRSmoothing<<"  "<<_RCorsnf<<"  " << _RCorsn<<endl;
-		    
+
 	cout<<"  medialSurfaceSettings:\n"
 		<<"   clipROutx     : "<< _clipROutx<<"\n"
 		<<"   clipROutyz    : "<< _clipROutyz<<"\n"
@@ -147,32 +144,30 @@ void medialSurface::paradox_pre_removeincludedballI() //to remove the included m
 		  { for (int ii = s.s[ix].start; ii<s.s[ix+1].start; ii += 2)
 			{
 				voxel* smallers[8] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
-				register int counter = -1;
-				register float maxRRR = 0;
+				int counter = -1;
+				float maxRRR = 0;
 				voxel* maxRPV = NULL;
 
 
 				for (int c = 0; c<2 ; ++c)
-				{ for (int b = 0; b<2 ; ++b)
-				  { for (int a = 0; a<2; ++a)
-				    {
+				 for (int b = 0; b<2 ; ++b)
+					for (int a = 0; a<2; ++a)
+					{
 						voxel* vi = vxl(ii+a, jj+b, kk+c);
 						if (vi != NULL && vi->ball==&ToBeAssigned )
 						{
-						   if (vi->R>maxRRR)
-						   {
-						      if (maxRPV)	smallers[++counter] = maxRPV;
-						      maxRRR = vi->R;
-						      maxRPV = vi;
-						   }
-						   else
-						   {
-						      smallers[++counter] = vi;
-						   }
+							if (vi->R>maxRRR)
+							{
+								if (maxRPV)	smallers[++counter] = maxRPV;
+								maxRRR = vi->R;
+								maxRPV = vi;
+							}
+							else
+							{
+								smallers[++counter] = vi;
+							}
 						}
-				    }
-				  }
-				}
+					}
 				++counter;
 				ndel += counter;
 				while(counter> 0)	if (smallers[--counter]) {  smallers[counter]->ball=NULL; }
@@ -261,15 +256,15 @@ void medialSurface::paradoxremoveincludedballI()
 
 
 void medialSurface::moveUphill(medialBall* b_i) // const
-{	/// Refines the maximal-sphere location and radius, 
+{	/// Refines the maximal-sphere location and radius,
 
 
 
 
 
 	
-	const voxel* vi = vxl(b_i->fi+_pp5, b_i->fj+_pp5, b_i->fk+_pp5);
-	dbl3 disp(0.0, 0.0, 0.0); 
+	const voxel* vi = vxl(b_i->fi, b_i->fj, b_i->fk);
+	dbl3 disp(0.0, 0.0, 0.0);
 	{
 		const voxel* vjm = vxl(vi->i-1, vi->j, vi->k);
 		const voxel* vjp = vxl(vi->i+1, vi->j, vi->k);
@@ -316,8 +311,7 @@ void medialSurface::moveUphillp1(medialBall* bi) // const
 
 
 
-
-	const voxel* vi = vxl(bi->fi+_pp5, bi->fj+_pp5, bi->fk+_pp5);
+	const voxel* vi = vxl(bi->fi, bi->fj, bi->fk);
 	dbl3 disp(0.0, 0.0, 0.0), grad(0.0, 0.0, 0.0);
 
 	{
@@ -358,7 +352,7 @@ void medialSurface::moveUphillp1(medialBall* bi) // const
 	if(bi!=bi->boss)
 	{
 		dbl3 BosKidVec=*bi - *(bi->boss);
-		disp -= 0.5*((BosKidVec&disp)/(magSqr(BosKidVec)+1.0e-12))*BosKidVec;  
+		disp -= 0.5*((BosKidVec&disp)/(magSqr(BosKidVec)+1.0e-12))*BosKidVec; 
 	}
 	disp/=(0.55*mag(disp)+0.05);
 
@@ -391,8 +385,8 @@ void medialSurface::allyWithBossKids()
 
 
 
-	register const std::vector<medialBall>::iterator voxend = ballSpace.end();
-	register       std::vector<medialBall>::iterator vitr;
+	const std::vector<medialBall>::iterator voxend = ballSpace.end();
+	      std::vector<medialBall>::iterator vitr;
 
 
 	int nOverlap=0;
@@ -512,7 +506,7 @@ void medialSurface::competeForParent(medialBall* vi, medialBall* vj)
 
 
 
-	const voxel* middlevxl=vxl( wsinv*(vi->fi*rjSqr+vj->fi*riSqr)+_pp5, wsinv*(vi->fj*rjSqr+vj->fj*riSqr)+_pp5, wsinv*(vi->fk*rjSqr+vj->fk*riSqr)+_pp5 );
+	const voxel* middlevxl=vxl( wsinv*(vi->fi*rjSqr+vj->fi*riSqr), wsinv*(vi->fj*rjSqr+vj->fj*riSqr), wsinv*(vi->fk*rjSqr+vj->fk*riSqr) );
 	if ( middlevxl && middlevxl->R>min(ri,rj)*_midRf-0.5 && 1.01*sqrt(dSqr)<ri+rj+1.0+1.0*noise )
 	{
 
@@ -628,7 +622,7 @@ void medialSurface::findBoss(medialBall* vi)
 
 
 
-	const float  x = vi->fi+_pp5,   y = vi->fj+_pp5,   z = vi->fk+_pp5;
+	const float  x = vi->fi,   y = vi->fj,   z = vi->fk;
 	const float  ripp = vi->R*0.6+2.0*_MSNoise+2.0;
 	const float  ex = x+ripp;
 	for (float xpa=2.*x-ex; xpa<=ex; xpa+=1.0f)
@@ -674,7 +668,7 @@ void medialSurface::createBallsAndHierarchy()
 
 
 
-	nBalls = 0;   double rBalls = 0.0; 
+	nBalls = 0;   double rBalls = 0.0;
 	std::vector<voxel>::iterator vit = vxlSpace.begin()-1;
 	const std::vector<voxel>::iterator vend = vxlSpace.end();
 	while (++vit < vend)
@@ -726,26 +720,26 @@ void medialSurface::createBallsAndHierarchy()
 
 
 
-	register const std::vector<medialBall>::iterator voxend = ballSpace.end();
+	const std::vector<medialBall>::iterator voxend = ballSpace.end();
 
 	{
-		register       std::vector<medialBall>::iterator vi = ballSpace.begin()-1;
+		std::vector<medialBall>::iterator vi = ballSpace.begin()-1;
 		while (++vi != voxend)    moveUphill(&*vi);
 	}
 	{
-		register       std::vector<medialBall>::iterator vi = ballSpace.begin()-1;
+		std::vector<medialBall>::iterator vi = ballSpace.begin()-1;
 		while (++vi != voxend)    moveUphillp1(&*vi);
 	}
 
 	{
-		register       std::vector<medialBall>::iterator vi = ballSpace.begin()-1;
+		std::vector<medialBall>::iterator vi = ballSpace.begin()-1;
 		while (++vi != voxend)    moveUphill(&*vi);
 	}
 
 	cout<< " creating ball hierarchy:";  cout.flush();
 	const std::vector<medialBall>::iterator voxp = ballSpace.begin();
 	{
-		register       std::vector<medialBall>::iterator vi = ballSpace.begin();
+		std::vector<medialBall>::iterator vi = ballSpace.begin();
 		while (vi != voxend)
 		{
 			findBoss(&*vi);

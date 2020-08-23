@@ -2,8 +2,8 @@
 #define VTUWRITER_H
 
 /*---------------------------------------------------------------------------*\
-written by:
-	Ali Q Raeini  email: a.qaseminejad-raeini09@imperial.ac.uk  and 
+Developed by:
+	Ali Q Raeini  email: a.q.raeini@imperial.ac.uk  and
 	Tom Bultreys
 \*---------------------------------------------------------------------------*/
 

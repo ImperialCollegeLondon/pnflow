@@ -33,6 +33,16 @@
 	#define  epsT(Typ)  std::numeric_limits<Typ>::epsilon()
 #endif
 
+#if (__cplusplus < 201403L )
+	template< bool B, class T = void >
+	using enable_if_t = typename std::enable_if<B,T>::type;
+#else
+	using std::enable_if_t;
+#endif
+
+
+
+
 #include "globals.h"
 
 
@@ -42,12 +52,14 @@ class var3
 {
  public:
 	T	x, y, z;
-	var3() {}
+	var3() = default;// Warning: not zero initialized in opt mode
+	template< typename std::enable_if<std::is_arithmetic<T>::value,int>::type = 0> 
+	var3(T r)  { x = r;  y = r;  z = r; } // use this to zero-initialize
 	var3(T r, T s, T t)  { x = r;  y = s;  z = t; }
+	var3(const T* d)  { x = d[0];  y = d[1];  z = d[2]; }
 	template<typename T2>
 	var3(var3<T2> n)  { x = n.x;  y = n.y;  z = n.z; }
 	//var3(std::array<int,3> n)  { x = n[0];  y = n[1];  z = n[2]; }
-	var3(const T* d)  { x = d[0];  y = d[1];  z = d[2]; }
 #ifdef VMMLIB__VECTOR__HPP
 	var3(const Vctr<3,T>& v3) 	{ x = v3[ 0 ];	y = v3[ 1 ];	z = v3[ 2 ]; 	}
 #endif
@@ -59,11 +71,13 @@ class var3
 	T _2() const  { return z; }
 
 
-    explicit operator int() const { return x; }
-    explicit operator double() const { return x; }
+    //operator  int() const { return x; }
+    //operator  double() const { return x; }
 
 	var3&  operator += (const var3& v)  { x += v.x;  y += v.y;  z += v.z;  return (*this); }
 	var3&  operator -= (const var3& v)  { x -= v.x;  y -= v.y;  z -= v.z;  return (*this); }
+	var3&  operator += (const T& t)  { x += t;  y += t;  z += t;  return (*this); } // clumsy
+	var3&  operator -= (const T& t)  { x -= t;  y -= t;  z -= t;  return (*this); } // clumsy
 	var3&  operator *= (const double t) { x *= t;  y *= t;  z *= t;  return (*this); }
 	var3&  operator /= (const double t) { double f = 1.0 / t;  x *= f;  y *= f;  z *= f;  return (*this); }
 	var3&  operator ^= (const var3& v)  { double r, s;  r=y*v.z-z*v.y;  s=z*v.x-x*v.z;  z=x*v.y-y*v.x;  x=r; y=s; 	return (*this); }
@@ -71,6 +85,8 @@ class var3
 	var3   operator -  (void) const          { return (var3(-x, -y, -z)); }
 	var3   operator +  (const var3& v) const { return (var3(x+v.x, y+v.y, z+v.z)); }
 	var3   operator -  (const var3& v) const { return (var3(x-v.x, y-v.y, z-v.z)); }
+	var3   operator +  (const T& t) const { return (var3(x+t, y+t, z+t)); } // clumsy
+	var3   operator -  (const T& t) const { return (var3(x-t, y-t, z-t)); } // clumsy
 	var3   operator *  (const double t)const { return (var3(x*t, y*t, z*t)); }
 	var3   operator /  (const double t)const { double f = 1.0 / t;  return (var3(x*f, y*f, z*f)); }
 	double operator &  (const var3& v) const { return (x*v.x+y*v.y+z*v.z); }
@@ -82,6 +98,9 @@ class var3
 };
 typedef  var3<int> int3;
 typedef  var3<var3<int> > int3x3;
+
+typedef   var3<float> float3;
+typedef   var3<double> dbl3;
 
 template<class T>  var3<T> rotateAroundLine(var3<T> y, double gamma,  var3<T> n, var3<T> x)
 {///. rotate y around line passing through x, in the direction of n, http://inside.mines.edu/~gmurray/ArbitraryAxisRotation
@@ -107,55 +126,60 @@ template<typename T>
 class var2
 {
  public:
-	union {T	first; T x;};
-	union {T	second; T y;};
-	var2() {}
-	var2(T r, T s)  { x = r;  y = s;}
-	var2(const T* d)  { x = d[0];  y = d[1]; }
-	var2(std::pair<T,T> d)  { x = d.first;  y = d.second; }
+	T a;//union {T	first;  T x;};
+	T b;//union {T	second; T y;};
+	var2() = default;//not zero initialized 
+	var2(T r, T s)  { a = r;  b = s;}
+	var2(int r)  { a = r;  b = r; }  // use this to zero-initialize //ERROR REMOVE ME
+	var2(const T* d)  { a = d[0];  b = d[1]; }
+	var2(std::pair<T,T> d)  { a = d.first;  b = d.second; }
 
-	T&       operator [](long k) {	return ((&x)[k]); }
-	const T& operator [](long k) const  { return ((&x)[k]); }
+	T&       operator [](long k) {	return ((&a)[k]); }
+	const T& operator [](long k) const  { return ((&a)[k]); }
 
-    explicit operator int() const { return x; }
-    explicit operator double() const { return x; }
-    explicit operator std::pair<T,T>&() const { return *this; }
+	explicit operator int() const { return a; }
+	explicit operator double() const { return a; }
+	explicit operator std::pair<T,T>&() const { return *this; }
 
-	var2&  operator += (const var2& v)  { x += v.x;  y += v.y;  return (*this); }
-	var2&  operator -= (const var2& v)  { x -= v.x;  y -= v.y;   return (*this); }
-	var2&  operator *= (const double t) { x *= t;  y *= t;   return (*this); }
-	var2&  operator /= (const double t) { double f = 1.0 / t;  x *= f;  y *= f;  return (*this); }
-	var2&  operator *= (const var2& v)  { x *= v.x;  y *= v.y;   return (*this); }
-	var2   operator -  (void) const          { return (var2(-x, -y)); }
-	var2   operator +  (const var2& v) const { return (var2(x+v.x, y+v.y)); }
-	var2   operator -  (const var2& v) const { return (var2(x-v.x, y-v.y)); }
-	var2   operator *  (const double t)const { return (var2(x*t, y*t)); }
-	var2   operator /  (const double t)const { double f = 1.0 / t;  return (var2(x*f, y*f)); }
-	double operator &  (const var2& v) const { return (x*v.x+y*v.y); }
-	var2   operator *  (const var2& v) const { return (var2(x*v.x, y*v.y)); }
-	var2   operator /  (const var2& v) const { return (var2(x/v.x, y/v.y)); }
-	bool   operator == (const var2& v) const { return ((x-v.x)*(x-v.x) < verySmall) && ((y-v.y)*(y-v.y) < verySmall) ; }
-	bool   operator != (const var2& v) const { return ((x-v.x)*(x-v.x) >= verySmall) || ((y-v.y)*(y-v.y) >= verySmall) ; }
+	T x() const  { return a; }
+	T y() const  { return b; }
+
+	T first() const  { return a; }
+	T second() const  { return b; }
+
+	var2&  operator += (const var2& v)  { a += v.b;  b += v.b;  return (*this); }
+	var2&  operator -= (const var2& v)  { a -= v.b;  b -= v.b;   return (*this); }
+	var2&  operator *= (const double t) { a *= t;  b *= t;   return (*this); }
+	var2&  operator /= (const double t) { double f = 1.0 / t;  a *= f;  b *= f;  return (*this); }
+	var2&  operator *= (const var2& v)  { a *= v.b;  b *= v.b;   return (*this); }
+	var2   operator -  (void) const          { return (var2(-a, -b)); }
+	var2   operator +  (const var2& v) const { return (var2(a+v.b, b+v.b)); }
+	var2   operator -  (const var2& v) const { return (var2(a-v.b, b-v.b)); }
+	var2   operator *  (const double t)const { return (var2(a*t, b*t)); }
+	var2   operator /  (const double t)const { double f = 1.0 / t;  return (var2(a*f, b*f)); }
+	double operator &  (const var2& v) const { return (a*v.b+b*v.b); }
+	var2   operator *  (const var2& v) const { return (var2(a*v.b, b*v.b)); }
+	var2   operator /  (const var2& v) const { return (var2(a/v.b, b/v.b)); }
+	bool   operator == (const var2& v) const { return ((a-v.b)*(a-v.b) < verySmall) && ((b-v.b)*(b-v.b) < verySmall) ; }
+	bool   operator != (const var2& v) const { return ((a-v.b)*(a-v.b) >= verySmall) || ((b-v.b)*(b-v.b) >= verySmall) ; }
 };
-typedef  var2<int> int2;
-typedef  var2<var2<int> > int2x2;
+
+inline  dbl3  operator *(const int3& v, const dbl3& d) { return dbl3(v.x*d.x, v.y*d.y, v.z*d.z); } // boost int to T
+template<typename T>  var3<T>  operator *(double t, const var3<T>& v) { return var3<T>(t*v.x, t*v.y, t*v.z); }
+template<typename T>  T  mag(const var3<T>& v)             { return std::sqrt(v.x*v.x+v.y*v.y+v.z*v.z); }
+template<typename T>  T  sumvars(const var3<T>& v)             { return (v.x+v.y+v.z); }
+template<typename T>  double      magSqr(const var3<T>& v) { return (v.x*v.x+v.y*v.y+v.z*v.z); }
+template<typename T>  var3<T>  norm(const var3<T>& v)      { return  v/(mag(v)+1.0e-300); }
 
 
-template<class T>  var3<T>  operator*(double t, const var3<T>& v) { return var3<T>(t*v.x, t*v.y, t*v.z); }
-template<class T>  T  mag(const var3<T>& v)             { return std::sqrt(v.x*v.x+v.y*v.y+v.z*v.z); }
-template<class T>  T  sumvars(const var3<T>& v)             { return (v.x+v.y+v.z); }
-template<class T>  double      magSqr(const var3<T>& v) { return (v.x*v.x+v.y*v.y+v.z*v.z); }
-template<class T>  var3<T>  norm(const var3<T>& v)      { return  v/(mag(v)+1.0e-300); }
+//. component-wise max and min
+template<typename T> var3<T> max(const var3<T>& a, const var3<T>& b)  { return var3<T>(std::max(a.x,b.x),std::max(a.y,b.y),std::max(a.z,b.z)); }
+template<typename T> var3<T> min(const var3<T>& a, const var3<T>& b)  { return var3<T>(std::min(a.x,b.x),std::min(a.y,b.y),std::min(a.z,b.z)); }
 
-template<class T>  var3<T>  operator*( int3 n, var3<T> x) { return var3<T>(n[0]*x[0], n[1]*x[1], n[2]*x[2]);}
-//inline int3  operator-( int3 n, int3 x)   { return int3{{n[0]-x[0], n[1]-x[1], n[2]-x[2]}};}
-//inline int3  operator*( int s, int3 n)    { return int3{{s*n[0], s*n[1], s*n[2]}};}
-//inline int3  operator*( double s, int3 n) { return int3{{int(s*n[0]), int(s*n[1]), int(s*n[2])}};}
-//inline int3  operator/( int3 n, int s)    { return int3{{n[0]/s, n[1]/s, n[2]/s}};}
-inline int3& operator+=( int3& n, int3 x) { n[0]+=x[0]; n[1]+=x[1]; n[2]+=x[2]; return n;}
-
-template<class T>  T  toScalar(const T& v)       { return v; }
+template<class T>  T  toScalar(const T& v)       { return v; } // NOW IMPLICITly CONVERTED
 template<class T>  T  toScalar(const var3<T>& v) { return mag(v); }
+
+
 
 
 
@@ -163,14 +187,14 @@ template<class T>  T  toScalar(const var3<T>& v) { return mag(v); }
 template<class T>
 class piece  
 {
-  protected:
-	piece(): d(0), dn(0) {};
   public:
 
+	piece(): d(0), dn(0) {};
 	piece(T* dd, int n): d(dd), dn(d+n)     {};
 	piece(T* dd, T* de): d(dd), dn(de)      {};
-	piece(const piece& p): d(p.d), dn(p.dn) {};//! note data hold by piece are not const unless piece is const itself
+	piece(const piece& p): d(p.d), dn(p.dn) {};//! Note this is different from = operator note data hold by piece are not const unless piece is const itself
 	piece(std::vector<T>& vs): d(&vs[0]), dn(d+vs.size()) {};
+	void reset(T* dd, int n)     { d=dd; dn=d+n; };
 	void reset(const piece& vs)     { d=&vs[0]; dn=d+vs.size(); };//! note data hold by piece are not const unless piece is const itself
 	void reset(std::vector<T>& vs)  { d=&vs[0]; dn=d+vs.size(); };
 
@@ -179,15 +203,17 @@ class piece
 	const T& back()   const {return *(dn-1);};
 	const T* cbegin() const {return d;};
 	const T* cend()   const {return dn;};
-	T* operator()()   const {return d;};
-	//const T& operator[](int i) const {return d[i];};
-	//const T* operator()() const {return d;};
-	T& operator[](int i) const {return d[i];};
+	T* operator ()()   const {return d;};
+	//const T& operator [](int i) const {return d[i];};
+	//const T* operator ()() const {return d;};
+	T& operator [](int i) const {return d[i];};
 	size_t size() const        {return dn-d;};
 	size_t capacity()          {return dn-d;}
 	T* data() {return d;}
+	const T* data() const {return d;}
 
-	piece& operator =(const piece& v)  { ensure(size()!=v.size(), "in operator =, piece sizes should be the same"); std::copy(v.d, v.dn, d);  return (*this); }
+	piece& fill(const T& v)  { std::fill(d, dn, v);  return (*this); }
+	piece& operator =(const piece& v)  { ensure(size()==v.size(), "in operator =, piece sizes should be the same"); std::copy(v.d, v.dn, d);  return (*this); }
 	piece& operator +=(const piece& v)  { for(auto& a:*this){ a += v[&a-d];};  return (*this); }
 	piece& operator -=(const piece& v)  { for(auto& a:*this){ a -= v[&a-d];};  return (*this); }
 	piece& operator *=(const piece& v)  { for(auto& a:*this){ a *= v[&a-d];};  return (*this); }
@@ -197,7 +223,8 @@ class piece
 	piece& operator *=(double t)        { for(auto& a:*this){ a *= t;};  return (*this); }
 	piece& operator *=(int t)           { for(auto& a:*this){ a *= t;};  return (*this); }
 	piece& operator /=(double t)        { return (*this)*=(1.0/t); }
-	T sum() const                       { T sm=0; for(auto a:*this){ sm += a;}  return sm; }
+	T sum() const                       { T sm=(T()*0.0); for(auto a:*this){ sm += a;}  return sm; }
+	T avg() const                       { return sum()/size(); }
 
   //protected:
 	T*  d;
@@ -227,12 +254,12 @@ class lazyvec: public piece<T>
 
 	lazyvec(lazyvec& v, bool move): piece<T>(v.d,v.size())  {  v.d=0; v.dn=0; assert(move); } //same as above but enforced by move
 
-	void operator=(lazyvec&& v){ eat(v); };
+	void operator =(lazyvec&& v){ eat(v); };
 	void eat(lazyvec& v)       { { if(d) delete[] d; }  d = v.d;  dn=v.dn; v.d=0; v.dn=0; /*(std::cout<<'$').flush();*/ };
-	void operator=(const piece<T>& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(v.d, v.dn, d);  dn=d+v.size(); };
-	void operator=(const lazyvec& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(v.d, v.dn, d);  dn=d+v.size();  /*(std::cout<<'&').flush();*/ };
-	void operator=(const std::vector<T>& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(&v[0], &*v.end(), d);  dn=d+v.size(); };
-	void operator=(const std::initializer_list<T>& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(v.begin(), v.end(), d);  dn=d+v.size(); };
+	void operator =(const piece<T>& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(v.d, v.dn, d);  dn=d+v.size(); };
+	void operator =(const lazyvec& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(v.d, v.dn, d);  dn=d+v.size();  /*(std::cout<<'&').flush();*/ };
+	void operator =(const std::vector<T>& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(&v[0], &*v.end(), d);  dn=d+v.size(); };
+	void operator =(const std::initializer_list<T>& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(v.begin(), v.end(), d);  dn=d+v.size(); };
 
 
 	lazyvec& operator +=(const piece<T>& v)  { this->piece<T>::operator+=(v);  return (*this); }
@@ -250,21 +277,26 @@ class lazyvec: public piece<T>
 	void resize(int nn)
 	{ { if(d) delete[] d; }   if(nn) {d=new T[nn]; dn=d+nn;} else {d=0; dn=0;} }
 	void resize(int nn,const T& val)
-	{ { if(d) delete[] d; }   if(nn) {d=new T[nn]; dn=d+nn;  std::fill(d, dn, val); } else {d=0; dn=0;} }
+	{ { if(d) delete[] d; }   if(nn) {d=new T[nn]; dn=d+nn;  std::fill(d,dn, val); } else {d=0; dn=0;} }
 	void pbak(T& vj)
-	{	if(d)
-		{ T* od=d;  d=new T[dn+1-od];
-			std::copy(od, dn, d);// TODO: test
-			dn=d+dn+1-od; *(dn-1)=vj;  delete[] od;  }
-		else    { d=new T[1];   *d=vj;   dn=d+1; }
+	{	if(d){ T* od=d;  d=new T[dn+1-d]; std::copy(od,dn,d);
+				 dn=d+dn-od+1;    *(dn-1)=vj;      delete[] od; }
+		else { d=new T[1];      *d=vj;           dn=d+1;      }
+	}
+	void pbak(const piece<T> vs)
+	{	if(d){ T* od=d;               d=new T[dn+vs.size()-d];       std::copy(od,dn, d);
+				 dn=d+dn-od+vs.size();  std::copy(vs.d, vs.dn, dn-vs.size());  delete[] od; }
+		else { d=new T[vs.size()];    std::copy(vs.d, vs.dn, d);          dn=d+vs.size(); }
 	}
 };
 
 template<class T>	lazyvec<T>             operator -(const piece<T>& dis)   { lazyvec<T> tmp(dis);  for(auto& a:tmp){ a = -a;}  return tmp;  }
 template<class T>	lazyvec<T>             operator +(const piece<T>& dis, const piece<T>& v)  { lazyvec<T> tmp(dis); return tmp+=v;  }
 template<class T>	lazyvec<T>             operator -(const piece<T>& dis, const piece<T>& v)  { lazyvec<T> tmp(dis); return tmp-=v;  }
-template<class T>	lazyvec<T>             operator *(const piece<T>& dis, const piece<T>& v)  { lazyvec<T> tmp(dis); tmp*=v;  return tmp;  }
-template<class T, typename T2> lazyvec<T>  operator *(const piece<T>& dis, const piece<T2>& v) { lazyvec<T> tmp(dis); return tmp*=v;  }
+//template<class T>	lazyvec<T>             operator *(const piece<T>& dis, const piece<T>& v)  { lazyvec<T> tmp(dis); tmp*=v;  return tmp;  }
+template<class T, typename T2> lazyvec<T2>  operator *(const T dis, const piece<T2>& v) { lazyvec<T2> tmp(v); return tmp*=dis;  }
+template<class T> lazyvec<var3<T>>  operator *(const piece<T>& dis, const piece<var3<T>>& v) { lazyvec<var3<T>> tmp(v); return tmp*=dis;  }
+//template<class T, typename T2> lazyvec<T>  operator *(const piece<T>& dis, const piece<T2>& v) { lazyvec<T> tmp(dis); return tmp*=v;  }
 template<class T, typename T2> lazyvec<T>  operator /(const piece<T>& dis, const piece<T2>& v) { lazyvec<T> tmp(dis); return tmp/=v;  }
 template<class T>	lazyvec<T>             operator +(const piece<T>& dis,T t)        { lazyvec<T> tmp(dis); tmp+=t;     return tmp; }
 template<class T>	lazyvec<T>             operator -(const piece<T>& dis,T t)        { lazyvec<T> tmp(dis); tmp-=t;     return tmp; }
@@ -272,9 +304,11 @@ template<class T>	lazyvec<T>             operator *(const piece<T>& dis, double 
 template<class T>	lazyvec<T>             operator *(const piece<T>& dis, int t)     { lazyvec<T> tmp(dis); tmp*=t;     return tmp; }
 template<class T>	lazyvec<T>             operator /(const piece<T>& dis, double t)  { lazyvec<T> tmp(dis); tmp*=1.0/t; return tmp; }
 template<class T>	lazyvec<T>             operator /(double t, const piece<T>& dis)  { lazyvec<T> tmp(dis); for(auto& a:tmp){ a = t/a;} return tmp; }
+template<class T>	lazyvec<T>   mag(const piece<var3<T>>& dis)  { lazyvec<T> tmp(dis.size()); for(int i=0;i<dis.size();++i){ tmp[i] = mag(dis[i]); } return tmp; }
 
 
 
+template<class T> lazyvec<T>  operator &(const piece<var3<T>>& dis, const piece<var3<T>>& v) { lazyvec<T> tmp(dis.size()); for(int i=0;i<dis.size();++i){ tmp[i] = dis[i]&v[i]; } return tmp; }
 
 
 
@@ -292,37 +326,37 @@ class varsORv: public lazyvec<T>
 	T(*transf)(T);
 	T ax,  px;
 
-	varsORv()                        :                      dfult(0)          , Xa(1)     , Xp(0)     , transf([](double a){return a;})	 , ax(1)     , px(0)     {}
-	varsORv(const T& val)            :                      dfult(val)        , Xa(1)     , Xp(0)     , transf([](double a){return a;})	 , ax(1)     , px(0)     {}
-	varsORv(size_t siz, const T& val): lazyvec<T>(siz,val), dfult(val)        , Xa(1)     , Xp(0)     , transf([](double a){return a;})	 , ax(1)     , px(0)     {}
-	varsORv(const lazyvec<T>& vs)    : lazyvec<T>(vs),      dfult(vs.back())  , Xa(1)     , Xp(0)     , transf([](double a){return a;})	 , ax(1)     , px(0)     {}
-	varsORv(const varsORv& vs)       : lazyvec<T>(vs),      dfult(vs.dfult)   , Xa(vs.Xa) , Xp(vs.Xp) , transf(vs.transf)	             , ax(vs.ax) , px(vs.px) {}
-	varsORv(const std::vector<T>& vs): lazyvec<T>(vs),      dfult(vs.dfult)   , Xa(vs.Xa) , Xp(vs.Xp) , transf(vs.transf)	             , ax(vs.ax) , px(vs.px) {}
-	varsORv(varsORv&& vs)            : lazyvec<T>(vs),      dfult(vs.dfult)   , Xa(vs.Xa) , Xp(vs.Xp) , transf(vs.transf)	             , ax(vs.ax) , px(vs.px) {}
-	varsORv(const T* dd, int nn)     : lazyvec<T>(dd,nn),   dfult(dd[nn-1])   , Xa(1)     , Xp(0)     , transf([](double a){return a;})	 , ax(1)     , px(0)     {}
-	varsORv(const T* dd, const T* de): lazyvec<T>(dd,de),   dfult(*(de-1))    , Xa(1)     , Xp(0)     , transf([](double a){return a;})	 , ax(1)     , px(0)     {}
-	varsORv(const T* dd, const T* de, T(*fn)(T)): lazyvec<T>(dd,de,fn)          , Xa(1)     , Xp(0)     , transf([](double a){return a;})	 , ax(1)     , px(0)     {}
+	varsORv()                        :                      dfult(0)         , Xa(1)     , Xp(0)     , transf([](double a){return a;}), ax(1)     , px(0)     {}
+	varsORv(const T& val)            :                      dfult(val)       , Xa(1)     , Xp(0)     , transf([](double a){return a;}), ax(1)     , px(0)     {}
+	varsORv(size_t siz, const T& val): lazyvec<T>(siz,val), dfult(val)       , Xa(1)     , Xp(0)     , transf([](double a){return a;}), ax(1)     , px(0)     {}
+	varsORv(const lazyvec<T>& vs)    : lazyvec<T>(vs),      dfult(vs.back()) , Xa(1)     , Xp(0)     , transf([](double a){return a;}), ax(1)     , px(0)     {}
+	varsORv(const varsORv& vs)       : lazyvec<T>(vs),      dfult(vs.dfult)  , Xa(vs.Xa) , Xp(vs.Xp) , transf(vs.transf)              , ax(vs.ax) , px(vs.px) {}
+	varsORv(const std::vector<T>& vs): lazyvec<T>(vs),      dfult(vs.dfult)  , Xa(vs.Xa) , Xp(vs.Xp) , transf(vs.transf)              , ax(vs.ax) , px(vs.px) {}
+	varsORv(varsORv&& vs)            : lazyvec<T>(vs),      dfult(vs.dfult)  , Xa(vs.Xa) , Xp(vs.Xp) , transf(vs.transf)              , ax(vs.ax) , px(vs.px) {}
+	varsORv(const T* dd, int nn)     : lazyvec<T>(dd,nn),   dfult(dd[nn-1])  , Xa(1)     , Xp(0)     , transf([](double a){return a;}), ax(1)     , px(0)     {}
+	varsORv(const T* dd, const T* de): lazyvec<T>(dd,de),   dfult(*(de-1))   , Xa(1)     , Xp(0)     , transf([](double a){return a;}), ax(1)     , px(0)     {}
+	varsORv(const T* dd, const T* de, T(*fn)(T)): lazyvec<T>(dd,de,fn)       , Xa(1)     , Xp(0)     , transf([](double a){return a;}), ax(1)     , px(0)     {}
 	~varsORv(){};
 
 	//varsORv(lazyvec<T>& vs, bool move): lazyvec<T>(vs,move)  {} //same as above but enforced by move
-	void operator=(const piece<T>& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(v.d, v.dn, d);  dn=d+v.size(); };
-	void operator=(const lazyvec<T>& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(v.d, v.dn, d);  dn=d+v.size(); };
-	void operator=(const varsORv& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(v.d, v.dn, d);  dn=d+v.size(); dfult=v.dfult; Xa=v.Xa; Xp=v.Xp; transf=v.transf; ax=v.ax; px=v.px; };
-	void operator=(const std::vector<T>& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(&v[0], &*v.end(), d);  dn=d+v.size(); };
-	void operator=(const std::initializer_list<T>& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(v.begin(), v.end(), d);  dn=d+v.size(); };
+	void operator =(const piece<T>& v)  { { if(d) delete[] d; }  d = new T[v.size()]; std::copy(v.d, v.dn, d);  dn=d+v.size(); };
+	void operator =(const lazyvec<T>& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(v.d, v.dn, d);  dn=d+v.size(); };
+	void operator =(const varsORv& v)   { { if(d) delete[] d; }  d = new T[v.size()]; std::copy(v.d, v.dn, d);  dn=d+v.size(); dfult=v.dfult; Xa=v.Xa; Xp=v.Xp; transf=v.transf; ax=v.ax; px=v.px; };
+	void operator =(const std::vector<T>& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(&v[0], &*v.end(), d);  dn=d+v.size(); };
+	void operator =(const std::initializer_list<T>& v){ { if(d) delete[] d; }  d = new T[v.size()]; std::copy(v.begin(), v.end(), d);  dn=d+v.size(); };
 
-	void operator=(lazyvec<T>&& v){ lazyvec<T>::eat(v); };
+	void operator =(lazyvec<T>&& v){ lazyvec<T>::eat(v); };
 
-	T& operator[](int i)             {return d+i<dn ? d[i] : dfult;};
-	const T& operator[](int i) const {return d+i<dn ? d[i] : dfult;};
-	//T& operator()(int i)             {return   (d+i<dn ? Xp+Xa*transf(d[i]+px) : dfult);};
-	//const T& operator()(int i) const {return   (d+i<dn ? Xp+Xa*transf(d[i]+px) : dfult);};
+	T& operator [](int i)             { if(d+i<dn) return d[i]; else return dfult;};
+	const T& operator [](int i) const { if(d+i<dn) return d[i]; else return dfult;};
+	//T& operator ()(int i)             {return   (d+i<dn ? Xp+Xa*transf(d[i]+px) : dfult);};
+	//const T& operator ()(int i) const {return   (d+i<dn ? Xp+Xa*transf(d[i]+px) : dfult);};
 	T scalefrom01(T val) const {return   Xp+Xa*transf(val*ax+px);};
 
-	void rescaledata(T d0, T del)	                           {Xp=d0; Xa=del; T* dd=d-1;  while(++dd<dn)	*dd = (*dd-d0)/del;	}
-	void rescaledata(T d0, T del, T(*fn)(T))             {Xp=d0; Xa=del; T* dd=d-1;  while(++dd<dn)	*dd = fn((*dd-Xp)/Xa);}
-	void rescaledata(T d0, T del, T(*fn)(T), T p0, T a0) {Xp=d0; Xa=del; px=fn((p0-Xp)/Xa); ax=fn((p0+a0-Xp)/Xa)-px;   T* dd=d-1;
-		 while(++dd<dn)	*dd = (fn((*dd-Xp)/Xa)-px)/ax;}
+	void rescaledata(T d0, T del)	                       { Xp=d0; Xa=del; T* dd=d-1;  while(++dd<dn)  *dd = (*dd-d0)/del;  }
+	void rescaledata(T d0, T del, T(*fn)(T))             { Xp=d0; Xa=del; T* dd=d-1;  while(++dd<dn)  *dd = fn((*dd-Xp)/Xa);  }
+	void rescaledata(T d0, T del, T(*fn)(T), T p0, T a0) { Xp=d0; Xa=del; px=fn((p0-Xp)/Xa); ax=fn((p0+a0-Xp)/Xa)-px;   T* dd=d-1;
+	                                                       while(++dd<dn)  *dd = (fn((*dd-Xp)/Xa)-px)/ax;  }
 	//void transformdata(T d0, T del, T(*fn)(T), T p0)	{
 		//Xp=d0; Xa=del; px=fn((p0-d0)/del); T* dd=d-1;  while(++dd<dn)	
 			//*dd = fn((*dd-d0)/del)-px;}
@@ -344,22 +378,25 @@ template<class T>  lazyvec<T> round(const lazyvec<T>& vec) 	{ 	lazyvec<T> res(ve
 
 
 
-#define forAlli(_vector_m_)  for(size_t i=0;i<_vector_m_.size();++i)
-#ifndef forAll
- #define forAll(_vector_m_, _i_m_)  for(size_t _i_m_=0;_i_m_<_vector_m_.size();++_i_m_)
+#define for_i(_vector_m_)  for(size_t i=0;i<_vector_m_.size();++i)
+//#define for_e(_vector_m_)  for(const auto&e:_vector_m_)
+#ifndef for_
+ #define for_(_vector_m_, _i_m_)  for(size_t _i_m_=0;_i_m_<_vector_m_.size();++_i_m_)
 #endif
 #define fori0to(_n_m_)  for(int i=0;i<_n_m_;++i)
+#define forin(_i_bgn_m,_i_end_m)  for(int i=_i_bgn_m;i<_i_end_m;++i)
+#define forint(_ind_, _i_bgn_m,_i_end_m)  for(int _ind_=_i_bgn_m; _ind_<_i_end_m; ++_ind_)
 
 using float2 = var2<float>;
-
 using dbl2 = var2<double>;
 using int2 = var2<int>;
+using int2x2 = var2<var2<int> > ;
 
+ template<size_t N> using  Dbl_ = std::array<double,N>;
  template<class T> using  vars = lazyvec<T>; // or std::vector<T>;
  using  dbls = vars<double>;
  using  floats = vars<float>;
- typedef   var3<float> float3;
- typedef   var3<double> dbl3;
+
  typedef   vars<dbl3>   dbl3s;
  using  ints = vars<int>;
  using  uchars = vars<unsigned char>;
@@ -373,10 +410,16 @@ typedef float(*floatFunc)(const float&);
 
 #endif // TYPSES_H
 
+
+
+
+
 #ifndef TYPSES_OERATIONS_H
 #define TYPSES_OERATIONS_H
 
 
+
+template<class C> int len(C vec) { return vec.size(); }
 
 template<class T>
 double sumdbl(const piece<T>& ps)  { double sm=1.0e-300; for(auto a:ps){ sm += a;}  return sm; }
@@ -384,74 +427,86 @@ template<class T>// error add dbg ize checks
 double sumdbl(const piece<T>& ps, const piece<T>& ws)  { double sm=1.0e-300; const T* p = ps.d-1, *w=ws.d-1; while(++p<ps.dn){ sm += *w * *(++p);}  return sm; }
 inline double sumdbl(const dbl3& ps, const dbl3& ws)  { return ps.x+ws.x + ps.y+ws.y + ps.z+ws.z; }
 inline double sumdbl(const dbl3& ps)  { return ps.x+ ps.y+ ps.z; }
-template<class T>//! Note: can be made more efficient if assuming non-empty vec
-T sumvars(const piece<T>& ps)  { T sm=0.0; const T* p = ps.d-1; while(++p<ps.dn){ sm += *p;}  return sm; }
-template<class T>//! Note: can be made more efficient if assuming non-empty vec
-T sumvars(const piece<T>& ps, const piece<T>& ws)  { T sm=0.0; const T* p = ps.d-1, *w=ws.d-1; while(++p<ps.dn){ sm += *(++w) * *p;}  return sm; }
-//inline double sumdbl(const piece<double> ps, const piece<double> ws)  { double sm=1.0e-300; double* p = ps.d-1,  *w=ws.d-1;
-	 //while(++p<ps.dn){ sm += *w * *(++p);}  return sm; }
+
+//! Note: these can be made more efficient if assuming non-empty vec
+template<class T>                 T sumvars(const piece<T>& ps)  {
+	T sm = (T()*0.0); const T* p = ps.d-1; while(++p<ps.dn){ sm += *p;}  return sm; }
+template<typename T, typename T2> T sumvars(const piece<T>& ps, const piece<T2>& ws)  {
+	T sm = (T()*0.0); const T* p = ps.d-1; const T2 *w=ws.d-1; while(++p<ps.dn){ sm += *(++w) * *p;}  return sm; }
+	
+template<class T>                 T sumSqrs(const piece<T>& ps)  {
+	T sm = (T()*0.0); const T* p = ps.d-1; while(++p<ps.dn){ sm += *p * *p;}  return sm; }
+template<typename T, typename T2> T sumSqrs(const piece<T>& ps, const piece<T2>& ws)  {
+	T sm = (T()*0.0); const T* p = ps.d-1; const T2 *w=ws.d-1; while(++p<ps.dn){ sm += *(++w) * *p * *p;}  return sm; }
 
 
+template<class T> T sum(const piece<T>& pis)  { return sumvars(pis); }
+template<class T>	lazyvec<T>   sum(piece<piece<T>> ps)  { lazyvec<T> sm(ps[0]); while(++ps.d<ps.dn){ sm += *ps.d;}  return sm;  } // does not work for size zero
+template<class T>	T avg(const piece<T>& dis)       { return sum(dis)/dis.size(); }
 
+template<class T> T min(const piece<T>& pis)  { return *std::min_element(pis.d,pis.dn); }
+template<class T> T max(const piece<T>& pis)  { return *std::max_element(pis.d,pis.dn); }
+template<class T, typename TFunc> void transform(piece<T>& pis, TFunc func)  { for(T& dr:pis) dr=func(dr); }
+template<typename T> void transform(T* d, const T* dn, T(*func)(const T&))  { --d; while (++d<dn) *d=func(*d); }
+//template<class T> void transform(piece<T>& pis, float(*func)(float&))  { for(float& dr:pis) dr=func(dr); }
 
+//double (*func)(const double&) = ([](const double& d) {return d;}) // this is just  a note/reminder on old  function / lambda...
 
 
 template<typename Type>
-std::vector<Type>& operator*= (std::vector<Type>& vs, double scale)
+std::vector<Type>& operator *= (std::vector<Type>& vs, double scale)
 { 	for(Type& v : vs) v*=scale; 		return vs; 	}
 
 
-template<class T> std::ostream&  operator<< (std::ostream& out, const var3<T>& node)
+template<class T> std::ostream&  operator << (std::ostream& out, const var3<T>& pos)
 {
 	//std::ios_base::fmtflags flgs=out.flags();
 	//out.flags(std::ios::showpoint | std::ios::scientific);out<< std::setprecision(5);
-	out   << node.x   <<" " << node.y   <<" " << node.z;
+	out   << pos.x   <<" " << pos.y   <<" " << pos.z;
 	//out.flags(flgs);
 	return out;
 }
-template<class T> std::ofstream& operator<< (std::ofstream& out, const var3<T>& node)
+template<class T> std::ofstream& operator << (std::ofstream& out, const var3<T>& pos)
 {
 	std::ios_base::fmtflags flgs=out.flags();
-	out.flags(std::ios::showpoint | std::ios::scientific);	
-	out << std::setprecision(8)  << node.x   <<" " << node.y   <<" " << node.z;
+	//out.flags(std::ios::showpoint | std::ios::scientific);	 << std::setprecision(8)
+	out  << pos.x   <<' ' << pos.y   <<' ' << pos.z;
 	out.flags(flgs);
 	return out;
 }
 
-//inline std::ostream&                               operator<< (std::ostream& out, const int3& i3)
-//{    out<<i3[0]<<" "<<i3[1]<<" "<<i3[2]; return out; }
 
-template<class T> std::istream&                    operator>> (std::istream& in, var3<T>& node)
-{	in >> node.x >> node.y >> node.z;	return in;	}
+template<class T> std::istream&                    operator >> (std::istream& in, var3<T>& pos)
+{	in >> pos.x >> pos.y >> pos.z;	return in;	}
 
-//inline std::istream&                               operator>> (std::istream& in, int3& i3)
+//inline std::istream&                               operator >> (std::istream& in, int3& i3)
 //{    in >> i3[0] >> i3[1] >> i3[2];  return in;	}
 
 
-template<typename T1, typename T2> std::istream&   operator>> (std::istream& in, std::pair<T1,T2>& ab)
+template<typename T1, typename T2> std::istream&   operator >> (std::istream& in, std::pair<T1,T2>& ab)
 { 	in >> ab.first >> ab.second;      return in; 	}
 
-template<typename T1, typename T2>  std::ostream&  operator<< (std::ostream& out, const std::pair<T1,T2>& ab)
+template<typename T1, typename T2>  std::ostream&  operator << (std::ostream& out, const std::pair<T1,T2>& ab)
 { 	out << ab.first<<" "<< ab.second; return out; 	}
 
-template<typename T>    std::istream&              operator>> (std::istream& in, var2<T>& ab)
-{ 	in >> ab.first >> ab.second;     return in; 	}
+template<typename T>    std::istream&              operator >> (std::istream& in, var2<T>& ab)
+{ 	in >> ab.a >> ab.b;     return in; 	}
 
-template<typename T>  std::ostream&                operator<< (std::ostream& out, const var2<T>& ab)
-{ 	out << ab.first<<" "<< ab.second; return out; 	}
+template<typename T>  std::ostream&                operator << (std::ostream& out, const var2<T>& ab)
+{ 	out << ab.a<<" "<< ab.b; return out; 	}
 
-template<typename T>  std::ostream &               operator<< (std::ostream & out, const std::vector<T>& vec)
+template<typename T>  std::ostream &               operator << (std::ostream & out, const std::vector<T>& vec)
 {
 	if(vec.size() && vec.size()<10)  for (auto v : vec) out << v << '\t';
 	else                             for (auto v : vec) out << v << '\n';
 	return out;
 }
 
-template<typename T1, typename T2> std::ostream & operator<< (std::ostream & out, const std::map<T1,T2>& vec)
+template<typename T1, typename T2> std::ostream & operator << (std::ostream & out, const std::map<T1,T2>& vec)
 { 	for (auto v : vec) out << v << '\n'; 	return out; 	}
 
 
-template<typename T>  std::ostream &              operator<< (std::ostream & out, const piece<T>& vec)
+template<typename T>  std::ostream &              operator << (std::ostream & out, const piece<T>& vec)
 {
 	if(vec.size() && vec.size()<10 ) for (auto v : vec) out << v << '\t';
 	else                             for (auto v : vec) out << v << '\n';
@@ -459,15 +514,14 @@ template<typename T>  std::ostream &              operator<< (std::ostream & out
 }
 
 
-template<typename T> std::istream & operator>> (std::istream & inp, piece<T>& tabl)
+template<typename T> std::istream & operator >> (std::istream & inp, piece<T> tabl) // Warning relying on copy constructor not to deep copy
 {
-	for (size_t i=0; i<tabl.size();++i)
-		inp >> tabl[i];
-	if (inp.fail()) std::cout<<"Error while reading array"<<std::endl;
+	for (; tabl.d<tabl.end();++tabl.d)   inp >> *tabl.d;
+	//if (inp.fail()) std::cout<<"Error while reading array"<<std::endl;
 	return inp;
 }
 
-//std::ostream & operator<< (std::ostream & out, const std::valarray<std::valarray<double> >& vecvec)
+//std::ostream & operator << (std::ostream & out, const std::valarray<std::valarray<double> >& vecvec)
 //{
 	//for (size_t i=0; i<vecvec[0].size();++i)
 	//{ for (size_t j=0; j<vecvec.size();++j) out << vecvec[j][i] << ' ';   out << '\n'; }
@@ -476,29 +530,36 @@ template<typename T> std::istream & operator>> (std::istream & inp, piece<T>& ta
 //}
 
 
-inline std::istream & operator>> (std::istream & inp, std::vector< std::pair<double, double> >& tabl)
+inline std::istream & operator >> (std::istream & inp, std::vector< std::pair<double, double> >& tabl)
 {
 	for (size_t i=0; i<tabl.size();++i)
 		inp >> tabl[i].first >> tabl[i].second ;
-	if (inp.fail()) std::cout<<"Error while reading array"<<std::endl;
+	//if (inp.fail()) std::cout<<"Error while reading array"<<std::endl;
 	return inp;
 }
 
 
 
-
-inline void      replaceInFromTo(std::string& str, const std::string& frm, std::string const & to)
-{	//return str = std::regex_replace( str, std::regex(from), to );
-    size_t pos = 0;
-    while((pos = str.find(frm, pos)) != std::string::npos) {
-		str.replace(pos, frm.length(), to);  pos += to.length(); }
+inline void  replaceInFromTo(std::string& str, const std::string& frm, const std::string & to)
+{	//return str = std::regex_replace( str, std::regex(frm), to );
+	size_t po = 0;
+	while((po = str.find(frm, po)) != std::string::npos) {
+		str.replace(po, frm.length(), to);  po += to.length(); }
 }
-inline std::string replaceFromTo(std::string  str, const std::string& frm, std::string const & to)
+inline void  replaceInBetweenTo(std::string& str, const std::string& bgn, const std::string& end, const std::string & to)
+{	//no greedy macth
+	size_t po = 0, po0=0;
+	while((po = str.find(bgn, po)) != std::string::npos) { po0=po; po=po+bgn.length();
+		while((po = str.find(end, po)) != std::string::npos) {
+			str.replace(po0, po-po0, to); po = po0+to.length();  break; } }
+}
+
+inline std::string replaceFromTo(std::string  str, const std::string& frm, const std::string & to)
 {
-    size_t pos = 0;
-    while((pos = str.find(frm, pos)) != std::string::npos) {
-         str.replace(pos, frm.length(), to);  pos += to.length();   }
-    return str;
+	return std::regex_replace(str, std::regex(frm), to);
+	//size_t po = 0;
+	//while((po = str.find(frm, po)) != std::string::npos) { str.replace(po, frm.length(), to);  po += to.length();   }
+	//return str;
 }
 
 inline std::string baseName(const std::string& fName)
@@ -510,13 +571,13 @@ inline std::string baseName(const std::string& fName)
 
 
 
-template<class T> T min(const piece<T>& pis)  { return *std::min_element(pis.d,pis.dn); }
-template<class T> T max(const piece<T>& pis)  { return *std::max_element(pis.d,pis.dn); }
-template<class T, typename TFunc> void transform(piece<T>& pis, TFunc func)  { for(T& dr:pis) dr=func(dr); }
-//template<class T> void transform(piece<T>& pis, float(*func)(float&))  { for(float& dr:pis) dr=func(dr); }
-template<typename T> void transform(T* d, const T* dn, T(*func)(const T&))  { --d; while (++d<dn) *d=func(*d); }
+template<typename T> bool _1At(T n, int ibgn)  {  return n&(1<<ibgn);  }
+inline               bool _1At(unsigned int n, int ibgn)  {  return n&(1<<ibgn);  }// for debugger
+template<typename T> bool _1In(T n, int ibgn, int lnt)  {  return (n>>ibgn)&((1<<lnt)-1);  }
 
-//double (*func)(const double&) = ([](const double& d) {return d;})
+
+
+
 
 template<typename T, template<typename ...> class C1, template<typename ...> class C2>
 vars<vars<T> > transpose(const C1<C2<T> >& vecvec)
@@ -530,11 +591,6 @@ vars<vars<T> > transpose(const C1<C2<T> >& vecvec)
 
 template<typename T, template<typename ...> class C>
 piece<T> allof(C<T>& vs) {return piece<T>(&*vs.begin(), &*vs.end());}
-
-
-template<typename T> bool _1At(T n, int ibgn)  {  return n&(1<<ibgn);  }
-template<typename T> bool _1In(T n, int ibgn, int lnt)  {  return (n>>ibgn)&((1<<lnt)-1);  }
-
 
 
 
@@ -552,7 +608,7 @@ template<typename T, template<typename ...> class C1, template<typename ...> cla
 TableIO<T,C1,C2> tableIO(const C1<C2<T> >& vecvec, std::vector<std::string> hdrs=std::vector<std::string>(), bool transpose=true, char sepr='\t') {return TableIO<T,C1,C2>(vecvec,hdrs,transpose,sepr);}
 
 template<typename T, template<typename ...> class C1, template<typename ...> class C2>
-std::ostream & operator<< (std::ostream & out, const TableIO<T,C1,C2>& tbl)
+std::ostream & operator << (std::ostream & out, const TableIO<T,C1,C2>& tbl)
 {
 	if(tbl.hds_.size()==tbl.vss_.size()) { for (size_t j=0; j<tbl.vss_.size();++j) out << tbl.hds_[j]<<tbl.sep_;  }   	out<<'\n';
 	for (size_t i=0; i<tbl.vss_[0].size();++i)
@@ -561,7 +617,7 @@ std::ostream & operator<< (std::ostream & out, const TableIO<T,C1,C2>& tbl)
 	return out;
 }
 template<typename T, template<typename ...> class C1, template<typename ...> class C2>
-inline std::istream & operator>> (std::istream & inp, TableIO<T,C1,C2>& tbl)
+inline std::istream & operator >> (std::istream & inp, TableIO<T,C1,C2>& tbl)
 {
 	inp >> std::ws;
 	std::string row, item;
@@ -583,8 +639,6 @@ inline std::istream & operator>> (std::istream & inp, TableIO<T,C1,C2>& tbl)
 	}
 	return inp;
 }
-
-
 
 
 

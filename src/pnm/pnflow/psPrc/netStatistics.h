@@ -1,20 +1,25 @@
 #ifndef NETSTATISTICS_H
 #define NETSTATISTICS_H
 /*---------------------------------------------------------------------------*\
-Developed by (2015): Ali Q Raeini  email: a.qaseminejad-raeini09@imperial.ac.uk
+Developed by (2015): Ali Q Raeini  email: a.q.raeini@imperial.ac.uk
 \*---------------------------------------------------------------------------*/
 
 
 #include <vector>
 #include "../Element.h"
 
-void printCornerAngStatistics( const std::vector<Element const *> *  rockLattices, int m_numPores);
-void printCornerNumStatistics( const std::vector<Element const *> *  rockLattices, int m_numPores);
-void printShapeFactorStatistics( const std::vector<Element const *> *  rockLattices, int m_numPores);
-void printRadiusStatistics( const std::vector<Element const *> *  rockLattices, int m_numPores);
-void printAspectRatioStatistics( const std::vector<Element const *> *  rockLattices, int m_numPores);
-void printCoordinaNumStatistics( const std::vector<Element const *> *  rockLattices, int m_numPores);
-void printDistanceMapStatistics( const std::vector<Element const *> &  rockLattices, int m_numPores);
+
+
+
+
+
+void printCornerAngStatistics(   const std::vector<Element const *>&  rockLattices, int nBSs_, int nBpPors_);
+void printCornerNumStatistics(   const std::vector<Element const *>&  rockLattices, int nBSs_, int nPores_);
+void printShapeFactorStatistics( const std::vector<Element const *>&  rockLattices, int nBSs_, int nPores_);
+void printRadiusStatistics(      const std::vector<Element const *>&  rockLattices, int nBSs_, int nPores_);
+void printAspectRatioStatistics( const std::vector<Element const *>&  rockLattices, int nBSs_, int nPores_);
+void printCoordinaNumStatistics( const std::vector<Element const *>&  rockLattices, int nBSs_, int nPores_);
+void printDistanceMapStatistics( const std::vector<Element const *>&  rockLattices, int nBSs_, int nPores_);
 
 
 

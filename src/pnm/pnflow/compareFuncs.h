@@ -10,161 +10,79 @@
 
 #include "Element.h"
 
+
 class ElemRadCmpInc
-{
-public:
-    bool operator() (const Element* elem1, const Element* elem2) const
-    {
-        return (elem1->model()->radius() < elem2->model()->radius());
-    }
+{ public:
+	bool operator() (const Element* elem1, const Element* elem2) const
+	{   return (elem1->RRR() < elem2->RRR());    }
+
+	bool operator() (const VoidElem* elem1, const VoidElem* elem2) const
+	{   return (elem1->RRR() < elem2->RRR());    }
 };
 
 class ElemRadCmpRed
 {
 public:
-    bool operator() (const Element* elem1, const Element* elem2) const
-    {
-        return (elem1->model()->radius() > elem2->model()->radius());
-    }
+	bool operator() (const Element* elem1, const Element* elem2) const
+	{  return (elem1->RRR() > elem2->RRR());  }
+	
+	bool operator() (const VoidElem* elem1, const VoidElem* elem2) const
+	{  return (elem1->RRR() > elem2->RRR());  }
 };
 
-//class ElemEquivRadCmpRed
-//{
-//public:
-    //bool operator() (const Element* elem1, const Element* elem2) const
-    //{
-        //return (elem1->model()->equivalentRadius() > elem2->model()->equivalentRadius());
-    //}
-//};
- 
+class ElemGCmpInc
+{ public:
+	bool operator() (const Element* elem1, const Element* elem2) const
+	{   return (pow(elem1->RRR(),3)/elem1->flowVolumeX() < pow(elem2->RRR(),3)/elem2->flowVolumeX());    }
+};
+
+
 class ElemVolCmpRed
 {
 public:
-    bool operator() (const Element* elem1, const Element* elem2) const
-    {
-        return (elem1->flowVolume() > elem2->flowVolume());
-    }
+	bool operator() (const Element* elem1, const Element* elem2) const
+	{
+		return (elem1->flowVolume() > elem2->flowVolume());
+	}
 };
 
 class ElemGCmpRed
 {
 public:
-    bool operator() (const Element* elem1, const Element* elem2) const
-    {
-        return (elem1->model()->shapeFactor() > elem2->model()->shapeFactor());
-    }
-};
-
-class ElemRandCmp
-{
-public:
-    bool operator() (const Element* elem1, const Element* elem2) const
-    {
-        return (elem1->randomAssInt() < elem2->randomAssInt());
-    }
-};
-
-class lenToRadRatioCmp
-{
-public:
-    bool operator() (const Element* elem1, const Element* elem2) const
-    {
-        return (elem1->lenToRadRatio() > elem2->lenToRadRatio());
-    }
+	bool operator() (const Element* elem1, const Element* elem2) const
+	{
+		return (elem1->model()->shapeFactor() > elem2->model()->shapeFactor());
+	}
 };
 
 
 class PceImbCmp
 {
 public:
-    bool operator() (const Apex* elem1, const Apex* elem2) const
-    {
-        register double pc1(elem1->gravCorrectedEntryPress());
-        register double pc2(elem2->gravCorrectedEntryPress());
-        if(pc1 == pc2)
-            return elem1 < elem2;
-        else
-            return pc1 < pc2;
-    }
+	bool operator() (const Apex* elem1, const Apex* elem2) const
+	{
+		double pc1(elem1->gravCorrectedEntryPress());
+		double pc2(elem2->gravCorrectedEntryPress());
+		if(pc1 == pc2)
+			return elem1 < elem2;
+		else
+			return pc1 < pc2;
+	}
 };
 
 class PceDrainCmp
 {
 public:
-    bool operator() (const Apex* elem1, const Apex* elem2) const
-    {
-        register double pc1(elem1->gravCorrectedEntryPress());
-        register double pc2(elem2->gravCorrectedEntryPress());
-        if(pc1 == pc2)
-            return elem1 < elem2;
-        else
-            return pc1 > pc2;
-    }
+	bool operator() (const Apex* elem1, const Apex* elem2) const
+	{
+		double pc1(elem1->gravCorrectedEntryPress());
+		double pc2(elem2->gravCorrectedEntryPress());
+		if(pc1 == pc2)
+			return elem1 < elem2;
+		else
+			return pc1 > pc2;
+	}
 };
-
-/*
-
-
-class CoalesceWatFillCmp  ///. PceImbCmp
-{
-public:
-    bool operator() (const Apex* elem1, const Apex* elem2) const
-    {
-        // if(elem1.third() == elem2.third())
-            // return elem1.second() < elem2.second();
-        // else
-            // return elem1.third() < elem2.third();
-            if (elem1->gravCorrectedEntryPress() == elem2->gravCorrectedEntryPress()) return elem1->subIndex() < elem2->subIndex();
-            else return elem1->gravCorrectedEntryPress() < elem2->gravCorrectedEntryPress();
-    }
-};
-
-class CoalesceOilFillCmp ///. PceDrainCmp
-{
-public:
-    bool operator() (const Apex* elem1, const Apex* elem2) const
-    {
-        // if(elem1.third() == elem2.third())
-            // return elem1.second() > elem2.second();
-        // else
-            // return elem1.third() > elem2.third();
-            if (elem1->gravCorrectedEntryPress() == elem2->gravCorrectedEntryPress()) return elem1->subIndex() > elem2->subIndex();
-            else return elem1->gravCorrectedEntryPress() > elem2->gravCorrectedEntryPress();
-    }
-};
-
- class PcColCmp ///. PceImbCmp
-{
-public:
-    bool operator() (const  Apex* elem1, const Apex* elem2) const
-    {
-        register double pc1(elem1->gravCorrectedEntryPress());
-        register double pc2(elem2->gravCorrectedEntryPress());
-        if(pc1 == pc2)
-            return elem1->subIndex() < elem2->subIndex();
-        else
-            return pc1 < pc2;
-    }
-};
-
-class PcRefCmp ///. PceDrainCmp
-{
-public:
-    bool operator() (const Apex* elem1, const Apex* elem2) const
-    {
-        register double pc1(elem1->gravCorrectedEntryPress());
-        register double pc2(elem2->gravCorrectedEntryPress());
-        if(pc1 == pc2)
-            return elem1->subIndex() > elem2->subIndex();
-        else
-            return pc1 > pc2;
-    }
-};
-
-
-*/
-
-
 
 
 
@@ -173,28 +91,28 @@ public:
 class FracWettInc
 {
 public:
-    bool operator() (pair<double, Element*> prop1, pair<double, Element*> prop2) const
-    {
-        return (prop1.first < prop2.first);
-    }
+	bool operator() (std::pair<double, Element*> prop1, std::pair<double, Element*> prop2) const
+	{
+		return (prop1.first < prop2.first);
+	}
 };
 
 class FracWettDec
 {
 public:
-    bool operator() (pair<double, Element*> prop1, pair<double, Element*> prop2) const
-    {
-        return (prop1.first > prop2.first);
-    }
+	bool operator() (std::pair<double, Element*> prop1, std::pair<double, Element*> prop2) const
+	{
+		return (prop1.first > prop2.first);
+	}
 };
 
 class TrappingWatStorageCmp
 {
 public:
-    bool operator() (pair<Element*, FluidBlob> elm1, pair<Element*, FluidBlob> elm2) const
-    {
-        return (elm1.first->latticeIndex() > elm2.first->latticeIndex());
-    }
+	bool operator() (std::pair<Element*, FluidBlob> elm1, std::pair<Element*, FluidBlob> elm2) const
+	{
+		return (elm1.first->index() > elm2.first->index());
+	}
 };
 
 /**
@@ -208,22 +126,22 @@ public:
 class DistToExitCompareThroats
 {
 public:
-    bool operator() (const Element* elem1, const Element* elem2) const
-    {
-        const Pore* pOneOne = dynamic_cast< const Pore* >(elem1->connection(0));
-        const Pore* pOneTwo = dynamic_cast< const Pore* >(elem1->connection(1));
-        const Pore* pTwoOne = dynamic_cast< const Pore* >(elem2->connection(0));
-        const Pore* pTwoTwo = dynamic_cast< const Pore* >(elem2->connection(1));
+	bool operator() (const Element* elem1, const Element* elem2) const
+	{
+		const Element* pOneOne = elem1->connection(0);
+		const Element* pOneTwo = elem1->connection(1);
+		const Element* pTwoOne = elem2->connection(0);
+		const Element* pTwoTwo = elem2->connection(1);
 
-        if(pOneOne == pTwoOne)
-            return pOneTwo->node()->distToExit() < pTwoTwo->node()->distToExit();
-        else if(pOneOne == pTwoTwo)
-            return pOneTwo->node()->distToExit() < pTwoOne->node()->distToExit();
-        else if(pOneTwo == pTwoOne)
-            return pOneOne->node()->distToExit() < pTwoTwo->node()->distToExit();
-        else
-            return pOneOne->node()->distToExit() < pTwoOne->node()->distToExit();
-    }
+		if(pOneOne == pTwoOne)
+			return pOneTwo->node().x > pTwoTwo->node().x;
+		else if(pOneOne == pTwoTwo)
+			return pOneTwo->node().x > pTwoOne->node().x;
+		else if(pOneTwo == pTwoOne)
+			return pOneOne->node().x > pTwoTwo->node().x;
+		else
+			return pOneOne->node().x > pTwoOne->node().x;
+	}
 };
 
 /**
@@ -232,13 +150,10 @@ public:
 class DistToExitComparePores
 {
 public:
-    bool operator() (const Element* elem1, const Element* elem2) const
-    {
-        const Pore* pOne = dynamic_cast< const Pore* >(elem1);
-        const Pore* pTwo = dynamic_cast< const Pore* >(elem2);
-
-        return pOne->node()->distToExit() < pTwo->node()->distToExit();
-    }
+	bool operator() (const Element* elem1, const Element* elem2) const
+	{
+		return elem1->node().x > elem2->node().x;
+	}
 };
 /**
 // How are the elements stored in the compressed row format sparse matrix
@@ -249,10 +164,10 @@ public:
 class poreIndexCompare
 {
 public:
-    bool operator() (pair< int, double > colOne, pair< int, double > colTwo) const
-    {
-        return (colOne.first < colTwo.first);
-    }
+	bool operator() (std::pair< int, double > colOne, std::pair< int, double > colTwo) const
+	{
+		return (colOne.first < colTwo.first);
+	}
 };
 
 /**
@@ -262,19 +177,19 @@ public:
 class poreDiagonalFirst
 {
 public:
-    bool operator() (pair< int, double > colOne, pair< int, double > colTwo) const
-    {
-        return (colOne.second > colTwo.second);
-    }
+	bool operator() (std::pair< int, double > colOne, std::pair< int, double > colTwo) const
+	{
+		return (colOne.second > colTwo.second);
+	}
 };
 
 class throatIndexCompare
 {
 public:
-    bool operator() (pair<const Element*, double> thOne, pair<const Element*, double> thTwo) const
-    {
-        return (thOne.first->indexOren() < thTwo.first->indexOren());
-    }
+	bool operator() (std::pair<const Element*, double> thOne, std::pair<const Element*, double> thTwo) const
+	{
+		return (thOne.first->indexOren() < thTwo.first->indexOren());
+	}
 };
 
 

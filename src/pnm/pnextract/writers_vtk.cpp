@@ -1,10 +1,9 @@
 
 /*---------------------------------------------------------------------------*\
-written by: Ali Q Raeini  email: a.qaseminejad-raeini09@imperial.ac.uk
+written by: Ali Q Raeini  email: a.q.raeini@imperial.ac.uk
 Imperial College, Total project on network extraction
 http://www3.imperial.ac.uk/earthscienceandengineering/research/perm/porescalemodelling
 \*---------------------------------------------------------------------------*/
-
 
 
 
@@ -53,7 +52,7 @@ dbl3 rotateAroundVec( dbl3 n, dbl3 y, double gamma)
 		(  - n[1]*( -n[0]*y[0]- n[1]*y[1]-n[2]*y[2] ) )*(1-cos(gamma)) + y[1]*cos(gamma) + (n[2]*y[0]-n[0]*y[2])*sin(gamma),
 		(  - n[2]*( -n[0]*y[0]- n[1]*y[1]-n[2]*y[2] ) )*(1-cos(gamma)) + y[2]*cos(gamma) + (n[0]*y[1]-n[1]*y[0])*sin(gamma)
 	  );
-	//~ -n*(n&y)*(1-cos(gamma)) + y*cos(gamma) + n^y*sin(gamma);
+	//-n*(n&y)*(1-cos(gamma)) + y*cos(gamma) + n^y*sin(gamma);
 }
 
 
@@ -74,7 +73,7 @@ int findOrInsertPoint(std::vector<dbl3>&  points, dbl3& point)
 void insertHalfCorneroints2(std::vector<dbl3>&  points, std::vector<int>& cellPoints, dbl3 c1, dbl3 c2, dbl3 nE1, dbl3 nE2, double appexDist_inrR, double appexDist_outR,
 							double conAng1, double conAng2, double rOuter, double hafAng, double CARelax = 1.0)
 {
-	//~ const double convertToRad = _pi/180.0;
+	//const double convertToRad = _pi/180.0;
 	dbl3 dd = c2-c1;
 	dbl3 normal = dd/(mag(dd)+1.0e-32);
 
@@ -197,8 +196,8 @@ void addThroatMesh(
 	const poreNE * elemp =  poreIs[porInd];
 
 
-	dbl3 c1(elem->mb22()->fi+_pp5,elem->mb22()->fj+_pp5,elem->mb22()->fk+_pp5);
-	dbl3 c2(elemp->mb->fi+_pp5,elemp->mb->fj+_pp5,elemp->mb->fk+_pp5);
+	dbl3 c1(elem->mb22()->fi,elem->mb22()->fj,elem->mb22()->fk);
+	dbl3 c2(elemp->mb->fi,elemp->mb->fj,elemp->mb->fk);
 	double r = elem->radius()*scaleFactor;
 
 
@@ -391,8 +390,8 @@ void AddCylinder(	dbl3& c1, dbl3& c2, double r,
 	nCE = ncc^nCE;
 	nCE = nCE/(mag(nCE)+1.0e-32);
 
-    //~ const Polygon* polyShape = dynamic_cast< const Polygon* >(elem->shape());
-    //~ if(0 && polyShape) ///. for now ignore corners    { }	else
+    //const Polygon* polyShape = dynamic_cast< const Polygon* >(elem->shape());
+    //if(0 && polyShape) ///. for now ignore corners    { }	else
 	{
 		int thetaResulutionp2 = (thetaResulution+1)/2;
 
@@ -412,12 +411,12 @@ void AddCylinder(	dbl3& c1, dbl3& c2, double r,
 				insertHalfCorneroints2( points,cellPoints,c1,c2,  -nCE1,  -nCE2,  1.0e-18,  r, 0.0,0.0,   0,  hafAng,0.0); ///. Warning: CA is not implemented for spheres
 					subTypes.push_back(0);
 				cellPores.push_back(poreIndx);
-				//~ alpha.push_back(elem->shape()->containCOil());
+				//alpha.push_back(elem->shape()->containCOil());
 
 				insertHalfCorneroints2( points,cellPoints,c1,c2,  -nCE1,  -nCE2,  1.0e-18,  r,  0.0,0.0,   0,  -hafAng,0.0);///. Warning: CA is not implemented for spheres
 					subTypes.push_back(0);
 				cellPores.push_back(poreIndx);
-				//~ alpha.push_back(elem->shape()->containCOil());
+				//alpha.push_back(elem->shape()->containCOil());
 			}
 		}
 	}
@@ -441,8 +440,8 @@ void addSpherePoreMesh
 {
 	const poreNE * elem = poreIs[poreIndx];
 
-	dbl3 c1(elem->mb->fi+_pp5,elem->mb->fj+_pp5,elem->mb->fk+_pp5);
-	dbl3 c2(elem->mb->fi+_pp5,elem->mb->fj+_pp5,elem->mb->fk+_pp5);
+	dbl3 c1(elem->mb->fi,elem->mb->fj,elem->mb->fk);
+	dbl3 c2(elem->mb->fi,elem->mb->fj,elem->mb->fk);
 	c2[1] += 1.0e-12;
 	double r = (elem->mb->R)*scaleFactor;
 	AddCylinder(c1, c2, r, poreIndx, points, subTypes, cellPores, alpha, cellPoints, scaleFactor, thetaResulution );
@@ -465,8 +464,8 @@ void addCylinderThroatMesh
 {
 	const throatNE * elem = throatIs[trotIndx];
 
-	dbl3 c2(elem->mb22()->fi+_pp5,elem->mb22()->fj+_pp5,elem->mb22()->fk+_pp5);
-	dbl3 c1 = c2;//elem->e1>1 ? dbl3(elem->mb1->i,elem->mb1->j,elem->mb1->k) : c2;
+	dbl3 c2(elem->mb22()->fi,elem->mb22()->fj,elem->mb22()->fk);
+	dbl3 c1 = c2;//elem->e1>SideImax ? dbl3(elem->mb1->i,elem->mb1->j,elem->mb1->k) : c2;
 	c2[1] += 1.0e-11;
 	double r = elem->mb22()->R*scaleFactor;
 	AddCylinder(c1, c2, r, trotIndx, points, subTypes, cellPores, alpha, cellPoints, scaleFactor, thetaResulution );
@@ -575,9 +574,9 @@ void vtuWritePores(std::string suffix, const std::vector<poreNE*>& poreIs, const
 	std::vector<int> cellPores;
 
 	std::vector<int> cellPoints;
-	//~ std::vector<FacePoints> facePoints;
-	//~ std::vector<CellFaces> cellFaces;
-	//~ std::vector<FaceCells> faceCells;
+	//std::vector<FacePoints> facePoints;
+	//std::vector<CellFaces> cellFaces;
+	//std::vector<FaceCells> faceCells;
 	points.reserve(poreIs.size()*200);
 	cellPoints.reserve(poreIs.size()*400);
 	subTypes.reserve(poreIs.size()*60);
@@ -677,9 +676,6 @@ void vtuWritePores(std::string suffix, const std::vector<poreNE*>& poreIs, const
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // /
 
 
-
-
-
 void addMbMbMesh(
 	 const medialBall* vi,
 	 const medialBall* vj,
@@ -693,12 +689,9 @@ void addMbMbMesh(
 	 )
 {
 
-	//~ const Node *  node1 = elem->connection(0)->node();
-	dbl3 c1(vi->fi+_pp5,vi->fj+_pp5,vi->fk+_pp5);
-	//~ const Node *  node2 = elem->connection(1)->node();
-	dbl3 c2(vj->fi+_pp5,vj->fj+_pp5,vj->fk+_pp5);
+	dbl3 c1(vi->fi,vi->fj,vi->fk);
+	dbl3 c2(vj->fi,vj->fj,vj->fk);
 	if (c1==c2) {c1.z-=0.2;c2.z+=0.2;}
-	//~ double r = vi.limit;
 
 	cellPoints.push_back(findOrInsertPoint(points, c1));
 	if(radius.size()<points.size()) {radius.push_back(vi->R);  cellType.push_back(vi->type); }
@@ -708,7 +701,7 @@ void addMbMbMesh(
 	cellPores.push_back(poreIndx); ///. 2 points each elem
 	subTypes.push_back(vi->corId); ///. 2 points each elem
 //	cellType.push_back(vi->type); ///. 2 points each elem
-	//~ if(distSqr(vi,vi->boss)< sqrt(vi->boss->limit)*1.2+2-sqrt(vi->limit))  *subTypes.rbegin()=-1;
+	//if(distSqr(vi,vi->boss)< sqrt(vi->boss->limit)*1.2+2-sqrt(vi->limit))  *subTypes.rbegin()=-1;
 
 }
 
@@ -727,13 +720,13 @@ void addMbMbMbMesh(
 	 )
 {
 
-	dbl3 c1(vi->fi+_pp5,vi->fj+_pp5,vi->fk+_pp5);
-	dbl3 c2(iKid->fi+_pp5,iKid->fj+_pp5,iKid->fk+_pp5);
+	dbl3 c1(vi->fi,vi->fj,vi->fk);
+	dbl3 c2(iKid->fi,iKid->fj,iKid->fk);
 	if (c1==c2) {c1.z-=0.2;c2.z+=0.2;}
-	dbl3 c3(jKid->fi+_pp5,jKid->fj+_pp5,jKid->fk+_pp5);
+	dbl3 c3(jKid->fi,jKid->fj,jKid->fk);
 	if (c2==c3) {c2.y-=0.2;c3.y+=0.2;}
-	dbl3 c4(vj->fi+_pp5,vj->fj+_pp5,vj->fk+_pp5);
-	//~ if (c2==c3) {c2.y-=0.2;c3.y+=0.2;}
+	dbl3 c4(vj->fi,vj->fj,vj->fk);
+	//if (c2==c3) {c2.y-=0.2;c3.y+=0.2;}
 
 	cellPoints.push_back(findOrInsertPoint(points, c1));
 	if(radius.size()<points.size()) {radius.push_back(vi->R);  cellType.push_back(vi->type); }
@@ -747,7 +740,7 @@ void addMbMbMbMesh(
 	cellPores.push_back(poreIndx); ///. 3 points each elem
 	subTypes.push_back(max(iKid->corId,jKid->corId)); ///. 3 points each elem
 //	cellType.push_back(max(iKid->type,jKid->type)); ///. 3 points each elem
-	//~ if(distSqr(vi,vi->boss)< sqrt(vi->boss->limit)*1.2+2-sqrt(vi->limit))  *subTypes.rbegin()=-1;
+	//if(distSqr(vi,vi->boss)< sqrt(vi->boss->limit)*1.2+2-sqrt(vi->limit))  *subTypes.rbegin()=-1;
 
 }
 
@@ -763,9 +756,9 @@ void vtuWriteMbMbs(std::string baseName, const std::vector<medialBall*>& ballSpa
 	std::vector<float> radius;
 
 	std::vector<int> cellPoints;
-	//~ std::vector<FacePoints> facePoints;
-	//~ std::vector<CellFaces> cellFaces;
-	//~ std::vector<FaceCells> faceCells;
+	//std::vector<FacePoints> facePoints;
+	//std::vector<CellFaces> cellFaces;
+	//std::vector<FaceCells> faceCells;
     points.reserve(ballSpace.size()*2);
     cellPoints.reserve(ballSpace.size()*2);
     subTypes.reserve(ballSpace.size()*2);
@@ -781,23 +774,23 @@ void vtuWriteMbMbs(std::string baseName, const std::vector<medialBall*>& ballSpa
 		if ((*vi)->boss != NULL)
 		{
 			medialBall* mvi=(*vi)->mastrSphere();
-			int id=VElems(mvi->fi+1+_pp5, mvi->fj+1+_pp5, mvi->fk+1+_pp5);
+			int id=VElems(mvi->fi+1, mvi->fj+1, mvi->fk+1);
 			addMbMbMesh(*vi, (*vi)->boss , id,points,subTypes,cellType,cellPores,radius,cellPoints);
 
-			//~ for (int i=0;i<vi->nKids;++i)
-			//~ {
-				//~ if(sqrt(distSqr(vi->kids[i],&*vi))< sqrt(vi->limit)*1.1+1-sqrt(vi->kids[i]->limit))
-					//~ {addMbMbMesh(&*vi, vi->boss , id,points,subTypes,cellPores,radius,cellPoints);*radius.rbegin()=-1;}
-				//~ for (int j=i+1;j<vi->nKids;++j)
-				//~ {
-						 //~ if(sqrt(distSqr(vi->kids[i], vi->kids[j])) < sqrt(vi->kids[i]->limit)*1.1+1-sqrt(vi->kids[j]->limit))
-						//~ {addMbMbMesh(vi->kids[i], vi->kids[j] , id,points,subTypes,cellPores,radius,cellPoints);*radius.rbegin()=-1;}
-					//~ else if(sqrt(distSqr(vi->kids[i], vi->kids[j])) < sqrt(vi->kids[j]->limit)*1.1+1-sqrt(vi->kids[i]->limit))
-						//~ {addMbMbMesh(vi->kids[i], vi->kids[j] , id,points,subTypes,cellPores,radius,cellPoints);*radius.rbegin()=-1;}
-				//~ }
+			//for (int i=0;i<vi->nKids;++i)
+			//{
+				//if(sqrt(distSqr(vi->kids[i],&*vi))< sqrt(vi->limit)*1.1+1-sqrt(vi->kids[i]->limit))
+					//{addMbMbMesh(&*vi, vi->boss , id,points,subTypes,cellPores,radius,cellPoints);*radius.rbegin()=-1;}
+				//for (int j=i+1;j<vi->nKids;++j)
+				//{
+						 //if(sqrt(distSqr(vi->kids[i], vi->kids[j])) < sqrt(vi->kids[i]->limit)*1.1+1-sqrt(vi->kids[j]->limit))
+						//{addMbMbMesh(vi->kids[i], vi->kids[j] , id,points,subTypes,cellPores,radius,cellPoints);*radius.rbegin()=-1;}
+					//else if(sqrt(distSqr(vi->kids[i], vi->kids[j])) < sqrt(vi->kids[j]->limit)*1.1+1-sqrt(vi->kids[i]->limit))
+						//{addMbMbMesh(vi->kids[i], vi->kids[j] , id,points,subTypes,cellPores,radius,cellPoints);*radius.rbegin()=-1;}
+				//}
 //~
 //~
-			//~ }
+			//}
 
 		}
 		++vi;
@@ -891,9 +884,9 @@ void vtuWriteMedialSurface(std::string baseName,
 	std::vector<float> radius;
 
 	std::vector<int> cellPoints;
-	//~ std::vector<FacePoints> facePoints;
-	//~ std::vector<CellFaces> cellFaces;
-	//~ std::vector<FaceCells> faceCells;
+	//std::vector<FacePoints> facePoints;
+	//std::vector<CellFaces> cellFaces;
+	//std::vector<FaceCells> faceCells;
     points.reserve(ballSpace.size()*2);
     cellPoints.reserve(ballSpace.size()*2);
     subTypes.reserve(ballSpace.size()*2);
@@ -909,12 +902,12 @@ void vtuWriteMedialSurface(std::string baseName,
 		if ((*vi)->boss != NULL)
 		{
 			medialBall* mvi=(*vi)->mastrSphere();
-			int id=VElems(mvi->fi+1+_pp5, mvi->fj+1+_pp5, mvi->fk+1+_pp5);
+			int id=VElems(mvi->fi+1, mvi->fj+1, mvi->fk+1);
 
 			for (int i=0;i<(*vi)->nNeis;++i)
 			{
-					//~ {addMbMbMbMesh((*vi)->boss, *vi, (*vi)->neis[i], id,points,subTypes,cellType,cellPores,radius,cellPoints);}
-					//~ if((*vi)->boss!=(*vi)->neis[i]->boss)
+					//{addMbMbMbMesh((*vi)->boss, *vi, (*vi)->neis[i], id,points,subTypes,cellType,cellPores,radius,cellPoints);}
+					//if((*vi)->boss!=(*vi)->neis[i]->boss)
 					{addMbMbMbMesh((*vi)->boss, (*vi)->neis[i]->boss, (*vi), (*vi)->neis[i], id,points,subTypes,cellType,cellPores,radius,cellPoints);}
 			}
 
@@ -1015,9 +1008,9 @@ void vtuWriteThroatMbMbs(std::string baseName,      /// ********* throat *******
 	std::vector<float> radius;
 
 	std::vector<int> cellPoints;
-	//~ std::vector<FacePoints> facePoints;
-	//~ std::vector<CellFaces> cellFaces;
-	//~ std::vector<FaceCells> faceCells;
+	//std::vector<FacePoints> facePoints;
+	//std::vector<CellFaces> cellFaces;
+	//std::vector<FaceCells> faceCells;
     points.reserve(throatIs.size()*20);
     cellPoints.reserve(throatIs.size()*20);
     subTypes.reserve(throatIs.size()*20);
@@ -1030,7 +1023,7 @@ void vtuWriteThroatMbMbs(std::string baseName,      /// ********* throat *******
 	std::vector<throatNE*>::const_iterator tbgn = throatIs.begin();
 	std::vector<throatNE*>::const_iterator ti = throatIs.begin();
 	std::vector<throatNE*>::const_iterator tend = throatIs.end();
-	//~ int poreIndex(0);
+	//int poreIndex(0);
 	while (ti<tend)
 	{
 
@@ -1044,7 +1037,7 @@ void vtuWriteThroatMbMbs(std::string baseName,      /// ********* throat *******
 		else if ((*ti)->e1>2) cout<<" EioMbk ";
 
 		medialBall* mvi=mb2->mastrSphere();
-		if ((*ti)->e2 != VElems(mvi->fi+1+_pp5, mvi->fj+1+_pp5, mvi->fk+1+_pp5)) ++Dkfhj1;//cout<<" Dkfhj1  "<< VElems[mvi->k+1][mvi->j+1][mvi->i+1]<<"   ";
+		if ((*ti)->e2 != VElems(mvi->fi+1, mvi->fj+1, mvi->fk+1)) ++Dkfhj1;//cout<<" Dkfhj1  "<< VElems[mvi->k+1][mvi->j+1][mvi->i+1]<<"   ";
 		if (mb2->boss == mb2) ++E_msfd;
 
 		while (mb2->boss != mb2)
@@ -1060,7 +1053,7 @@ void vtuWriteThroatMbMbs(std::string baseName,      /// ********* throat *******
 		{
 
 			mvi=mb1->mastrSphere();
-			if ((*ti)->e1 != VElems(mvi->fi+1+_pp5, mvi->fj+1+_pp5, mvi->fk+1+_pp5)) ++Dkfhj2;//cout<<" Dkfhj2  "<< VElems[mvi->k+1][mvi->j+1][mvi->i+1]<<"   ";
+			if ((*ti)->e1 != VElems(mvi->fi+1, mvi->fj+1, mvi->fk+1)) ++Dkfhj2;//cout<<" Dkfhj2  "<< VElems[mvi->k+1][mvi->j+1][mvi->i+1]<<"   ";
 
 			addMbMbMesh(mb1 , mb1->boss , (*ti)->e1,points,subTypes,cellType,cellPores,radius,cellPoints);
 			mb1 = mb1->boss;

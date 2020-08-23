@@ -3,168 +3,165 @@
 
 
 class Fluid;
-class Node;
 class Element;
-//class CoalesceWatFillCmp;
-//class CoalesceOilFillCmp;
 
-#include "netsim_data.h"
-//#include "apex.h"
-#include "threeSome.h"
+
+#include "FlowData.h"
 #include "Element.h"
  
 
- 
+
 
 ////////////////////////////// BASE CLASS FOR PORE SHAPES ////////////////////////////////
 class ElemModel
 {
 
-    friend std::ostream& operator<< (std::ostream&, ElemModel&);
+	friend std::ostream& operator<< (std::ostream&, ElemModel&);
 
 public:
 
-    ElemModel(Element&, const CommonData&, double, int);
-    virtual ~ElemModel(){}
+	ElemModel(Element&, const CommonData&, double, int);
+	virtual ~ElemModel(){}
 
 	virtual double calcR(double pc) = 0;
-	
-    virtual void initOilInjection(double pc) = 0;
-    virtual void initWaterInjection(double pc) = 0;
-    virtual void finitOilInjection(double pc) = 0;
-    virtual void finitWaterInjection(double pc) = 0;
-    virtual void fillCentreWithWaterCreateLayers(bool snapOffOverRide = false) = 0;
-    virtual void fillCentreWithOilRemoveLayers() = 0;
-    virtual double centreEntryPrsWatInj() = 0;
-    virtual double centreEntryPrsOilInj() = 0;
-    virtual void setShapeFactor(double shapeFact) = 0;
-    virtual bool waterLayer_UntrappedCorner_PcLsnapPc(double cappPrs) const = 0;///. rare
-    virtual bool hasOilLayer_TrappedOutside_PcHsnapPc(double cappPrs) const = 0;
-    //virtual bool check(double cappPressure) const = 0 ;
 
-    virtual double conAngEquil() const = 0;///. duggy
-    virtual void setContactAngle(double equilConAng, int wettClass, double modelTwoSepAng) = 0;
-    virtual void setRadius(double newRad) = 0;
+	virtual void initOilInjection(double pc) = 0;
+	virtual void initWaterInjection(double pc) = 0;
+	virtual void finitOilInjection(double pc) = 0;
+	virtual void finitWaterInjection(double pc) = 0;
+	virtual void fillCentreWithWaterCreateLayers(bool snapOffOverRide = false) = 0;
+	virtual void fillCentreWithOilRemoveLayers() = 0;
+	virtual double centreEntryPrsWatInj() = 0;
+	virtual double centreEntryPrsOilInj() = 0;
+	virtual void setShapeFactor(double shapeFact) = 0;
+	virtual bool waterLayer_UntrappedCorner_PcLsnapPc(double cappPrs) const = 0;///. rare
+	virtual bool hasOilLayer_TrappedOutside_PcHsnapPc(double cappPrs) const = 0;
+	//virtual bool check(double cappPressure) const = 0 ;
+
+	virtual void setContactAngle(double equilCA, int wettClass, double modelTwoSepAng) = 0;
+	virtual void setRadius(double newRad) = 0;
 	virtual double shapeFactor() const {return 0.0625;} ///. default shp
-    virtual char displacementType() const {return 'p';};
-    
+	virtual char displacementType() const {return 'p';};
 
 
+	virtual int    rockIndex() const  {return 0; };
+	int    index() const  {return elem_.index(); };
+	const Element* connection(int ind) { return elem_.connection(ind); };
 
-	//virtual bool containCFluid(const Fluid* injectant) const  { return (m_bulkFluid == injectant); }
-	virtual bool containCOil() const  {return (m_bulkFluid == &m_comn.oil());	}
+	//virtual bool containCFluid(const Fluid* injectant) const  { return (bulkFluid_ == injectant); }
+	virtual bool containCOil() const  {return (bulkFluid_ == &comn_.oil());	}
 
 
-    virtual bool canNOTReconfigure(const Fluid* injectant) const  
-    {  ///. only dealing with centre reconfiguration
-		if (m_bulkFluid == injectant) return true;
+	virtual bool canNOTReconfigure(const Fluid& injectant) const  
+	{  ///. only dealing with centre reconfiguration
+		if (bulkFluid_==&injectant) return true;
 
-		if (injectant == &m_comn.oil()) return m_elem.trappingWatBulk().first>-1 && m_elem.trappingWatFilm().first>-1;
-		else 								  return m_elem.isTrappedOil();
+		if (injectant.isOil())   return elem_.trappingWatBulk().first>-1 && elem_.trappingWatFilm().first>-1;
+		else                     return elem_.isTrappedOil();
 
-	 }
+	}
 
-    virtual bool conductCOil() const  { return (m_bulkFluid == &m_comn.oil() && m_elem.nonTrappedOil());	}
-    virtual bool conductCWater() const { return (m_bulkFluid == &m_comn.water() && m_elem.nonTrappedWat(bulkBlob));	}
+	virtual bool conductCOil() const  { return (bulkFluid_ == &comn_.oil() && elem_.nonTrappedOil());	}
+	virtual bool conductCWater() const { return (bulkFluid_ == &comn_.water() && elem_.notTrapdW(bulkBlob));	}
 	bool conductAnyWaterBlob(FluidBlob blob) const
-	{	 //double Warning = 1.0; 	
-		if(blob == bulkBlob)	return (m_bulkFluid == &m_comn.water() && m_elem.nonTrappedWat(bulkBlob));
-		else					return m_waterConnection && m_elem.nonTrappedWat(filmBlob);
-	}
-	
-     bool conductsAny(const Fluid* fluid) const
 	{
-		if(fluid == &m_comn.oil())			return (m_oilConnection  &&  m_elem.nonTrappedOil());
-		else									return (m_waterConnection && (m_elem.nonTrappedWat(bulkBlob) || m_elem.nonTrappedWat(filmBlob) ));
+		if(blob == bulkBlob) return (bulkFluid_ == &comn_.water() && elem_.notTrapdW(bulkBlob));
+		else                 return waterConnection_ && elem_.notTrapdW(filmBlob);
 	}
 
-    bool conductsAnyOil() const
-     {return (m_oilConnection  &&  m_elem.nonTrappedOil());}
-    bool conductAnyWater() const
-     {return (m_waterConnection && (m_elem.nonTrappedWat(bulkBlob) || m_elem.nonTrappedWat(filmBlob) ));}
+	bool conductsAny(const Fluid& fluid) const
+	{
+		if(fluid.isOil())  return (oilConnection_  &&  elem_.nonTrappedOil());
+		else               return (waterConnection_ && (elem_.notTrapdW(bulkBlob) || elem_.notTrapdW(filmBlob) ));
+	}
+
+	bool conductsAnyOil() const  { return oilConnection_  &&  elem_.nonTrappedOil(); }
+	bool conductAnyWater() const { return waterConnection_ && (elem_.notTrapdW(bulkBlob) || elem_.notTrapdW(filmBlob)); }
 
 
 
 
 
-    double radius() const {return m_R;}
-    double area() const {return m_area;}///.  statistics
-	double porosity() const {return m_porosity;}
+	double RRR() const {return R_;}
+	double area() const {return area_;}///.  statistics
+	double porosity() const {return porosity_;}
 
-    bool disConectedCentreWCornerW() const {return m_hasDisConectedCentreWCornerW;}
-    bool affectsNeiEntryPc(const Fluid& retreadingFluid) const {return m_bulkFluid == &retreadingFluid;}
-    const Fluid* bulkFluid() const {return m_bulkFluid;}
+	bool disConectedCentreWCornerW() const {return hasDisConectedCentreWCornerW_;}
+	bool affectsNeiEntryPc(const Fluid& retreadingFluid) const {return bulkFluid_ == &retreadingFluid;}
+	const Fluid* bulkFluid() const {return bulkFluid_;}
 
-    const Element* const eleman() const {return &m_elem;}   
-    Element* ChParent() const {return &m_elem;}   
+	const Element* const eleman() const {return &elem_;}   
+	Element* ChParent() const {return &elem_;}   
 
-    void setClusterIndex(int wtindex) {m_tetaClusterIndex = wtindex;}
-    inline int clusterIndex() const {return m_tetaClusterIndex;}
+	void setClusterIndex(int wtindex) {tetaClusterIndex_ = wtindex;}
+	inline int clusterIndex() const {return tetaClusterIndex_;}
 
 
-    double Pc_pistonTypeAdv() const {return m_Pc_pistonTypeAdv;};
-    double Pc_pistonTypeRec() const {return m_Pc_pistonTypeRec;};
-    void SetInOutletPc_pistonTypeAdv(double pc)  {m_Pc_pistonTypeAdv=pc;};
-    void SetInOutletPc_pistonTypeRec(double pc)  {m_Pc_pistonTypeRec=pc;};
+	double Pc_pistonTypeAdv() const {return Pc__pistonTypeAdv;};
+	double Pc_pistonTypeRec() const {return Pc__pistonTypeRec;};
+	void SetInOutletPc_pistonTypeAdv(double pc)  {Pc__pistonTypeAdv=pc;};
+	void SetInOutletPc_pistonTypeRec(double pc)  {Pc__pistonTypeRec=pc;};
 
-    double rhogh() const {return m_elem.gravityCorrection();}
-    inline double gravCorrectedEntryPress() const {	return m_elem.gravCorrectedEntryPress(); }
+	//inline double gravCorrectedEntryPress() const {	return elem_.gravCorrectedEntryPress(); }
 
-	double electricalConductance(const Fluid* fluid, bool neighbourToExit = false) const	{ return m_ElectricalConductance+1.0e-260;	}
+	double electricalConductance() const	{ return ElectricalConductance_+1.0e-260;	}
 
-	inline double getConductance(const Fluid* fluid, bool neighbourToInOutlet) const;
+	inline double getConductance(const Fluid& fluid, bool neighbourToInOutlet) const;
 	inline double getWaterConductance(FluidBlob blob, bool neighbourToInOutlet) const;
-    
-    
-    
-    virtual double SPConductance(double area, double visc) const = 0;
-    double oilConductance() const {return m_conductanceOil;};
 
 
-    const CommonData& commonData() {return m_comn;}
+
+	virtual double SPConductance(double area, double visc) const = 0;
+	double oilConductance() const {return conductanceOil_;};
+	double wtrConductancePar() const {return conductanceWater_.first+conductanceWater_.second;};
+
+
+	const CommonData& commonData() {return comn_;}
 
 
 	double  K_E_SP, K_Q_SP;
 
-    static const int                MAX_NEWT_ITR;
-    static const double             EPSILON;
-    static const double             PI;
-    static const double             INF_NEG_NUM;
-    
-    
+	static const int                MAX_NEWT_ITR;
+	static const double             EPSILON;
+	static const double             PI;
+	static const double             INF_NEG_NUM;
+
+
    virtual int numCorners() const =0;
 
 ///.tmp
-	virtual void readKrPcSwData(istringstream&, double voxelSizeScaleFact) {cout<<"Error: not to be called this way"<<endl;};
+	virtual void readKrPcSwData(std::istringstream&, double voxelSizeScaleFact) {std::cout<<"Error: not to be called this way"<<std::endl;};
 
-    
+	bool exists(fluidf ff) const { return bulkFluid_->ff()==ff; };
+
 protected:
 
-    Element&                       m_elem;
-    const CommonData&              m_comn;
+	Element&                       elem_;
+	const CommonData&              comn_;
 
-    double                          m_R;
-    const Fluid*                    m_bulkFluid;
+	double                          R_;
+	const Fluid*                    bulkFluid_;
+	bool                            waterConnection_;
+	bool                            oilConnection_;  
 
-    bool                            m_hasDisConectedCentreWCornerW;
-    bool                            m_waterConnection;
-    bool                            m_oilConnection;  
-    bool                            m_virginState;
-    int                             m_tetaClusterIndex; ///. contact angle cluster, to remove
+	bool                            hasDisConectedCentreWCornerW_;
+	bool                            virginState_;
+	int                             tetaClusterIndex_; ///. contact angle cluster, to remove
 
 
-    double                          m_porosity;
-    double                          m_area;
-    double                          m_SatWater;
-    
-    double                          m_Pc_pistonTypeRec;
-    double                          m_Pc_pistonTypeAdv;
+	double                          porosity_;
+	double                          area_;
+	double                          SatWater_;
 
-    
-	double                          m_ElectricalConductance;
-	double                          m_conductanceOil;
-    std::pair<double, double>       m_conductanceWater;
-    std::pair<double, double>       m_conductanceWaterOldToCheck;
+	double                          Pc__pistonTypeRec;
+	double                          Pc__pistonTypeAdv;
+
+
+	double                          ElectricalConductance_;
+	double                          conductanceOil_;
+	std::pair<double, double>       conductanceWater_;
+	std::pair<double, double>       conductanceWaterOldToCheck_;
+	friend class InOutBoundary;
 
 };
 
@@ -177,59 +174,36 @@ protected:
 
 inline double ElemModel::getWaterConductance(FluidBlob blob, bool neighbourToInOutlet = false) const
 {
-    if(neighbourToInOutlet)
-        return SPConductance(m_area, m_comn.water().viscosity());/// TODO: such a good job, tabarakallah
-    else 
-    if(blob == filmBlob)
-        return m_conductanceWater.first*0.999999999+0.000000001*m_conductanceWater.second;
-    else
-        return m_conductanceWater.second*0.999999999+0.000000001*m_conductanceWater.first;
+	if(neighbourToInOutlet)
+		return SPConductance(area_, comn_.water().viscosity());/// TODO: such a good job,
+	else 
+	if(blob == filmBlob)
+		return conductanceWater_.first*0.999999999+0.000000001*conductanceWater_.second;
+	else
+		return conductanceWater_.second*0.999999999+0.000000001*conductanceWater_.first;
 }
 
-inline double ElemModel::getConductance(const Fluid* fluid,  bool neighbourToInOutlet = false) const
-{/*bool filmFlow, bool bulkFlow,*/
-    double flowConductance(0.0);
-    if(neighbourToInOutlet)
-        flowConductance = SPConductance(m_area, fluid->viscosity()); /// TODO: such a good job, tabarakallah
-    else if(fluid == &m_comn.oil())
-        flowConductance = m_conductanceOil;
-    else 
-        flowConductance = max(m_conductanceWater.first,0.0) + max(m_conductanceWater.second,0.0);
+inline double ElemModel::getConductance(const Fluid& fluid,  bool neighbourToInOutlet = false) const
+{
+	double flowConductance(0.0);
+	if(neighbourToInOutlet)
+		flowConductance = SPConductance(area_, fluid.viscosity()); /// TODO: such a good job,
+	else if(fluid.isOil())
+		flowConductance = conductanceOil_;
+	else 
+		flowConductance = std::max(conductanceWater_.first,0.0) + std::max(conductanceWater_.second,0.0);
 
-	ensure(m_comn.debugMode<1 || flowConductance > 1.0e-50);
-	if(flowConductance <=  1.0e-50 && m_comn.debugMode>500)
-	{
-		cout<<"\nError: zero flow conductance "<<"\n" ;
-		if(fluid == &m_comn.oil())        cout<<" for oil phase "<<"\n";
-		//if(fluid == &m_comn.water())        cout<<" for water in bulk"<<bulkFlow<<" film"<<filmFlow<<" conductance = "<<flowConductance<<"\n";
-		//printInfo(*m_elem);
-		if(neighbourToInOutlet)        cout<<" which is neighbourToInOutlet"<<"\n";
-		cout<<"  SPConductance = "<<SPConductance(m_area, fluid->viscosity())<<"  bulkOil"<<conductCOil()<<endl; 
-	}
-
-
-
-	//if (timestep>50 && !fluid->isOil() && flowConductance < watCondOld*0.9999 && 
-	//m_elem.trappingWatBulk().first<0 &&  m_elem.trappingWatFilm().first<0)
+	ensure(debugLevel<1 || flowConductance > 1.0e-50);
+	//if(flowConductance <=  1.0e-50 && debugLevel>500)
 	//{
-		//cout
-		//<<" "<<m_elem.canWBulkBePassedToSolver()<<m_elem.canWFilmBePassedToSolver()  
-		//<<containCOil()<<conductCOil()<<"   "<<cCondOld<<conductCWater()<<conductAnyWater()<<"  "<<flowConductance<<" "<<watCondOld<<"\\\n"
-		//<<"  "<<m_conductanceWater.first<<" "<<m_conductanceWater.second<<"\\\n";
-		//
-		//exit(-1); 
-	//}
-	//timestep++;
-	//if ( !fluid->isOil())
-	//{
-		//watCondOld=flowConductance;
-		//cCondOld=conductAnyWater();
+		//std::cout<<"\nError: zero flow conductance "<<"\n" ;
+		//if(fluid == &comn_.oil())        std::cout<<" for oil phase "<<"\n";
+		//if(neighbourToInOutlet)        std::cout<<" which is neighbourToInOutlet"<<"\n";
+		//std::cout<<"  SPConductance = "<<SPConductance(area_, fluid->viscosity())<<"  bulkOil"<<conductCOil()<<std::endl; 
 	//}
 
 
 
-
-	
 	return flowConductance;
 }
 

@@ -1,17 +1,13 @@
 
 #include "blockNet.h"
 
-//~ #include "vxlImage_manip.h"
-
-//~ clock_t myTime::start = clock();
 
 
 
 
 
 
-
-void blockNetwork::createMedialSurface(medialSurface*& refs, inputDataNE& cfg, size_t startValue)
+void blockNetwork::createMedialSurface(medialSurface*& srf, inputDataNE& cfg, size_t startValue)
 { /// calls medialSurface::createBallsAndHierarchy(), ...
 
 
@@ -21,7 +17,7 @@ void blockNetwork::createMedialSurface(medialSurface*& refs, inputDataNE& cfg, s
 
 	medialSurface* medSurf = new medialSurface(cfg);
     medSurf->createBallsAndHierarchy();
-    refs=(medSurf);
+    srf=(medSurf);
 
   }
 
@@ -40,39 +36,28 @@ void blockNetwork::CreateVElem(size_t startValue)
 
 
 
-	int nPores = 0;
 	if(poreIs.empty())
 	{
-
-		inletV.i = -1;
-		inletV.j = cg.ny/2;
-		inletV.k = cg.nz/2;
-		inletV.R = cg.nx/4;
-		 poreNE* tmp = new poreNE();
-		tmp->volumn = cg.ny*cg.nz;
+		sides[0] = voxel(-1, cg.ny/2, cg.nz/2, cg.nx/4.0f); //minX
+		poreNE* tmp=new poreNE();  tmp->volumn=cg.ny*cg.nz;  tmp->mb=new medialBall(&sides[0],-1);
 		poreIs.push_back(tmp);
-		tmp->mb=new medialBall(&inletV,-1);
 
-
-		outletV.i = cg.nx+1;
-		outletV.j = cg.ny/2;
-		outletV.k = cg.nz/2;
-		outletV.R = cg.nx/4;
-		tmp = new poreNE();
-		tmp->volumn = cg.ny*cg.nz;
-		tmp->mb=new medialBall(&outletV,-1);
+		sides[1] = voxel(cg.nx+1, cg.ny/2, cg.nz/2, cg.nx/4.0f); //maxX
+		tmp = new poreNE();  tmp->volumn = cg.ny*cg.nz; tmp->mb=new medialBall(&sides[1],-1);
 		poreIs.push_back(tmp);
+
+
 	}
 
 
-	VElems.reset(cg.nx+2,cg.ny+2,cg.nz+2,-257); 
+	VElems.reset(cg.nx+2,cg.ny+2,cg.nz+2,-257);
 	VElems.X0Ch()=cg.VImage.X0()-cg.VImage.dx();  VElems.dxCh()=cg.VImage.dx();
 	int nVVs=0;
 	for (int iz = 0; iz<cg.nz; ++iz)
 	{for (int iy = 0; iy<cg.ny; ++iy)
 	 {const segments& s = cg.segs_[iz][iy];
 	  for (int ix = 0; ix<s.cnt; ++ix)
-	  {register int value=-1-int(s.s[ix].value);
+	  {int value=-1-int(s.s[ix].value);
 		nVVs=max(nVVs,value);
 	  	for (int i = s.s[ix].start; i<s.s[ix+1].start; ++i)
 		{
@@ -84,19 +69,12 @@ void blockNetwork::CreateVElem(size_t startValue)
 
 
 
-const int	Left  =0,		Right =1,	
-				Bottom=nVVs+2,	Top   =nVVs+3,	
-				Back  =nVVs+4,	Front =nVVs+5;
-
-	VElems.setSlice('i',0,         Left  );
-	VElems.setSlice('i',cg.nx+1,   Right );
-	VElems.setSlice('j',0,      -1-Bottom); //TODO: check
-	VElems.setSlice('j',cg.ny+1,-1-Top   );
-	VElems.setSlice('k',0,      -1-Back  );
-	VElems.setSlice('k',cg.nz+1,-1-Front );
-
-
-
+	VElems.setSlice('i',0,       0);
+	VElems.setSlice('i',cg.nx+1, 1);
+	VElems.setSlice('j',0,      -1-2-nVVs); //TODO: check, this means negatives can not be sued to uniquely identify pores
+	VElems.setSlice('j',cg.ny+1,-1-3-nVVs);
+	VElems.setSlice('k',0,      -1-4-nVVs);
+	VElems.setSlice('k',cg.nz+1,-1-5-nVVs);
 
 
 	firstPore = 2;
@@ -108,7 +86,7 @@ const int	Left  =0,		Right =1,
 
       int uasyned = -1;
 
-		const std::vector<medialBall>& balspc = rfs->ballSpace;
+		const std::vector<medialBall>& balspc = srf->ballSpace;
 
 
 
@@ -120,23 +98,23 @@ const int	Left  =0,		Right =1,
 		while (bi<bend)
 		{
 		  if (bi->boss == &*bi)
-		  { ++nPores;
-			VElems(bi->fi+1+_pp5,bi->fj+1+_pp5,bi->fk+1+_pp5) = poreIs.size();
+		  {
+			VElems(bi->fi+1,bi->fj+1,bi->fk+1) = poreIs.size();
 			poreNE* tmp = new poreNE();
 			tmp->mb = &*bi;
 			poreIs.push_back(tmp);
 		  }
 		  ++bi;
 		}
-		cout<<"\n created "<<nPores<<" pores  for up to index "<<0<<endl;
+		cout<<"\n created "<<poreIs.size()<<" pores (+boundaries)  for up to index "<<0<<endl;
 
 		lastPores=(poreIs.size()-1);
 
 	  }
 
 
-	  register const int firstPoreInd=firstPores;
-	  register const int lastPoreInd=lastPores;
+	  const int firstPoreInd=firstPores;
+	  const int lastPoreInd=lastPores;
 		cout<<" mapping pores indices to image, for index "<<0<< ":  "<<firstPores<<" to "<<lastPores<<",  unasigned:"<<uasyned<<endl;
 
 
@@ -149,7 +127,7 @@ const int	Left  =0,		Right =1,
 		  if (bi->boss != NULL)
 		  {
 			  medialBall* mastrSphere = bi->mastrSphere();
-			  register float apmi(mastrSphere->fi+_pp5), bpmi(mastrSphere->fj+_pp5), cpmi(mastrSphere->fk+_pp5);
+			  float apmi(mastrSphere->fi), bpmi(mastrSphere->fj), cpmi(mastrSphere->fk);
 			  int VElemV = VElems(apmi+1,bpmi+1,cpmi+1);
 
 
@@ -157,10 +135,10 @@ const int	Left  =0,		Right =1,
 
 			  if (elem->ispore())
 			  {
-				register const float   x = bi->fi+_pp5,   y = bi->fj+_pp5,   z = bi->fk+_pp5;
+				const float   x = bi->fi,   y = bi->fj,   z = bi->fk;
 				apmi =         x - mastrSphere->fi; bpmi = y - mastrSphere->fj;   cpmi = z - mastrSphere->fk;
-				register float R = bi->R;
-				register int r2 = std::max(R*0.25-1.0,1.001)*std::max(R*0.25-1.0,1.001);
+				float R = bi->R;
+				int r2 = std::max(R*0.25-1.0,1.001)*std::max(R*0.25-1.0,1.001);
 
 				float ex = sqrt(r2);
 				for (float xpa = max((x-ex),0.5f); xpa <=  min((x+ex),cg.nx-0.5f); xpa+=1.0f)
@@ -169,19 +147,19 @@ const int	Left  =0,		Right =1,
 				 { float ez = sqrt(r2-(xpa-x)*(xpa-x)-(ypb-y)*(ypb-y));
 				   for (float zpc = max((z-ez),0.5f); zpc <=  min((z+ez),cg.nz-0.5f); zpc+=1.0f)
 				   {
-					 register int idj = VElems(xpa+1,ypb+1,zpc+1);
+					 int idj = VElems(xpa+1,ypb+1,zpc+1);
 					   if (idj == (-1-int(0))  )
 					   {
 							VElems(xpa+1,ypb+1,zpc+1) = VElemV;
 					   }
 					   else if (VElemV != idj && (firstPoreInd<=idj && idj<=lastPoreInd))
 					   {
-						 voxel* vj=rfs->vxl(xpa,ypb,zpc);
+						 voxel* vj=srf->vxl(xpa,ypb,zpc);
 						 if (!vj->ball && vj->R<R)
 						 {
 						 	 const medialBall* mvj = poreIs[idj]->mb;
-						 	 register float  amj = xpa-mvj->fi,   bmj = ypb-mvj->fj,   cmj = zpc-mvj->fk;
-						 	 register float  ami = xpa - mastrSphere->fi,   bmi = ypb - mastrSphere->fj,   cmi = zpc - mastrSphere->fk;
+						 	 float  amj = xpa-mvj->fi,   bmj = ypb-mvj->fj,   cmj = zpc-mvj->fk;
+						 	 float  ami = xpa - mastrSphere->fi,   bmi = ypb - mastrSphere->fj,   cmi = zpc - mastrSphere->fk;
 						 	if ( ami*ami+bmi*bmi+cmi*cmi < amj*amj+bmj*bmj+cmj*cmj)
 						 		VElems(xpa+1,ypb+1,zpc+1) = VElemV;//elem->id;
 						 }
@@ -290,7 +268,7 @@ const int	Left  =0,		Right =1,
 
 
 
-		medianElem(cg, VElems,  firstPores, lastPores, poreIs); 
+		medianElem(cg, VElems,  firstPores, lastPores, poreIs);
 		medianElem(cg, VElems,  firstPores, lastPores, poreIs);
 		medianElem(cg, VElems,  firstPores, lastPores, poreIs);
 
@@ -313,7 +291,7 @@ const int	Left  =0,		Right =1,
 		for (bi = balspc.begin();bi<bend; ++bi)
 		{
 		      medialBall* mastrSphere = bi->mastrSphere();
-			  VElems(bi->fi+1+_pp5, bi->fj+1+_pp5, bi->fk+1+_pp5) = VElems(mastrSphere->fi+1+_pp5, mastrSphere->fj+1+_pp5, mastrSphere->fk+1+_pp5);
+			  VElems(bi->fi+1, bi->fj+1, bi->fk+1) = VElems(mastrSphere->fi+1, mastrSphere->fj+1, mastrSphere->fk+1);
 		}
 		growPoresMedian(cg, VElems,  firstPores, lastPores, poreIs, uasyned);
 		growPoresMedEqs(cg, VElems,  firstPores, lastPores, poreIs, uasyned);
@@ -340,7 +318,7 @@ const int	Left  =0,		Right =1,
 		for (bi = balspc.begin();bi<bend; ++bi)
 		{
 		      medialBall* mastrSphere = bi->mastrSphere();
-			  VElems(bi->fi+1+_pp5, bi->fj+1+_pp5, bi->fk+1+_pp5) = VElems(mastrSphere->fi+1+_pp5, mastrSphere->fj+1+_pp5, mastrSphere->fk+1+_pp5);
+			  VElems(bi->fi+1, bi->fj+1, bi->fk+1) = VElems(mastrSphere->fi+1, mastrSphere->fj+1, mastrSphere->fk+1);
         }
 		growPoresMedEqsLoose(cg, VElems,  firstPores, lastPores, poreIs, uasyned);
 
@@ -357,16 +335,16 @@ const int	Left  =0,		Right =1,
 
 
 
-void blockNetwork::createNewThroats(medialSurface*& refs)
+void blockNetwork::createNewThroats(medialSurface*& srf)
 {
 
  //vector<int> iThroatFaces; iThroatFaces.reserve(throatIs.size()+poreIs.size()*10);
  { cout<<"\nlooking for connections, iFirst = "<< throatIs.size()<< " ..  "; cout.flush();
 
 
-     for ( int i = 0; i<int(VElems.size3()[0])-1 ; i++ )
-   for (int k = 1; k<int(VElems.size3()[2])-1 ; k++ )
-    for ( int j = 1; j<int(VElems.size3()[1])-1 ; j++ )
+     for ( int i = 0; i<int(VElems.nx())-1 ; i++ )
+   for (int k = 1; k<int(VElems.nz())-1 ; k++ )
+    for ( int j = 1; j<int(VElems.ny())-1 ; j++ )
      {
 		 int p1ID = VElems(i,j,k);
 		 if(p1ID>= 0)
@@ -409,9 +387,9 @@ void blockNetwork::createNewThroats(medialSurface*& refs)
 	(cout<<throatIs.size()<<" .. ").flush();
 
 
-    for ( int j = 0; j<int(VElems.size3()[1])-1 ; j++ ) //     y >-<
-   for ( int k = 1; k<int(VElems.size3()[2])-1 ; k++ )
-     for ( int i = 1; i<int(VElems.size3()[0])-1 ; i++ )
+    for ( int j = 0; j<int(VElems.ny())-1 ; j++ ) //     y >-<
+   for ( int k = 1; k<int(VElems.nz())-1 ; k++ )
+     for ( int i = 1; i<int(VElems.nx())-1 ; i++ )
      {
 		 int p1ID = VElems(i,j,k);
 		 if(p1ID>= 0)
@@ -451,9 +429,9 @@ void blockNetwork::createNewThroats(medialSurface*& refs)
 	(cout<<throatIs.size()<<" .. ").flush();
 
 
-   for ( int k = 0; k<int(VElems.size3()[2])-1 ; k++ ) //     z >-<
-    for ( int j = 1; j<int(VElems.size3()[1])-1 ; j++ )
-     for ( int i = 1; i<int(VElems.size3()[0])-1 ; i++ )
+   for ( int k = 0; k<int(VElems.nz())-1 ; k++ ) //     z >-<
+    for ( int j = 1; j<int(VElems.ny())-1 ; j++ )
+     for ( int i = 1; i<int(VElems.nx())-1 ; i++ )
      {
 		 int p1ID = VElems(i,j,k);
 		 if(p1ID>= 0)
@@ -500,11 +478,11 @@ void blockNetwork::createNewThroats(medialSurface*& refs)
 
 
 
-	nPores=poreIs.size();
+	nNodes=poreIs.size();
 	nTrots=throatIs.size();
-	nElems=nPores+nTrots;
+	nElems=nNodes+nTrots;
 
-	cout<<"nElems:  "<<poreIs.size()<<" + "<<throatIs.size()<<" = "<<nElems<<endl;
+	cout<<"nElems:  "<<nElems<<" = "<<poreIs.size()<<" + "<<throatIs.size()<<endl;
 
 
 
@@ -526,36 +504,36 @@ void blockNetwork::createNewThroats(medialSurface*& refs)
 
 
 	int nMultiTouchErrors = 0;
-   for (int k = 1; k<int(VElems.size3()[2])-1 ; k++ )
-   {for ( int j = 1; j<int(VElems.size3()[1])-1 ; j++ )
-    {for ( int i = 1; i<int(VElems.size3()[0])-1 ; i++ )
+   for (int k = 1; k<int(VElems.nz())-1 ; k++ )
+   {for ( int j = 1; j<int(VElems.ny())-1 ; j++ )
+    {for ( int i = 1; i<int(VElems.nx())-1 ; i++ )
      {
-		register int p1ID = VElems(i,j,k);
+		int p1ID = VElems(i,j,k);
 		if (p1ID>= firstPore)
 		{
-			 std::set<int> neis;
-			 register int neiPID;
+			std::set<int> neis;
+			int neiPID;
 
-			 neiPID = VElems(i-1,j,k); 	if ((p1ID != neiPID) && (neiPID>= 0) ) neis.insert(neiPID);
-			 neiPID = VElems(i+1,j,k); 	if ((p1ID != neiPID) && (neiPID>= 0) ) neis.insert(neiPID);
-			 neiPID = VElems(i,j-1,k); 	if ((p1ID != neiPID) && (neiPID>= 0) ) neis.insert(neiPID);
-			 neiPID = VElems(i,j+1,k); 	if ((p1ID != neiPID) && (neiPID>= 0) ) neis.insert(neiPID);
-			 neiPID = VElems(i,j,k-1); 	if ((p1ID != neiPID) && (neiPID>= 0) ) neis.insert(neiPID);
-			 neiPID = VElems(i,j,k+1); 	if ((p1ID != neiPID) && (neiPID>= 0) ) neis.insert(neiPID);
+			neiPID = VElems(i-1,j,k); 	if ((p1ID != neiPID) && (neiPID>= 0) ) neis.insert(neiPID);
+			neiPID = VElems(i+1,j,k); 	if ((p1ID != neiPID) && (neiPID>= 0) ) neis.insert(neiPID);
+			neiPID = VElems(i,j-1,k); 	if ((p1ID != neiPID) && (neiPID>= 0) ) neis.insert(neiPID);
+			neiPID = VElems(i,j+1,k); 	if ((p1ID != neiPID) && (neiPID>= 0) ) neis.insert(neiPID);
+			neiPID = VElems(i,j,k-1); 	if ((p1ID != neiPID) && (neiPID>= 0) ) neis.insert(neiPID);
+			neiPID = VElems(i,j,k+1); 	if ((p1ID != neiPID) && (neiPID>= 0) ) neis.insert(neiPID);
 			for (std::set<int>::iterator neitr = neis.begin();neitr != neis.end();++neitr)
 			{
 				 poreNE* p1 = poreIs[p1ID];
 				 throatNE* trot = throatIs[p1->contacts[*neitr]];
-				 if(p1ID>*neitr) 
+				 if(p1ID>*neitr)
 				 {
-					d_assert(refs->vxl(i-1,j-1,k-1));
-					trot->toxels2.push_back( (refs->vxl(i-1,j-1,k-1)) ); 	
+					d_assert(srf->vxl(i-1,j-1,k-1));
+					trot->toxels2.push_back( (srf->vxl(i-1,j-1,k-1)) ); 	
 
 				 }
-				 else 
+				 else
 				 {
-					d_assert(refs->vxl(i-1,j-1,k-1));
-					trot->toxels1.push_back( (refs->vxl(i-1,j-1,k-1)) );
+					d_assert(srf->vxl(i-1,j-1,k-1));
+					trot->toxels1.push_back( (srf->vxl(i-1,j-1,k-1)) );
 				 }
 			}
 			if (neis.size()>1) ++nMultiTouchErrors;
@@ -563,7 +541,7 @@ void blockNetwork::createNewThroats(medialSurface*& refs)
      }
     }
    }
-	if (nMultiTouchErrors>0)  (cout<<"\n   Warning: "<< nMultiTouchErrors <<" voxels being in touch to more than two pores)\n      ").flush();
+	if (nMultiTouchErrors>0)  cout<<"\n   Warning: "<< nMultiTouchErrors <<" voxels being in touch to more than two pores"<<endl;
   }
 
 
@@ -574,7 +552,7 @@ void blockNetwork::createNewThroats(medialSurface*& refs)
 
 		sort((*titr)->toxels2.begin(), (*titr)->toxels2.end(), metaballcomparer());
 		sort((*titr)->toxels1.begin(), (*titr)->toxels1.end(), metaballcomparer());
-	//~ cout<<titr - throatIs.begin()<< " n toxels:  "<<(*titr)->toxels1.size()<<"  "<<(*titr)->toxels2.size()<<endl;
+	//cout<<titr - throatIs.begin()<< " n toxels:  "<<(*titr)->toxels1.size()<<"  "<<(*titr)->toxels2.size()<<endl;
 
 	}
 
@@ -587,17 +565,17 @@ void blockNetwork::createNewThroats(medialSurface*& refs)
 	  {
 		voxel* tvox2=*(tr->toxels2.begin());// get the largest distance map throat voxel
 		if (tvox2->ball!=NULL)
-		{ 
+		{
 			medialBall* vbi = (*tr->toxels2.begin())->ball;
 			vbi->type = 5;
 
 					medialBall* mvi=vbi->mastrSphere();
-					if (mvi!=NULL && mvi!=vbi && tr->e2 != VElems(mvi->fi+1+_pp5, mvi->fj+1+_pp5, mvi->fk+1+_pp5))	cout<<" Dmb2rrr  "<< VElems(mvi->fi+1+_pp5, mvi->fj+1+_pp5, mvi->fk+1+_pp5)<<"   ";
+					if (mvi!=NULL && mvi!=vbi && tr->e2 != VElems(mvi->fi+1, mvi->fj+1, mvi->fk+1))	cout<<" Dmb2rrr  "<< VElems(mvi->fi+1, mvi->fj+1, mvi->fk+1)<<"   ";
 		}
 		else
 		{
 			tvox2->ball = new medialBall(tvox2, 15); throadAdditBalls.push_back(tvox2->ball);
-			refs->moveUphill(tvox2->ball);
+			srf->moveUphill(tvox2->ball);
 		}
 
 
@@ -615,12 +593,12 @@ void blockNetwork::createNewThroats(medialSurface*& refs)
 				vbi->type = 6;
 
 				medialBall* mvi=vbi->mastrSphere();
-				if (mvi!=NULL && mvi!=vbi && tr->e1 != VElems(mvi->fi+1+_pp5, mvi->fj+1+_pp5, mvi->fk+1+_pp5))		cout<<" Dmb1rrr  "<< VElems(mvi->fi+1+_pp5, mvi->fj+1+_pp5, mvi->fk+1+_pp5) <<"   ";
+				if (mvi!=NULL && mvi!=vbi && tr->e1 != VElems(mvi->fi+1, mvi->fj+1, mvi->fk+1))		cout<<" Dmb1rrr  "<< VElems(mvi->fi+1, mvi->fj+1, mvi->fk+1) <<"   ";
 			}
 		  else
 		  {
             tvox1->ball = new medialBall(tvox1,16); throadAdditBalls.push_back(tvox1->ball);
-            refs->moveUphill(tvox1->ball);
+            srf->moveUphill(tvox1->ball);
 		  }
 	  }
 

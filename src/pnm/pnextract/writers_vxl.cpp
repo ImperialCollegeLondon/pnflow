@@ -16,7 +16,7 @@ voxelField<float> ballRadiiToVoxel(const blockNetwork& mpn)
 {
 	voxelField<float> vfild(mpn.cg.nx,mpn.cg.ny,mpn.cg.nz,0);
 	{
-		const medialSurface & rf = *mpn.rfs;
+		const medialSurface & rf = *mpn.srf;
 
 		{
 			float maxr=0.0;
@@ -44,12 +44,12 @@ voxelImageT<int> VElemsPlusThroats(const blockNetwork& mpn)
 {
 	voxelImageT<int> vfild(mpn.VElems);
  	cout<< " VElemsPlusThroats   "<<endl   ;
-	register int throatValue=mpn.poreIs.size()+1000000;
+	int throatValue=mpn.poreIs.size()+1000000;
 	std::vector<throatNE*>::const_iterator ti = mpn.throatIs.begin();
 	std::vector<throatNE*>::const_iterator tend = mpn.throatIs.end();
 	while (ti<tend)
 	{
-		register std::vector<voxel*>::iterator  vitr = (*ti)->toxels2.begin();
+		std::vector<voxel*>::iterator  vitr = (*ti)->toxels2.begin();
 		for ( ; vitr<(*ti)->toxels2.end();++vitr)
 			vfild((*vitr)->i+1,(*vitr)->j+1,(*vitr)->k+1) = throatValue;
 		++ti;
@@ -69,13 +69,13 @@ voxelField<int> VThroats(const blockNetwork& mpn)
 {
     voxelField<int> vfild (mpn.VElems.size3() , 0);
     cout<< " VThroats   "<<endl   ;
-    //register int throatValue=mpn.poreIs.size()+1000000;
+    //int throatValue=mpn.poreIs.size()+1000000;
     std::vector<throatNE*>::const_iterator ti = mpn.throatIs.begin();
     std::vector<throatNE*>::const_iterator tend = mpn.throatIs.end();
     while (ti<tend)
     {
         int throatValue = (*ti)->tid + 1;
-        register std::vector<voxel*>::iterator  vitr = (*ti)->toxels2.begin();
+        std::vector<voxel*>::iterator  vitr = (*ti)->toxels2.begin();
         for ( ; vitr<(*ti)->toxels2.end();++vitr)
             vfild((*vitr)->i+1,(*vitr)->j+1,(*vitr)->k+1) = throatValue;
         ++ti;
@@ -92,13 +92,13 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
     mpn.VElems.getSize(x,y,zdummy);
     voxelField<int> vfild (int3(x,y,endSlice - beginSlice) , 0);
     cout<< " VThroats   "<<endl   ;
-    //register int throatValue=mpn.poreIs.size()+1000000;
+    //int throatValue=mpn.poreIs.size()+1000000;
     std::vector<throatNE*>::const_iterator ti = mpn.throatIs.begin();
     std::vector<throatNE*>::const_iterator tend = mpn.throatIs.end();
     while (ti<tend)
     {
         int throatValue = (*ti)->tid + 1;
-        register std::vector<voxel*>::iterator  vitr = (*ti)->toxels2.begin();
+        std::vector<voxel*>::iterator  vitr = (*ti)->toxels2.begin();
         for ( ; vitr<(*ti)->toxels2.end();++vitr)
             if( (*vitr)->k+1 >= beginSlice && (*vitr)->k+1 < endSlice)
                 vfild((*vitr)->i+1,(*vitr)->j+1,(*vitr)->k + 1 - beginSlice) = throatValue;
@@ -112,16 +112,16 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
  {
     voxelField<int> vfild(mpn.cg.nx, mpn.cg.ny, mpn.cg.nz,0);
     {
-        const medialSurface & rf = *mpn.rfs;
+        const medialSurface & rf = *mpn.srf;
 
         std::vector<medialBall>::const_iterator vi = rf.ballSpace.begin();
         std::vector<medialBall>::const_iterator voxend = rf.ballSpace.end();
         while (vi<voxend)
         {
            int x,y,z;
-           x = vi->fi+_pp5;
-           y = vi->fj+_pp5;
-           z = vi->fk+_pp5;
+           x = vi->fi;
+           y = vi->fj;
+           z = vi->fk;
              {
 
                float rlim = vi->R*vi->R;//
@@ -155,16 +155,16 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
  {
     voxelField<int> vfild(mpn.cg.nx, mpn.cg.ny, lastSlice - firstSlice, 0);
     {
-        const medialSurface & rf = *mpn.rfs;
+        const medialSurface & rf = *mpn.srf;
 
         std::vector<medialBall>::const_iterator vi = rf.ballSpace.begin();
         std::vector<medialBall>::const_iterator voxend = rf.ballSpace.end();
         while (vi<voxend)
         {
            int x,y,z;
-           x = vi->fi+_pp5;
-           y = vi->fj+_pp5;
-           z = vi->fk+_pp5;
+           x = vi->fi;
+           y = vi->fj;
+           z = vi->fk;
              {
 
                float rlim = vi->R*vi->R;//
@@ -199,7 +199,7 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
  {
     voxelField<int> vfild(mpn.cg.nx,mpn.cg.ny,mpn.cg.nz,0);
     {
-        const medialSurface & rf = *mpn.rfs;
+        const medialSurface & rf = *mpn.srf;
 
         std::vector<throatNE *>::const_iterator thr = mpn.throatIs.begin();
         std::vector<throatNE *>::const_iterator thrEnd = mpn.throatIs.end();
@@ -222,9 +222,9 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
           else
               vi = (*thr)->mb22();
 
-           x = vi->fi +_pp5;
-           y = vi->fj +_pp5;
-           z = vi->fk +_pp5;
+           x = vi->fi ;
+           y = vi->fj ;
+           z = vi->fk ;
 
              {
 
@@ -260,7 +260,7 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
  {
     voxelField<int> vfild(mpn.cg.nx,mpn.cg.ny,lastSlice - firstSlice,0);
     {
-        const medialSurface & rf = *mpn.rfs;
+        const medialSurface & rf = *mpn.srf;
 
         std::vector<throatNE *>::const_iterator thr = mpn.throatIs.begin();
         std::vector<throatNE *>::const_iterator thrEnd = mpn.throatIs.end();
@@ -283,9 +283,9 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
           else
               vi = (*thr)->mb22();
 
-           x = vi->fi +_pp5;
-           y = vi->fj +_pp5;
-           z = vi->fk +_pp5;
+           x = vi->fi ;
+           y = vi->fj ;
+           z = vi->fk ;
 
              {
 
@@ -315,8 +315,7 @@ voxelField<int> VThroats(const blockNetwork& mpn, int beginSlice, int endSlice)
   }
     return vfild;
 }
-///. } Tom 
-
+///. } Tom
 
 
 

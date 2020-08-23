@@ -218,7 +218,7 @@
 		vit->R = limit ;
 
 
-//		double limit = dx*dx + dy*dy + dz*dz; limit-=sqrt(limit)-0.25;
+
 		if (frz2 <= 0) cout<<"WTF frz2 = "<<frz2<<endl;
 		if (nalien.i<-2000 || limit > 16000000)
 		{cout<<"Error i = "<<nalien.i<<endl;
@@ -241,18 +241,18 @@
 voxelImage segToVxlMesh(const medialSurface & ref)
 {/// converts segments back to voxelImage
 	voxelImage vxls(ref.nx,ref.ny,ref.nz,255);
- 	for (int iz = 0; iz<ref.nz; ++iz)
- 	{
- 		for (int iy = 0; iy<ref.ny; ++iy)
- 		{
- 			const segments& s = ref.segs_[iz][iy];
- 			for (int ix = 0; ix<s.cnt; ++ix)
- 			{
+	for (int iz = 0; iz<ref.nz; ++iz)
+	{
+		for (int iy = 0; iy<ref.ny; ++iy)
+		{
+			const segments& s = ref.segs_[iz][iy];
+			for (int ix = 0; ix<s.cnt; ++ix)
+			{
 				std::fill (&vxls(s.s[ix].start,iy,iz),&vxls(s.s[ix+1].start,iy,iz),s.s[ix].value);
- 			}
- 		}
- 	}
- 	return vxls;
+			}
+		}
+	}
+	return vxls;
 }
 
 
@@ -269,23 +269,26 @@ void medialSurface::calc_distmaps() //search  MBs at each voxel
 
 
 
-	std::vector<std::vector<node> > oldAliens(ny+1,std::vector<node>(nx));
-	for (int j = 0; j<ny+1; ++j)
-	for (int i = 0; i<nx; ++i)
+	OMPragma("omp parallel reduction(+:rBalls)")
 	{
-		oldAliens[j][i].i = i;
-		oldAliens[j][i].j = j;
-		oldAliens[j][i].k = -nz/2-1;
-	}
+		std::vector<std::vector<node> > oldAliens(ny+1,std::vector<node>(nx));
+		for (int j = 0; j<ny+1; ++j)
+		for (int i = 0; i<nx; ++i)
+		{
+			oldAliens[j][i].i = i;
+			oldAliens[j][i].j = j;
+			oldAliens[j][i].k = -nz/2-1;
+		}
 
-	size_t nvxls10th=pow(10,int(log10(10000+vxlSpace.size()/100)));
-	std::vector<voxel>::iterator vit = vxlSpace.begin();
-	for (size_t i = 0; i<nVxls; ++i)
-	{
-		calc_distmap(&*vit, 0, vxls, oldAliens);
-		if (i%nvxls10th == 0)	{cout<< "\r  voxel#" << i << " distance map / sphere radius = " <<vit->R ;cout.flush();}
-		rBalls+=vit->R;
-		++vit;
+		size_t nvxls10th=pow(10,int(log10(10000+vxlSpace.size()/20)));
+		const voxel* const vnd = &*vxlSpace.end();;
+		OMPragma("omp for")
+		for (voxel* vit = &vxlSpace[0]; vit<vnd; ++vit)
+		{
+			calc_distmap(&*vit, 0, vxls, oldAliens);
+			if (size_t(vit)%nvxls10th == 0)  {  ( cout<< "\r  distance map / sphere radius = " <<vit->R ).flush();  }
+			rBalls+=vit->R;
+		}
 	}
 	cout<< "\n  average distance map = "<<rBalls/nVxls<<endl;
 
@@ -295,7 +298,7 @@ void medialSurface::calc_distmaps() //search  MBs at each voxel
 	}
 
 
- 	return ;
+	return ;
  }
 
 
@@ -313,9 +316,9 @@ void medialSurface::smoothRadius()
 
 
 	std::vector<double> delRrr(vxlSpace.size(),0.0);
- 	for (short k = 0; k < nz; ++k)
+	for (short k = 0; k < nz; ++k)
 	 for (short j = 0; j < ny; ++j)
- 	 {
+	 {
 		const segments& s = cg_.segs_[k][j];
 		for (short ix = 0; ix<s.cnt; ++ix)
 		if (s.s[ix].value == 0)
@@ -344,16 +347,16 @@ void medialSurface::smoothRadius()
 
 
 
-			  delRrr[seg.segV+(i-seg.start)-(&vxlSpace[0])] = 4.0*sumR/(3*counter+27)-seg.segV[i-seg.start].R; 
+			  delRrr[seg.segV+(i-seg.start)-(&vxlSpace[0])] = 4.0*sumR/(3*counter+27)-seg.segV[i-seg.start].R;
 		   }
 		}
 	 }
 
 
 
- 	for (short k = 0; k < nz; ++k)
+	for (short k = 0; k < nz; ++k)
 	 for (short j = 0; j < ny; ++j)
- 	 {
+	 {
 		const segments& s = cg_.segs_[k][j];
 		for (short ix = 0; ix<s.cnt; ++ix)
 		if (s.s[ix].value == 0)
@@ -377,7 +380,7 @@ void medialSurface::smoothRadius()
 					}
 				}
 			  }
-			  
+
 
 
 			  seg.segV[i-seg.start].R  += min(max(0.02* (delRrr[seg.segV+(i-seg.start)-(&vxlSpace[0])] - 0.99*2.0*sumDelR/(1*counter+27)),-0.005),0.01);

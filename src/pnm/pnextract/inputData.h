@@ -7,6 +7,7 @@
 #include "ElementGNE.h"
 
 
+using namespace std;
 
 #define MICROCTDATA 1
 #define BINARYDATA 2
@@ -29,18 +30,17 @@ public:
 #endif //PORORANGE_H
 
 
-inline int createSample_input_nextract(string fileName, string opts)
+inline int createSample_input_nextract(std::string fnam, std::string opts)
 {
-	if (fileName.empty()) fileName = "vxlImage.mhd";
+	if (fnam.empty()) fnam = "vxlImage.mhd";
 
-	std::ifstream in(fileName.c_str());
-	if (in) { std::cout << "\n\nError: file "<<fileName<<" exists," << endl
-		     <<      "  to run simulation: rerun with "<< fileName<<" as the only argument "<< endl
-	         	        <<      "  to regenerate: delete it and try again,\n or provide a different file name:\n"
-	         	        <<      "   pnextract -g vxlImage2.mhd" << endl;
-	         	return -1; }
 
-	ofstream of(fileName);
+	ensure(!std::ifstream(fnam),"\n\nFile "+fnam+" exists,\n"
+	         +     "  to run simulation: rerun with "+fnam+" as the only argument \n"
+	         +     "  to regenerate: delete it and try again,\n or provide a different file name:\n"
+	         +     "   pnextract -g input_pnextract.mhd\n",  -1);
+
+	ofstream of(fnam);
 	if(opts=="-g")
 	{
 	 of	<<"ObjectType =  Image\n"
@@ -90,7 +90,7 @@ inline int createSample_input_nextract(string fileName, string opts)
 		<<"// write_poreMaxBalls:	true\n"
 		<<"// write_throatMaxBalls:	true\n"
 		<<"// write_throats:	true\n"
-		<<"// write_poroats:	true\n"
+		//<<"// write_poroats:	true\n" // leads to seg fault
 		<<"// write_hierarchy:	true\n"
 		<<"// write_medialSurface:	true\n"
 		<<"// write_throatHierarchy:	true\n"
@@ -102,7 +102,7 @@ inline int createSample_input_nextract(string fileName, string opts)
 
 	of.close();
 
-	cout <<" file "<<fileName<<" generated, edit: set Image size, name etc, and rerun\n";
+	cout <<" file "<<fnam<<" generated, edit: set Image size, name etc, and rerun\n";
 	return 0;
 
 }
@@ -113,21 +113,22 @@ inline int createSample_input_nextract(string fileName, string opts)
 class inputDataNE : public InputFile
 {
 public:
- inputDataNE(std::string file)
-	: InputFile(file,false), precision(1), X0(0.0,0.0,0.0),  datatype(BINARYDATA), invalidSeg{-10000, 255}
+ inputDataNE(const std::string& fnam)
+	: InputFile(fnam,false), nx(0), ny(0), nz(0), vxlSize(1), X0(0.0,0.0,0.0),  datatype(BINARYDATA), invalidSeg{-10000, 255,0}
 	{}
 
- inputDataNE(std::string file, int minvoid, int maxvoid, int outsiderange, bool readCfg)
-	: InputFile(false),  precision(1), X0(0.0,0.0,0.0),  datatype(MHDDATA), invalidSeg{-10000, 255}
+ inputDataNE(const std::string& fnam, int minvoid, int maxvoid, int outsiderange, bool readCfg)
+	: InputFile(false),  nx(0), ny(0), nz(0), vxlSize(1), X0(0.0,0.0,0.0),  datatype(MHDDATA), invalidSeg{-10000, 255,0}
 	{
-		if(!readCfg)
+		if(readCfg) 		read(fnam);
+		else
 		{
-			setKeyword("ElementDataFile",file);
-			setKeyword("void_range",toStr(minvoid)+" "+toStr(maxvoid));
-			if(outsiderange<256) setKeyword("outside_range", toStr(outsiderange));
+			setKeyword("ElementDataFile",fnam);
+			fileName_ = fnam;
 		}
-		else	read(file);
-		setTitle();
+		if(maxvoid)          setKeyword("void_range",_s(minvoid)+" "+_s(maxvoid));
+		if(outsiderange<256) setKeyword("outside_range", _s(outsiderange));
+		setTitle(fnam);
 		//echoKeywords(cout);
 	}
 
@@ -135,49 +136,50 @@ public:
  {
 
 	cout<< "Reading inputDataNE data:"<<endl;
+	echoKeywords(std::cout);
 
-	std::istringstream inputKeyData;
+	std::istringstream iss;
 
 
-	Assert(getVar(imgfileName,"ElementDataFile") || getVar(imgfileName,"imageFile") || !verbos, "ElementDataFile or imageFile", "keyword not found");
+	Assert(getVar(imgfileName,"ElementDataFile") || getVar(imgfileName,"shapeToVoxel") || !verbos, "ElementDataFile or shapeToVoxel", "keyword not found", true);
 	if(verbos)
 		cout<<" image file: "<<imgfileName<<endl;
 
 
-
-	Assert(getData(inputKeyData, "DimSize") ||  getData(inputKeyData, "imageSize") || !verbos, "DimSize or imageSize", "keyword not found");
-		inputKeyData >> nx >> ny >> nz;
+	Assert(getData(iss, "DimSize") ||  getData(iss, "imageSize") || !verbos, "DimSize or imageSize", "keyword not found", false);
+		iss >> nx >> ny >> nz;
 	if(verbos)
 		cout<< " image size: " << nx << " " << ny << " " << nz <<endl;
 
 
-	Assert(getVar(precision, "ElementSpacing") || getVar(precision, "voxelSize") || getVar(precision, "ElementSize") || !verbos, "ElementSpacing or voxelSize", "keyword not found");
+	Assert(getVar(vxlSize, "ElementSize") || getVar(vxlSize,  "ElementSpacing") || getVar(vxlSize, "voxelSize") || !verbos, "ElementSpacing or voxelSize", "keyword not found", false);
 	if(verbos)
-		cout<< " voxel size: " <<precision <<endl;
+		cout<< " voxel size: " <<vxlSize <<endl;
 
 
 	std::string dataType("binary char");
 	if (getVar(dataType,"ElementType") || getVar(dataType,"fileType"))
 	{
-		if (dataType == "binary")	datatype = BINARYDATA;
-		if (dataType == "MET_UCHAR")	datatype = MHDDATA;
-		else if	(dataType == "microct")	                        datatype = MICROCTDATA;
-		else if	(dataType == "ascii")	                        datatype = ASCIIDATA;
+		if (dataType == "binary")        	datatype = BINARYDATA;
+		else if (dataType == "MET_UCHAR")	datatype = MHDDATA;
+		else if	(dataType == "microct")  	datatype = MICROCTDATA;
+		else if	(dataType == "ascii")    	datatype = ASCIIDATA;
 		else cout<<"wrong data type, going with binary"<<endl;
-		cout<<"  file type: "<<dataType <<endl;
+		cout<<"  file type: "<<dataType<<", "<<datatype <<endl;
 	}
+	else if	(fileName_.size()>4 && fileName_.compare(fileName_.size()-4,4,".mhd")==0)	datatype = MHDDATA;
 
 	if (!getVar(imgfrmt,"DefaultImageFormat")) imgfrmt=".raw.gz";
 	if(imgfrmt[0]!='.') imgfrmt="."+imgfrmt;
-	suffix(imgfrmt);
+	imgExt(imgfrmt);
 	cout<<"DefaultImageFormat: "<<imgfrmt<<endl;
-	
+
 
 	cout<<" voxel indices:"<<endl;
-	if (getData(inputKeyData,"voidSpace"))
+	if (getData(iss,"voidSpace"))
 	{
 		std::string rockTypeName;
-		inputKeyData>>rockTypeName;
+		iss>>rockTypeName;
 		cout<<"  "<<0<<": rockTypeName = "<<rockTypeName<<endl;
 		poroRange ithRockType(rockTypeName,0,0);
 
@@ -190,39 +192,25 @@ public:
 		cout<<"  "<<0<<": void voxels "<<endl;
 	}
 
-	int nRTypes(0);
-	if(getData(inputKeyData,"porousRocks"))
-	{
-		inputKeyData >> nRTypes;
-		for(int i = 1; i <=  nRTypes; ++i)
-		{
-				std::string rockTypeName;
-				inputKeyData>>rockTypeName;
-				cout<<"  "<<i<<": porousRocks = "<<rockTypeName<<endl;
-				poroRange ithRockType(rockTypeName,i,i);
-				_rockTypes.push_back(ithRockType);
-		}
-		cout<< "  number of rock types: "<<_rockTypes.size()<<endl;
-	}
 
 	segValues.resize(256, _rockTypes.size());
 
-	for(int i = 0; i <=  nRTypes; ++i)
-	{
-		if(getData(inputKeyData, _rockTypes[i].name+"_range") || getData(inputKeyData, _rockTypes[i].name+"_thresholds"))
+	for_i(_rockTypes)
+	{	auto& rt=_rockTypes[i];
+		if(getData(iss, rt.name+"_range") || getData(iss, rt.name+"_thresholds"))
 		{
 			int lower,upper;
-			inputKeyData >> lower >> upper;
-			 _rockTypes[i].first = lower;
-			 _rockTypes[i].second = upper;
-			if (_rockTypes[i].first > _rockTypes[i].second)
-				cout<<"  Wrong entries for keyword \""<<_rockTypes[i].name+"_range"<<"\":\n"<<keywordData(_rockTypes[i].name+"_thresholds")<<"\n lower value is higher than upper value"<<endl;
+			iss >> lower >> upper;
+			rt.first = lower;
+			rt.second = upper;
+			if (rt.first > rt.second)
+				cout<<"  Wrong entries for keyword \""<<rt.name+"_range"<<"\":\n"<<keyvals(rt.name+"_thresholds")<<"\n lower value is higher than upper value"<<endl;
 		}
 
-		for(size_t j = _rockTypes[i].first; j <=  _rockTypes[i].second; ++j)
+		for(size_t j = rt.first; j <=  rt.second; ++j)
 			segValues[j] = i;
 
-		cout<<"  "<< _rockTypes[i].name<<" voxel values: ["<<int(_rockTypes[i].first)<< " "<<int(_rockTypes[i].second)<<"]"<<endl;
+		cout<<"  "<< rt.name<<" voxel values: ["<<int(rt.first)<< " "<<int(rt.second)<<"]"<<endl;
 	}
 
 	cout<<"  Voxel value indices:";
@@ -239,29 +227,32 @@ public:
  {
 	cout<< "\nLoading voxel data, format:"<<datatype <<" fileName:"<<fileName()<<endl;
 
-	VImage.reset(nx,ny,nz,0);
+	VImage.reset(nx,ny,nz,255);
 	if (datatype == MICROCTDATA)	VImage.readMicroCT(imgfileName);
-	else if (datatype == BINARYDATA)	{if (!VImage.readBin(imgfileName))   {cout<<"\nError: didn't read binary image!\n"<<endl; exit(-1);}}
-	else if (datatype == ASCIIDATA)	{if (!VImage.readAscii(imgfileName)) {cout<<"\nError: didn't read ascii image!\n"<<endl; exit(-1);}}
+	else if (datatype == BINARYDATA)  {if (!VImage.readBin(imgfileName))   {cout<<"\nError: didn't read binary image!\n"<<endl; exit(-1);}}
+	else if (datatype == ASCIIDATA)   {if (!VImage.readAscii(imgfileName)) {cout<<"\nError: didn't read ascii image!\n"<<endl; exit(-1);}}
 	else
 	{
 		VImage.reset(0,0,0,255);
-		VImage.readFromHeader(fileName());
+		readConvertFromHeader(VImage, fileName());
 		int3 siz=VImage.size3();
 		nx= siz[0];  ny= siz[1];  nz= siz[2];
-		precision = VImage.dx()[0];
+		vxlSize = VImage.dx()[0];
 		X0=VImage.X0();
+		cout<<" siz:"<<siz<<" vxlSize:"<<vxlSize<<" X0:"<<X0<<endl;
+		ensure(siz[2],"no image read",2);
 	}
-	if(!VImage.size3()[0]) {  cout<<"\nError: no image read!\n"<<endl; exit(-1);}
+	if(!VImage.nx()) {  cout<<"\nError: no image read!\n"<<endl; exit(-1);}
 	VImage.printInfo();
 
 	nInside= (long long)(nx)*ny*nz;
-	std::istringstream inputKeyData;
-	if(getData(inputKeyData, "outside_range") || getData(inputKeyData,"outside_thresholds"))
+	std::istringstream iss;
+	if(getData(iss, "outside_range") || getData(iss,"outside_thresholds"))
 	{
 		int lower,upper;
-		inputKeyData >> lower >> upper;
+		iss >> lower >> upper;
 		forAllcp(VImage) if(lower<=(*cp) && (*cp)<=upper) --nInside;
+		cout<<" outside_range: "<<lower <<" "<<upper<<"; inside_fraction: "<<nInside/(double(nx)*ny*nz)<<endl;
 
 	}
  }
@@ -272,20 +263,23 @@ public:
 
 
 
-	nVxlVs.resize(_rockTypes.size()+1,0);
-
-	std::vector<segment> segTmp(nx+1);
- 	segs_.resize(nz,std::vector<segments>(ny));
-
- 	for (int iz = 0; iz<nz; iz++)
- 	 for (int iy = 0; iy<ny; iy++)
- 		if(segs_[iz][iy].s != NULL) cout<<"ERROR"<<endl;
+	std::vector<size_t> nVxlVs(_rockTypes.size()+1,0);
+	segs_.resize(nz,std::vector<segments>(ny));
 
 
+
+	#ifdef OpenMP
+		#pragma   omp declare reduction(vec_sizet_plus : std::vector<size_t> : \
+				  std::transform(omp_out.begin(), omp_out.end(), omp_in.begin(), omp_out.begin(), std::plus<size_t>())) \
+				  initializer(omp_priv = omp_orig)
+	#endif
+
+	OMPragma("omp parallel for  reduction(vec_sizet_plus : nVxlVs)")
 	for (int iz = 0; iz<nz; ++iz)
 	{
- 		for (int iy = 0; iy<ny; ++iy)
- 		{
+		std::vector<segment> segTmp(nx+1);
+		for (int iy = 0; iy<ny; ++iy)
+		{
 			int cnt = 0;
 			int  currentSegValue = 257;
 			for (int ix = 0; ix<nx; ++ix)
@@ -314,13 +308,18 @@ public:
 			}
 			ss.s[cnt].start = nx;
 			ss.s[cnt].value = 254;
- 		}
- 	}
+		}
+	}
 
 
 	cout<< endl;
-	for (int i = 0;i<int(_rockTypes.size());i++)
-		cout<<" "<<i<< ". " << _rockTypes[i].name<< ": " << nVxlVs[i] << " voxels, " <<  (nVxlVs[i]*(100.0/nx/ny/nz))<< "%"<<endl;
+	size_t nVInsids=0.0;
+	for_i(_rockTypes)
+	{
+		nVInsids+=nVxlVs[i];
+		cout<<" "<<i<<". "<< _rockTypes[i].name<<": "<<nVxlVs[i]<<" voxels, "<< nVxlVs[i]/(double(0.01*nx)*ny*nz) << "%"<<endl;
+	}
+	ensure(nVInsids>double(0.01*nx)*ny*nz, "too low porosity, set 'void_range' maybe?", -1);
 	cout<< endl;
 
  }
@@ -328,14 +327,14 @@ public:
 
  const segment* segptr(int i, int j, int k) const
  {
- 	if (i<0 || j<0 || k<0 || i>= nx || j>= ny || k>= nz)  return &invalidSeg;
+	if (i<0 || j<0 || k<0 || i>= nx || j>= ny || k>= nz)  return &invalidSeg;
 
- 	const segments& s = segs_[k][j];
- 	for (int p = 0; p<s.cnt; ++p)
- 		if (i >= s.s[p].start && i < s.s[p+1].start)	  return s.s+p;
+	const segments& s = segs_[k][j];
+	for (int p = 0; p<s.cnt; ++p)
+		if (i >= s.s[p].start && i < s.s[p+1].start)	  return s.s+p;
 
 	cout<<"Error can not find segment at "<<i<<" "<<j<<" "<<k<<" nSegs: "<<s.cnt<<endl;
- 	return (s.s+s.cnt);
+	return (s.s+s.cnt);
  }
 
 
@@ -343,7 +342,7 @@ public:
 public:
 
 	int nx, ny, nz;
-	double precision;
+	double vxlSize;
 	dbl3 X0;
 	int datatype;
 	std::string imgfrmt;
@@ -355,7 +354,6 @@ public:
 	std::vector< std::vector<segments> > segs_;
 	segment invalidSeg;
 
-	std::vector<size_t> nVxlVs;
 	std::vector<int> segValues;
 	std::vector<poroRange> _rockTypes;
 	voxelImage VImage;
