@@ -14,10 +14,8 @@ In 2020, the code has been through further restructuring and clean up as part of
 
 
 ### Recent changes:
-* USE ``;`` (or double empty lines) to mark the end of input_pnflow.dat keyword data. 
-  ``#`` can not be used for this purpose any more. 
 
-* pnflow input keywords has been changed significantly, see the new input_pnflow.dat file in doc folder.
+* pnflow input keywords has been changed significantly, see the new [input_pnflow.dat](https://github.com/aliraeini/pnflow/blob/develop/doc/input_pnflow.dat) file in doc folder.
 
 ### Instructions for Windows:
 
