@@ -13,10 +13,8 @@ A recent validation of the pnflow and [pnextract] codes is published by [Bultrey
 
 
 ### Recent changes:
-* USE ``;`` (or double empty lines) to mark the end of input_pnflow.dat keyword data. 
-  ``#`` can not be used for this purpose any more. 
 
-* Previous code has been moved to branch [bu20190607] (discontinued) 
+* A new  "cleaned-up" version is published as `develop` branch, which will replace this branch after more testing.
 
 ### Instructions for Windows:
 
