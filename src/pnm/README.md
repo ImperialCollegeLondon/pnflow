@@ -17,7 +17,7 @@ In 2020, the code has been through further restructuring and clean up as part of
 * USE ``;`` (or double empty lines) to mark the end of input_pnflow.dat keyword data. 
   ``#`` can not be used for this purpose any more. 
 
-* Previous code has been moved to branch [bu20190607] (discontinued) 
+* pnflow input keywords has been changed significantly, see the new input_pnflow.dat file in doc folder.
 
 ### Instructions for Windows:
 
