@@ -14,7 +14,7 @@ A recent validation of the pnflow and [pnextract] codes is published by [Bultrey
 
 ### Recent changes:
 
-* A new  "cleaned-up" version is published as `develop` branch, which will replace this branch after more testing.
+* A new  "cleaned-up" version is published as [develop branch](https://github.com/aliraeini/pnflow/tree/develop), which will replace this after more testing.
 
 ### Instructions for Windows:
 
