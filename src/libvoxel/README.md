@@ -5,7 +5,7 @@ software which work with X-ray computer tomography data.
 
 In addition, voxelImageConvert and voxelToFoam(Par) applications are included here (when needed) for convinience; the libvoxel codes (all starting with voxelImage) are independent of these apps.
 
-voxelImageConvert is also used to generate synthetic images for testing libvoxelk and other packages.
+voxelImageConvert is also used to generate synthetic images for testing libvoxel and other packages.
 
 The library can read and write 3D image data in ascii (.dat) or binary (.raw) formats, in Avizo (.am) formats (only uncompressed and ByteRLE encoded data are supported).  It can also read raw.gz and .tif image formats provided that the  [libz] and [libtiff] libraries are available.
 
