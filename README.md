@@ -6,7 +6,7 @@ This repository hosts the classical network flow simulation code called pnflow.
 
  ----------------------------------------------------------------
  
- **Please see the [src/pnm](src/pnm) and [doc](doc) folders for specific details**
+ **Please see the [src/pnm](src/pnm), [src/pnm/pnextract](src/pnm/pnextract), and [doc](doc) folders for specific details.**
  
  ----------------------------------------------------------------
 
