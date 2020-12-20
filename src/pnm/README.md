@@ -1,21 +1,23 @@
 ﻿##  pnflow - classical pore-network (extraction and) flow simulation
 
 This repository included the classical network flow simulation code called pnflow. 
-[pnextract network extraction 
-code](https://github.com/aliraeini/pnextract) is also included [here](src/pnm/pnextract) for convenience. These two codes are kept compatible and refered to as pore-network model (PNM) together.
+[pnextract network extraction code](https://github.com/aliraeini/pnextract) is also 
+included [here in pnextract folder](src/pnm/pnextract) for convenience. These two 
+codes are kept compatible and refered to as pore-network model (PNM) together.
 
-These pnflow code is essentially a cleaned up version of the [poreflow code] by
+The pnflow code is essentially a cleaned up version of the [poreflow code] by
 [Valvatne and Blunt (2004)].  The poreflow code was restructured with some 
 post-processing features added in preparation for the generalized network 
 model [Raeini, Bijeljic and Blunt 2018], sponsored by [TOTAL]. 
 A recent validation of the pnflow and [pnextract] codes is published by [Bultreys et al. 2018].
 
-In 2020, the code has been through further restructuring and clean up as part of a sponsorship from [Wintershall Dea].  The common components of PNM codes are kept in sync with the privately developed codes to reduce development effort and allow future collaborations.  This base code is kept under `develop` branch until further testing and benchmarking with the original code is undergoing.
-
-
 ### Recent changes:
 
-* pnflow input keywords has been changed significantly, see the new [input_pnflow.dat](https://github.com/aliraeini/pnflow/blob/develop/doc/input_pnflow.dat) file in doc folder.
+
+- In 2020, the code has been through further restructuring and clean up as part of a sponsorship from [Wintershall Dea].
+The common components of PNM codes are kept in sync with privately developed codes and the closed-source generalized network model to reduce development effort and to allow future collaborations.  This new code is kept under `develop` branch until further testing and benchmarking with the original code.
+
+- pnflow input keywords are changed significantly (for compatibility with the generalized network model) see the new [input_pnflow.dat](https://github.com/aliraeini/pnflow/blob/develop/doc/input_pnflow.dat) file in doc folder for more information.
 
 ### Instructions for Windows:
 
