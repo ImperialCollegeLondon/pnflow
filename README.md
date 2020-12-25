@@ -1,4 +1,4 @@
-![make all test](https://github.com/aliraeini/pnflow/workflows/make%20all%20test/badge.svg?branch=develop)
+![make and test](https://github.com/aliraeini/pnflow/workflows/make%20and%20test/badge.svg)
 
 ##  pnflow - classical pore-network (extraction and) flow simulation
 
