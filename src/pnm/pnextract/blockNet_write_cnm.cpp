@@ -2,7 +2,7 @@
 #include "blockNet.h"
 
 
-inline double randomG ()
+inline double randomG () //! to randomly distribute the shape factors, in case of errors
 {
 	double x1, x2, w, y;
 	do{
@@ -19,10 +19,12 @@ inline double randomG ()
 
 void  blockNetwork::writePNM() const
 {
+	//! pnflow uses the following indexes: [0:nB(=2)] for boundary nodes, 
+	//! [nB:nP+nB] for internal nodes and throat indices start afterwards.
+	//! here, in Statoil format, all these are subtracted by 1 (starting from -1).
 
-
-
-
+	//!### First we compute the classical network model parameters,
+	//!#### throat radii, shape factors and lengths,
 	vector<double> t_radiuss(nTrots,0.0);//
 	vector<double> t_shapeFacts(nTrots,0.0);//
 	vector<double> t_lengthP1toP2s(nTrots,0.0);
@@ -30,7 +32,7 @@ void  blockNetwork::writePNM() const
 	vector<double> t_lp2s(nTrots,0.0);//
 	vector<double> t_ltrot(nTrots,0.0); // throat portion of t_lengthP1toP2s
 
-
+	//!#### pore radii, shape factors and lengths.
 	vector<double> p_radiuss(nNodes,0.0);
 	vector<double> p_shape1s(nNodes,0.0);
 	vector<double> p_physlengths(nNodes,0.0);
@@ -41,7 +43,7 @@ void  blockNetwork::writePNM() const
 	double nBelowAllowedG(0.0), nAboveAllowedG(0.0), totalArea(0.0);
 
 
-
+	//!### Compute throat  parameters
 	for (int ti=0; ti<nTrots; ++ti)
 	{
 	    throatNE& tr = *throatIs[ti];
@@ -54,21 +56,21 @@ void  blockNetwork::writePNM() const
 		if (tr.surfaceArea == 0)		tr.surfaceArea = 6;
 		if (mag(tr.CrosArea) <0.01)		tr.CrosArea[0] = 0.1;
 
-
+		//! - compute distance between the throat centre and each of the two adjacent pore centres
 		double lpt1 = (   (tr.e1 <2)  ?  (tr.e1 == 0 ? tr.mb22()->fi:cg.nx-tr.mb22()->fi) : dist (poreIs[tr.e1]->mb, tr.mb22())   );
 		double rp1 = std::max(   (tr.e1 <2 ) ? tr.mb22()->R : poreIs[tr.e1]->mb->R , 1.0f );
 		double lpt2 = (   (tr.e2 <2)  ?  (tr.e2 == 0?tr.mb22()->fi:cg.nx-tr.mb22()->fi) : dist (poreIs[tr.e2]->mb, tr.mb22())   );
 		double rp2 = std::max(   (tr.e2 <2 ) ? tr.mb22()->R : poreIs[tr.e2]->mb->R , 1.0f );
 
-
+		//! - throat radius is the radius of the largest maximal sphere  on the throat surface
 		double rr = std::max(tr.mb22()->R,0.5f);
 		rr = std::min(std::min(rr,rp1),rp2);
 		t_radiuss[ti] = rr+0.5*(0.5-double(rand())/RAND_MAX);
-
+		//! - throat total length is the sum of the two half-throat lengths
 		double lengthP1toP2 = lpt1+lpt2;
 		if (lengthP1toP2 < 3.0) 	lengthP1toP2 = 3.01, ++lengthP1toP2Warnings;
 
-
+		//! - each pore is given 67% of the total throat length, the rest is called the throat elngth
 		lp1 = lpt1*0.67;
 		lp2 = lpt2*0.67;
 		if (tr.e1 < 2 )	lp1 = 1;
@@ -78,7 +80,7 @@ void  blockNetwork::writePNM() const
 
 		if (lthroat < 0.0000001) 	lthroat = 1;
 
-		t_shapeFacts[ti] = rr*rr/4.0/mag(tr.CrosArea);
+		t_shapeFacts[ti] = rr*rr/4.0/mag(tr.CrosArea);  //!- new throat shape factor definition G = R^2/4A
 
 
 		if (t_shapeFacts[ti]>= 0.09 )
@@ -89,7 +91,7 @@ void  blockNetwork::writePNM() const
 
 		totalArea += mag(tr.CrosArea);
 
-		t_lengthP1toP2s[ti] = lengthP1toP2*1.0;
+		t_lengthP1toP2s[ti] = lengthP1toP2*1.0; //: check
 		t_lp1s[ti] = lp1*1.0;
 		t_lp2s[ti] = lp2*1.0;
 		t_ltrot[ti] = lthroat*1;
@@ -101,7 +103,7 @@ void  blockNetwork::writePNM() const
 	 cout<<"calc Pores"<<endl;
 
 
-
+	//!### Compute pore  parameters
 	for (int pid=2; pid<nNodes; ++pid)
 	{
 		poreNE& por = *poreIs[pid];
@@ -110,8 +112,8 @@ void  blockNetwork::writePNM() const
 		if (por.surfaceArea<1) por.surfaceArea = 6;
 		if (por.volumn<1) por.volumn = 1;
 
-
-		double shapeFactor(5.0e-38), SumTArea(1.0e-36);
+		//! - pore shape factor is computed from a weighted average of its throat shape factors
+		double shapeFactor(5.e-38), SumTArea(1e-36);
 		for (const auto& bi:por.contacts)
 		{
 			throatNE& tr = *throatIs[bi.second];
@@ -139,7 +141,7 @@ void  blockNetwork::writePNM() const
 	const double dx = cg.vxlSize;
 	cout<<"Writing throats";cout.flush();
 
-	{
+	{ //!### write  _link1.dat file
 		FILE* fil = fopen((cg.name() + "_link1.dat").c_str(), "w");
 		fprintf(fil, "%6d\n", int(throatIs.size()));
 		for (int ti = 0; ti < int(throatIs.size()); ++ti)
@@ -151,7 +153,7 @@ void  blockNetwork::writePNM() const
 		fclose(fil);
 	}
 
-	{
+	{//!### write  _link2.dat file
 		FILE* fil = fopen((cg.name() + "_link2.dat").c_str(), "w");
 		for (int ti = 0; ti < int(throatIs.size()); ++ti)
 		{	const throatNE& tr = *throatIs[ti];
@@ -165,7 +167,7 @@ void  blockNetwork::writePNM() const
 
 
 	cout<<"Writing pores";cout.flush();
-	{
+	{//!### write  _node1.dat file
 		FILE* fil = fopen((cg.name() + "_node1.dat").c_str(), "w");
 		fprintf(fil, "%6d  %E  %E  %E\n", int(poreIs.size())-2, cg.nx*dx, cg.ny*dx, cg.nz*dx);
 
@@ -194,8 +196,8 @@ void  blockNetwork::writePNM() const
 				}
 			}
 
-			fprintf(fil, "\t%5d", (inlet) ); //. .dummy
-			fprintf(fil, "\t%5d", (outlet) ); //. .dummy
+			fprintf(fil, "\t%5d", (inlet) ); // dummy
+			fprintf(fil, "\t%5d", (outlet) ); // dummy
 
 			for (std::map<int,int>::const_iterator bi = por.contacts.begin(); bi != por.contacts.end(); ++bi)
 			{
@@ -206,7 +208,7 @@ void  blockNetwork::writePNM() const
 		fclose(fil);
 	}
 
-	{
+	{//!### write  _node2.dat file
 		FILE* fil = fopen((cg.name() + "_node2.dat").c_str(), "w");
 		for (int pid = 2; pid < int(poreIs.size()); ++pid)//. 0th and first are inlet and outlet elements
 		{	const poreNE& por = *poreIs[pid];
@@ -218,9 +220,6 @@ void  blockNetwork::writePNM() const
 	cout<<".\n";cout.flush();
 
 }
-
-
-
 
 
 
