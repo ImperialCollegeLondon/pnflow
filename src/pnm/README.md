@@ -79,8 +79,8 @@ or send me an email:   a.qaseminejad-raeini09@imperial.ac.uk
 
 
 
-[Imperial College - pore-scale consortium]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling
-[poreflow code]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/software/two-phase-network-modelling-code
+[Imperial College - pore-scale consortium]: https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling
+[poreflow code]: https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/software/two-phase-network-modelling-code
 [Valvatne and Blunt (2004)]:  https://doi.org/10.1029/2003WR002627
 [Bultreys et al. 2018]: https://doi.org/10.1103/PhysRevE.97.053104
 [Raeini, Bijeljic and Blunt 2018]: https://doi.org/10.1103/PhysRevE.97.023308

@@ -4,7 +4,7 @@
 mnextract algorithm version 0.3, March. 2017
 
 For more information, please visit Imperial College pore-scale modelling website:
-http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/
+https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/
 or contact Ali Q. Raeini by email: a.qaseminejad-raeini@imperial.ac.uk
 ***************************************************************************************/
 
@@ -41,7 +41,7 @@ inline void usage(int detailed=1)
 		std::cout<<"  mnextract -g vxlImage.mhd\n"<< std::endl;
 
 		std::cout<<" For more information, please visit Imperial College pore-scale modelling website:"<<std::endl
-			 <<"http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling"<<std::endl
+			 <<"https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling"<<std::endl
 			 <<"or contact Ali Q. Raeini by email: a.qaseminejad-raeini@imperial.ac.uk"<<endl;
 	}
 }

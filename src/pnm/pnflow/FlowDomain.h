@@ -26,7 +26,7 @@ freely, subject to the following restrictions:
 --------------------------------------------------------------------
 See the Imperial College Consortium on Pore-Scale Modelling and Imaging
 for contact details:
-https://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/
+https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/
 
 */
 

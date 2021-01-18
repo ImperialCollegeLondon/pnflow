@@ -23,7 +23,7 @@ void usageCNF(string exename, int detailed)
 	if(detailed)
 	{
 		std::cout<<"For more information, please visit Imperial College pore-scale modelling website:"<<std::endl
-			 <<"http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling"<<std::endl
+			 <<"https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling"<<std::endl
 			 <<"or contact Ali Q. Raeini by email: a.qaseminejad-raeini@imperial.ac.uk"<<endl;
 			std::cout<<"\nUsage:"<< std::endl;
 			std::cout<<" Run a flow simulation:"<< std::endl;

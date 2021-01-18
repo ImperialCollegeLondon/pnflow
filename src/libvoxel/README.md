@@ -35,9 +35,9 @@ For further information contact me by email:   a.q.raeini@imperial.ac.uk
 ### References
 See the [Publications on our website], also [Images on our website].
 
-[Publications on our website]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/publications/
-[Images on our website]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/micro-ct-images-and-networks/
-[Imperial College - pore-scale consortium]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling
+[Publications on our website]: https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/publications/
+[Images on our website]: https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/micro-ct-images-and-networks/
+[Imperial College - pore-scale consortium]: https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling
 [libtiff]: https://gitlab.com/libtiff/libtiff
 [porefoam]: https://github.com/aliraeini/porefoam
 [pnextract]: https://github.com/aliraeini/pnextract
