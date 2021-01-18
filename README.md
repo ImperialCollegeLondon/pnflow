@@ -1,85 +1,83 @@
-﻿##  pnflow - classical pore-network (extraction and) flow simulation
+![make and test](https://github.com/aliraeini/pnflow/workflows/make%20and%20test/badge.svg)
 
-This repository included the classical network flow simulation code called pnflow. 
-[pnextract network extraction 
-code](https://github.com/aliraeini/pnextract) is also included [here](src/pnm/pnextract) for convenience.
+##  pnflow - classical pore-network (extraction and) flow simulation
 
-These pnflow code is essentially a cleaned up version of the [poreflow code] by
-[Valvatne and Blunt (2004)].  The poreflow code was restructured with some 
-post-processing features added in preparation for the generalized network 
-model [Raeini, Bijeljic and Blunt 2018], sponsored by [TOTAL]. 
-A recent validation of the pnflow and [pnextract] codes is published by [Bultreys et al. 2018].
+This repository hosts the classical network flow simulation code called pnflow. 
+[pnextract network extraction code](https://github.com/aliraeini/pnextract) is also included [here](src/pnm/pnextract) for convenience.
 
 
+ ----------------------------------------------------------------
+ 
+ **Please see the [src/pnm](src/pnm), [src/pnm/pnextract](src/pnm/pnextract), and [doc](doc) folders for specific details.**
+ 
+ ----------------------------------------------------------------
 
 ### Recent changes:
 
-* A new  "cleaned-up" version is published as [develop branch](https://github.com/aliraeini/pnflow/tree/develop), which will replace this after more testing.
+* The code is being synchronized with the generalized network model to reduce future development efforts.  Previous version of the code can be downloaded from [pnm2019 branch](https://github.com/aliraeini/pnflow/tree/pnm2019).
 
-### Instructions for Windows:
+## General instructions
 
-Instructions for extracting a network from a micro-CT image are given in
-the doc folder; see also the [pnextract] README.
+### Compiling
 
-To run a network flow simulation, copy the sample input file src/doc/input_pnflow.dat
-and the extracted networks (with suffixes  _link1.dat, _link1.dat, _node1.dat and 
-_node2.dat) into a new folder.  Then edit the input_pnflow.dat file and set the NETWORK
-keyword and other flow parameters. Finally run, in a Windows Command Prompt: 
-  
-    PATH\TO\bin\pnflow.exe  input_pnflow.dat
+To compile, open a terminal in the upper most directory and run:
 
-* You may need to modify the command above and, instead of `` PATH\TO\bin\ ``, provide the full path to the pnflow.exe, if it exists in a different directory than your command prompt working directory.
+ `make -j`
 
-* To open a command-prompt in Windows, hold the *Shift* key and *right-click*
-  into the folder where the input_pnflow.dat is copied and click on the *Open Command Window Here* menu.
+once everything compiled successfully, to clean the temporary files, type:
 
-###  Compiling:
-The code is already compiled to bin/pnextract.exe and bin/pnflow.exe, Win64 
-executables (extract the bin.7z to see these files) using MinGW compilers.
+ `make clean`
 
-In Linux, the compilation can be done by running in the top-level directory (where this file is):    
+The above command can be run inside most of the subfolders, wherever a 
+makefile or Makefile is present.  The libraries, those with a `makefile`,
+should be compiled before the apps that contain `Makefile`s.
 
-    make -j
-
-"-j" flag is to compile in parallel and can be omitted. 
-
-Running ``make mgw`` instead cross-compiles the code for Windows machines, if MinGW compilers are ailable in your system and set in [src/AllMakeMinGW](src/AllMakeMinGW) script.
-Run ``make clean`` before switching between Windows and Linux compilations, to avoid mixing the intermidiate Linux and Windows object files.
-
-### Installation
-
-In Windows, you just need to know how to run standalone exe files from Command Prompt, as explained above.
-
-In Linux, you can source the src/bashrc file to set te paths to the compiled binaries:     
-
-     source PATH/TO/src/bashrc
-
-###  Dependencies:
-The pnflow code depends on the [Hypre] library which along with other [pnextract] dependencies are included in 
-the [thirdparty](thirdparty) folder. 
+Compilation requires gnu (Linux) make, cmake, a c++ compiler with -std=c++11
+support and an MPI. The compilation is tested using g++ (version 5+) (default)
+and using intel-2018 compilers.
 
 
-Note, you may need to install jpg and lzma libraries, prerequisites of libtif and oxelImage/libvoxel libraries (to check...), for the make command above to succeed. In Ubuntu this can be installed by running the following commands:      
+### Tests and demos
+To test the codes type:
 
-    sudo apt install libjpeg-dev liblzma-dev
-      
-###  Licence:
+ `make test`
 
-The code is release as a free, using a zlib-style licence, see the file 
-src/pnflow/netsim.h for a copy of the licence.
+This should copy a series of input files/scripts in a `test` folder and 
+run a series of relatively quick test cases (see README.md files in 
+subdirectories).  
 
-For contact and further information see [Imperial College - pore-scale consortium] website,
-or send me an email:   a.qaseminejad-raeini09@imperial.ac.uk
+### Coding conventions
+
+GNU Makefile scripts are used primarily for code compilation and 
+running quick tests by code developers.
+
+Automatic tests are written using input files for C++ codes, new C++ 
+executables testing internals of the codes and Python scripts. All 
+these can be run using `make test` command, which uses 
+script/testApp bash script.
+
+All scripts, either for testing or production, which need mathematical 
+calculations or plotting and are not performance critical are developed 
+using Python.   
+
+All computations which typically take more than few minutes are 
+developed using C++.  When interaction with other languages 
+(R/Shell/Python) are needed the C++ code shall make use of SiR class to 
+achieve this, where possible, using the `_sh_` command to launch other 
+scripts/executables.
+
+
+Bash/Shell scripts are used to launch run Makefile and Python scripts, 
+either for testing or in production to simplify the run of openfoam 
+solvers.  
 
 
 
+### Contact and References ###
 
-[Imperial College - pore-scale consortium]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling
-[poreflow code]: http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling/software/two-phase-network-modelling-code
-[Valvatne and Blunt (2004)]:  https://doi.org/10.1029/2003WR002627
-[Bultreys et al. 2018]: https://doi.org/10.1103/PhysRevE.97.053104
-[Raeini, Bijeljic and Blunt 2018]: https://doi.org/10.1103/PhysRevE.97.023308
-[Hypre]: https://github.com/LLNL/hypre
-[TOTAL]: https://www.total.com
-[pnextract]:  src/pnm/pnextract
-[bu20190607]:  https://github.com/aliraeini/pnflow/tree/bu20190607
+For contacts and references please see: 
+http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling
+or contact Ali Q. Raeini, email: a.q.raeini@imperial.ac.uk
+
+More details are given in the apps/doc directory.
+

@@ -10,11 +10,8 @@
 
 #include "inputData.h"
 #include "medialSurf.h"
-//~ #include "util.h"
 
-#define RLEVEL3 0.7
 
-#define SubElem0 nElems
 
 int nextract(inputDataNE& cfg, bool verbos=true);
 
@@ -25,23 +22,24 @@ class blockNetwork
  public:
 
 	blockNetwork(medialSurface*& rs, const inputDataNE& c)
-	: rfs(rs), cg(c), maxNCors(5) {};
+	: srf(rs), cg(c), maxNCors(5) {};
 
 
-	void createMedialSurface(medialSurface*& refs, inputDataNE& cfg, size_t startValue);
-	void collectAllballs(medialSurface*& refs, inputDataNE& cfg, size_t startValue);
+	void createMedialSurface(medialSurface*& srf, inputDataNE& cfg, size_t startValue);
+	void collectAllballs(medialSurface*& srf, inputDataNE& cfg, size_t startValue);
 	void createchildHierarchy();
 	void CreateVElem(size_t startValue);
-	void createNewThroats(medialSurface*& refs);
+	void createNewThroats(medialSurface*& srf);
 	void findParentInElem(medialBall* vi, int e1s2, int& EbadElem, int& EbadBoss, int& nAllElem, int& nAllBoss);
-	void createThroatBallConnectivity(medialSurface*& refs);
+	void createThroatBallConnectivity(medialSurface*& srf);
 	void createCornerHirarchy();
 
 
 
 
 
-	void writeStatoilFormat() const;
+
+	void writePNM() const;
 
 
 
@@ -49,13 +47,13 @@ class blockNetwork
 
 public:
 
-	medialSurface*&   rfs;
+	medialSurface*&   srf;
 	// std::vector<mediaAxes*> mas;
 	int firstPore;
 	int firstPores;
 	int lastPores;
 	const inputDataNE& cg;
-	voxel inletV, outletV;
+	std::array<voxel,8> sides;
 
 	voxelImageT<int>  VElems;
 
@@ -67,7 +65,7 @@ public:
 
 
 
-	int nPores;
+	int nNodes;
 	int nTrots;
 	int nElems;
 

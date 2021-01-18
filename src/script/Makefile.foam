@@ -1,0 +1,17 @@
+
+
+all: msApp
+
+msSrc ?= $(abspath ../..)
+
+include ${CURDIR}/Make/options
+
+USE_MINIFOAMX3=1
+OFCs=$(shell find | grep -F .C | sed s:./::)
+OFincs =  meshTools finiteVolume
+OFlibs =  meshTools finiteVolume interFacePropsBCs
+
+
+USE_OMP=1
+USE_msMAKE=1
+include  ${msSrc}/script/Makefile.in

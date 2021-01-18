@@ -21,48 +21,35 @@ using namespace std;
 
 
 
-Throat::Throat(CommonData& common, const Oil& oil, const Water& water, double radius, double volume, double volumeClay,
-               double shapeFactor, double length, double lengthPore1, double lengthPore2, int index,
-               std::string rockType) : Element(common, oil,water, radius, volume, volumeClay, shapeFactor, 2, false, rockType), 
-              m_latticeIndex(index)
+Throat::Throat(const CommonData& common, int indx, dbl3 nod, double radius, double vol, double volumeClay,
+			   double shapeFactor, double length, double lengthPore1, double lengthPore2, int rockType) 
+	: Element(common, indx, nod, radius, vol, volumeClay, shapeFactor, 2, false, rockType), index_(indx), 
+	poreLength_{lengthPore1,lengthPore2}, length_(length)
+{}
+
+
+
+
+
+
+
+
+
+
+void Throat::prepare2()
 {
-    m_length = length;
-    m_poreLength.push_back(lengthPore1);
-    m_poreLength.push_back(lengthPore2);
-}
-
-
-
-
-
-
-
-
-
-
-void Throat::calcVolume_CheckIntegrity(double& totNetVolume, double& totClayVolume, int& maxNonZeros, int& isolatedSum) const
-{
-    if(!m_connectedToNetwork) ++isolatedSum;
-    if(m_isInsideSatBox)
-    {
-        totNetVolume += m_flowVolume;
-        totClayVolume += m_clayVolume;
-    }
-    if(index2p()<10) outD<<"g:"<<connection(0)->index2p()<<"-"<<connection(1)->index2p()<<":"<<index2p()<<" R:"<<RRR()<<" nCor_"<<index2p()<<":"<<model()->numCorners()<<"\n";
-    checkConnections();
-
+	if(index()<10) outD<<"g:"<<connection(0)->index()<<"-"<<connection(1)->index()<<":"<<index()<<" R:"<<RRR()<<" nCor_"<<index()<<":"<<model()->numCorners()<<"\n";
+	checkConnections();
 }
 
 
 
 double Throat::snapOfLongitCurvature() const
 {
-	//double lengthEff = (m_poreLength[1]+m_poreLength[0]+m_length);
-	double delRSqr = 0.5*(m_connections[1]->model()->radius()+m_connections[0]->model()->radius())-model()->radius();
-	//cout<<lengthEff<<"  "<<m_connections[1]->model()->radius()<<"  "<<m_connections[0]->model()->radius()<<"  "<<model()->radius()<<"  "<<endl;
+	double delRSqr = 0.5*(connections_[1]->model()->RRR()+connections_[0]->model()->RRR())-model()->RRR();
 	if (delRSqr<0.0) return 0.0; ///. Errror
 	delRSqr *= delRSqr;
-	
+
 	return 0.0; 
 	//return 4.0*std::sqrt(delRSqr/(delRSqr+lengthEff*lengthEff*0.025330296))/lengthEff; //lengthEff/lengthEff;
 	///. return 2*sigma*sin(45)*sqrt(2.0*delRSqr/(delRSqr+(L_poreToPore/2PI)^2)/(lengthEff/2.0) //lengthEff/lengthEff;
@@ -70,58 +57,29 @@ double Throat::snapOfLongitCurvature() const
 }
 
 
-double Throat::poreLength(const Element* callingPore) const
-{
-    if(m_connections.size() != 2)
-    {
-        cerr << endl
-            << "============================================" << endl
-            << "For optimized network to be written to file " << endl
-            << "the option to drain singlets must be enabled" << endl
-            << "============================================" << endl;        exit(-1);
-    }
-    if(m_connections[1] == callingPore)
-        return m_poreLength[1];
-    else
-        return m_poreLength[0];
-}
 
-
-const Element* Throat::neighbouringPore(const Element* callingPore) const
+const Pore* Throat::neighbouringPore(const Element* callingPore) const
 {
-    if(m_connections.size() != 2)
-    {
-        cerr << endl
-            << "============================================" << endl
-            << "For optimized network to be written to file " << endl
-            << "the option to drain singlets must be enabled" << endl
-            << "============================================" << endl;        exit(-1);
-    }
-    if(m_connections[0] == callingPore)
-        return m_connections[1];
-    else
-        return m_connections[0];
+	ensure(connections_.size() == 2, " Throat connection deleted, set drainSinglets to true.", -1);
+	if(connections_[0] == callingPore)  return static_cast<Pore*>(connections_[1]);
+	else                                return static_cast<Pore*>(connections_[0]);
 }
 
 
 
 
 
-/**
-// Does a throat cross any given interior plane
-*/
+/// Does a throat cross any given interior plane
 bool Throat::crossesPlaneAt(double location) const
 {
-    double ptOne(m_connections[0]->node()->xPos()), ptTwo(m_connections[1]->node()->xPos());
+	double ptOne(connections_[0]->node().x), ptTwo(connections_[1]->node().x);
 
-    if(ptTwo < ptOne)
-    {
-        double tmp = ptTwo;         // Ensure that that the two points we pick up acyually are within
-        ptTwo = ptOne;              // the inteior of the model
-        ptOne = tmp;
-    }
+	if(ptTwo < ptOne)
+	{   // Ensure that that the two points we pick up acyually are within the inteior of the model
+		double tmp = ptTwo;   ptTwo = ptOne;   ptOne = tmp;
+	}
 
-    return ptOne < location && ptTwo >= location;
+	return ptOne < location && ptTwo >= location;
 }
 
 
@@ -131,111 +89,17 @@ bool Throat::crossesPlaneAt(double location) const
 */
 void Throat::sortConnectingElems_DistToExit()
 {
-    Element *oldFirst = m_connections[0];
-    sort(m_connections.begin(), m_connections.end(), DistToExitComparePores());
+	Element *oldFirst = connections_[0];
+	sort(connections_.begin(), connections_.end(), DistToExitComparePores());
 
-    assert(m_connections.size() == 2 && m_poreLength.size() == 2);
-    if(oldFirst != m_connections[0])    // Pores got switched
-    {
-        double tmp(m_poreLength[0]);
-        m_poreLength[0] = m_poreLength[1];
-        m_poreLength[1] = tmp;
-
-        if(m_originalPoreLengths)
-        {
-            double tmpLen(m_originalPoreLengths[0]);
-            m_originalPoreLengths[0] = m_originalPoreLengths[2];
-            m_originalPoreLengths[2] = tmpLen;
-        }
-    }
+	assert(connections_.size() == 2);
+	if(oldFirst != connections_[0])    // Pores got switched
+	{
+		double tmp(poreLength_[0]);   poreLength_[0] = poreLength_[1];  poreLength_[1] = tmp;
+	}
 }
 
 
-/**
-// The throat data is written to file in following format:
-//
-// *_link1.dat (outOne):
-// index, pore 1 index, pore 2 index, radius, shape factor, total length (pore center to pore center)
-//
-// *_link2.dat (outTwo):
-// index, pore 1 index, pore 2 index, length pore 1, length pore 2, length throat, volume, clay volume
-*/
-void Throat::writeNetworkData(ostream& outOne, ostream& outTwo) const
-{
-    outOne.flags(ios::showpoint);
-    outOne.flags(ios::scientific);
-    outTwo.flags(ios::showpoint);
-    outTwo.flags(ios::scientific);
-    double lenPoreOne(m_poreLength[0]), lenPoreTwo(m_poreLength[1]), lenThroat(m_length);
-    double lenTotal(m_poreLength[0]+m_poreLength[1]+m_length);
-
-    if(m_originalPoreLengths)
-    {
-        lenPoreOne = m_originalPoreLengths[0];  // The pore lengths were modified when moving
-        lenThroat = m_originalPoreLengths[1];   // pressure boundaries
-        lenPoreTwo = m_originalPoreLengths[2];
-        lenTotal = lenPoreOne+lenThroat+lenPoreTwo;
-    }
-
-    if(m_connections.size() != 2)
-    {
-        cerr << endl
-            << "============================================" << endl
-            << "For optimized network to be written to file " << endl
-            << "the option to drain singlets must be enabled" << endl
-            << "============================================" << endl;        exit(-1);
-    }
-
-    outOne << setw(7)   << indexOren()
-        << setw(7)      << m_connections[0]->indexOren()
-        << setw(7)      << m_connections[1]->indexOren()
-        << setw(15)     << m_elemModel->radius()
-        << setw(15)     << m_elemModel->shapeFactor()
-        << setw(15)     << lenTotal
-        << endl;
-
-    outTwo << setw(7)   << indexOren()
-        << setw(7)      << m_connections[0]->indexOren()
-        << setw(7)      << m_connections[1]->indexOren()
-        << setw(15)     << lenPoreOne
-        << setw(15)     << lenPoreTwo
-        << setw(15)     << lenThroat
-        << setw(15)     << m_flowVolume* (m_iRockType>0 ? 1.0/m_elemModel->porosity() : 1.0)
-        << setw(15)     << m_clayVolume
-        << endl;
-}
-
-void Throat::writeNetworkDataBinary(ostream& out) const
-{
-    double lenPoreOne(m_poreLength[0]), lenPoreTwo(m_poreLength[1]), lenThroat(m_length);
-    double lenTotal(m_poreLength[0]+m_poreLength[1]+m_length);
-    if(m_originalPoreLengths)
-    {
-        lenPoreOne = m_originalPoreLengths[0];  // The pore lengths were modified when moving
-        lenThroat = m_originalPoreLengths[1];   // pressure boundaries
-        lenPoreTwo = m_originalPoreLengths[2];
-        lenTotal = lenPoreOne+lenThroat+lenPoreTwo;
-    }
-
-    ThroatStruct Prop;
-    Prop.index = indexOren();
-    Prop.poreOne = m_connections[0]->indexOren();
-    Prop.poreTwo = m_connections[1]->indexOren();
-
-    Prop.radius = m_elemModel->radius();
-    Prop.shapeFact = m_elemModel->shapeFactor();
-    Prop.lenPoreOne = lenPoreOne;
-    Prop.lenPoreTwo = lenPoreTwo;
-    Prop.lenThroat = lenThroat;
-    Prop.lenTot = lenTotal;
-    Prop.volume = m_flowVolume* (m_iRockType>0 ? 1.0/m_elemModel->porosity() : 1.0);
-    Prop.clayVol = m_clayVolume;
-    out.write((char *)(&Prop), sizeof(Prop));
-
-} 
- 
- 
- 
 
 
 /**
@@ -251,151 +115,132 @@ void Throat::writeNetworkDataBinary(ostream& out) const
 // the box. There has to be some length to the outlet to make the problem
 // solveable, hence we allow pressure drop to occur within that pore.
 */ 
-void Throat::addConnections(Element* first, Element* second, double inletBdr, double outletBdr, bool moveBoundary)
+void Throat::addConnections(Element* p1, Element* p2, double inletBdr, double outletBdr, bool moveBoundary, bool setNod)
 {
-	m_node.m_xPos=0.5*(second->node()->m_xPos + first->node()->m_xPos);
-	m_node.m_yPos=0.5*(second->node()->m_yPos + first->node()->m_yPos);
-	m_node.m_zPos=0.5*(second->node()->m_zPos + first->node()->m_zPos);
-
-	if(first->isEntryOrExitRes())
+	if(setNod)
 	{
-		//m_node.m_xPos= second->node()->m_xPos ;
-		m_node.m_yPos= second->node()->m_yPos ;
-		m_node.m_zPos= second->node()->m_zPos ;
+		node_=0.5*(p2->node() + p1->node());
+		if(p1->isEntryOrExitRes())
+		{
+			node_.y= p2->node().y;  node_.z= p2->node().z;
+		}
+
+		if(p2->isEntryOrExitRes())
+		{
+			node_.y= p1->node().y;  node_.z= p1->node().z;
+		}
 	}
-	
-	if(second->isEntryOrExitRes())
+
+	double mid=(inletBdr+outletBdr)*0.5;
+
+	if(p1->isEntryRes() || p1->isExitRes())       setGravityCorrection(p2->node());
+	else if(p2->isEntryRes() || p2->isExitRes())  setGravityCorrection(p1->node());
+	else                                          setGravityCorrection(p1->node(), p2->node());
+
+	if(p1->isEntryRes() || p2->isEntryRes())
 	{
-		//m_node.m_xPos= first->node()->m_xPos ;
-		m_node.m_yPos= first->node()->m_yPos ;
-		m_node.m_zPos= first->node()->m_zPos ;
-		
+		isConnectedToEntry_ = true;
+		p1->isConnectedToEntry(p1->isEntryRes());
+		p2->isConnectedToEntry(p2->isEntryRes());
 	}
-	
-    if(first->isEntryRes() || first->isExitRes())
-        /*m_elemModel->*/setGravityCorrection(second->node());
-    else if(second->isEntryRes() || second->isExitRes())
-        /*m_elemModel->*/setGravityCorrection(first->node());
-    else
-        /*m_elemModel->*/setGravityCorrection(first->node(), second->node());
+	else if(p1->isExitRes() || p2->isExitRes())
+	{
+		isConnectedToExit_ = true;
+		p1->isConnectedToExit(p1->isExitRes());
+		p2->isConnectedToExit(p2->isExitRes());
+	}
 
-    if(first->isEntryRes() || second->isEntryRes())
-    {
-        m_isConnectedToEntry = true;
-        first->isConnectedToEntry(first->isEntryRes());
-        second->isConnectedToEntry(second->isEntryRes());
-    }
-    else if(first->isExitRes() || second->isExitRes())
-    {
-        m_isConnectedToExit = true;
-        first->isConnectedToExit(first->isExitRes());
-        second->isConnectedToExit(second->isExitRes());
-    }
+	isInsideSolverBox_ = (p1->isInsideSolverBox() || p2->isInsideSolverBox());
+	isInCalcBox_ = (p1->isInCalcBox() || p2->isInCalcBox());
+	connectedToEntryOrExit_ = (p1->isEntryOrExitRes() || p2->isEntryOrExitRes());
 
-    m_isInsideSolverBox = (first->isInsideSolverBox() || second->isInsideSolverBox());
-    m_isInsideSatBox = (first->isInsideSatBox() || second->isInsideSatBox());
-    m_connectedToEntryOrExit = (first->isEntryOrExitRes() || second->isEntryOrExitRes());
+	double oldPOneLen(poreLength_[0]), oldPTwoLen(poreLength_[1]), oldThrLen(length_);
 
-    double oldPOneLen(m_poreLength[0]), oldPTwoLen(m_poreLength[1]), oldThrLen(m_length);
+	if(isInsideSolverBox_ && !p2->isInsideSolverBox())
+	{
+		p2->setOnInletSlvrBdr(p2->node().x < mid);
+		p2->setOnOutletSlvrBdr(p2->node().x > mid);
 
-    if(m_isInsideSolverBox && !second->isInsideSolverBox())
-    {
-        second->setOnInletSlvrBdr(second->node()->xPos() < inletBdr);
-        second->setOnOutletSlvrBdr(second->node()->xPos() > outletBdr);
+		//if(moveBoundary) // this is ttoo risky, not compatible with small throat lenghts and twsted throats
+		//{
+			//double scaleFact = (p2->node().x - p1->node().x) / (length_+poreLength_[0]+poreLength_[1]);
+			//if(p2->isEntryOrExitRes()) scaleFact = (p2->node().x-p1->node().x) / fabs(p2->node().x-p1->node().x);     // We don't know position of exit and entry res.
 
-        if(moveBoundary)
-        {
-            double scaleFact = (second->node()->xPos() - first->node()->xPos()) / (m_length+m_poreLength[0]+m_poreLength[1]);
-            if(second->isEntryOrExitRes())      // We don't know position of exit and entry res.
-                scaleFact = (second->node()->xPos()-first->node()->xPos()) / fabs(second->node()->xPos()-first->node()->xPos());;
-
-            double bdr = (second->node()->xPos() < inletBdr) ? inletBdr: outletBdr;
-            double throatStart = first->node()->xPos() + m_poreLength[0]*scaleFact;
-            double throatEnd = throatStart + m_length*scaleFact;
-            m_originalPoreLengths[0] = m_poreLength[0];
-            m_originalPoreLengths[1] = m_length;
-            m_originalPoreLengths[2] = m_poreLength[1];
+			//double bdr = (p2->node().x < inletBdr) ? inletBdr: outletBdr;
+			//double throatStart = p1->node().x + poreLength_[0]*scaleFact;
+			//double throatEnd = throatStart + length_*scaleFact;
 
 
-            if(second->isEntryOrExitRes())                                          // Keep throat lengths if whole model is being used
-                m_poreLength[1] = 0.0;                                              // for calculations
-            else if(throatEnd > inletBdr && throatEnd < outletBdr)                  // Both pore1 and throat are within the box
-                m_poreLength[1] *= (bdr - throatEnd)/(m_poreLength[1]*scaleFact);
-            else if(throatStart > inletBdr && throatStart < outletBdr)              // Onle pore 1 is fully within box
-            {
-                m_poreLength[1] = 0.0;
-                m_length *= (bdr - throatStart)/(m_length*scaleFact);
-            }
-            else                                                                    // Pore 1 is only partially within box
-            {
-                m_poreLength[1] = 0.0;
-                m_length = 0.0;
-            }
-        }
-    }
-    else if(m_isInsideSolverBox && !first->isInsideSolverBox())             // Pore 1 is outside box
-    {
-        first->setOnInletSlvrBdr(first->node()->xPos() < inletBdr);
-        first->setOnOutletSlvrBdr(first->node()->xPos() > outletBdr);
+			if(p2->isEntryOrExitRes())                                          // Keep throat lengths if whole model is being used
+				poreLength_[1] = 1.0e-300;                                              // for calculations
+			//else if(throatEnd > inletBdr && throatEnd < outletBdr)                  // Both pore1 and throat are within the box
+				//poreLength_[1] *= (bdr - throatEnd)/(poreLength_[1]*scaleFact);
+			//else if(throatStart > inletBdr && throatStart < outletBdr)              // Onle pore 1 is fully within box
+			//{
+				//poreLength_[1] = 1.0e-300;
+				//length_ *= (bdr - throatStart)/(length_*scaleFact);
+			//}
+			//else                                                                    // Pore 1 is only partially within box
+			//{
+				//poreLength_[1] = 1.0e-300;
+				//length_ = 1.0e-300;
+			//}
+		//}
+	}
+	else if(isInsideSolverBox_ && !p1->isInsideSolverBox())             // Pore 1 is outside box
+	{
+		ensure(poreLength_[0]>0.0);	ensure(poreLength_[1]>0.0);
+		p1->setOnInletSlvrBdr(p1->node().x < mid);
+		p1->setOnOutletSlvrBdr(p1->node().x > mid);
 
-        if(moveBoundary)
-        {
-            double scaleFact = (first->node()->xPos() - second->node()->xPos()) / (m_length+m_poreLength[0]+m_poreLength[1]);
-            if(first->isEntryOrExitRes())       // We don't know position of exit and entry res.
-                scaleFact = (first->node()->xPos()-second->node()->xPos()) / fabs(first->node()->xPos()-second->node()->xPos());
+		//if(moveBoundary)
+		//{
+			//double scaleFact = (p1->node().x - p2->node().x) / (length_+poreLength_[0]+poreLength_[1]);
+			//if(p1->isEntryOrExitRes())       // We don't know position of exit and entry res.
+				//scaleFact = (p1->node().x-p2->node().x) / fabs(p1->node().x-p2->node().x);
 
-            double bdr = (first->node()->xPos() < inletBdr) ? inletBdr: outletBdr;
-            double throatStart = second->node()->xPos() + m_poreLength[1]*scaleFact;
-            double throatEnd = throatStart + m_length*scaleFact;
-            m_originalPoreLengths[0] = m_poreLength[0];
-            m_originalPoreLengths[1] = m_length;
-            m_originalPoreLengths[2] = m_poreLength[1];
+			//double bdr = (p1->node().x < inletBdr) ? inletBdr: outletBdr;
+			//double throatStart = p2->node().x + poreLength_[1]*scaleFact;
+			//double throatEnd = throatStart + length_*scaleFact;
 
-            if(first->isEntryOrExitRes())
-                m_poreLength[0] = 0.0;
-            else if(throatEnd > inletBdr && throatEnd < outletBdr)               // Both pore 2 and throat are within the box
-                m_poreLength[0] *= (bdr - throatEnd)/(m_poreLength[0]*scaleFact);
-            else if(throatStart > inletBdr && throatStart < outletBdr)      // Only pore 2 is fully within box
-            {
-                m_poreLength[0] = 0.0;
-                m_length *= (bdr - throatStart)/(m_length*scaleFact);
-            }
-            else                                                            // Pore 2 is only partially within box
-            {
-                m_poreLength[0] = 0.0;
-                m_length = 0.0;
-            }
-        }
-    }
+			if(p1->isEntryOrExitRes())
+				poreLength_[0] = 1.0e-300;
+			//else if(throatEnd > inletBdr && throatEnd < outletBdr)               // Both pore 2 and throat are within the box
+				//poreLength_[0] *= (bdr - throatEnd)/(poreLength_[0]*scaleFact);
+			//else if(throatStart > inletBdr && throatStart < outletBdr)      // Only pore 2 is fully within box
+			//{
+				//poreLength_[0] = 1.0e-300;
+				//length_ *= (bdr - throatStart)/(length_*scaleFact);
+			//}
+			//else                                                            // Pore 2 is only partially within box
+			//{
+				//poreLength_[0] = 1.0e-300;
+				//length_ = 1.0e-300;
+			//}
+			//ensure(poreLength_[0]>0.0);	ensure(poreLength_[1]>0.0);
+		//}
+	}
 
-    if(m_poreLength[0] > 1.1*oldPOneLen || m_poreLength[1] > 1.1*oldPTwoLen || m_length > 1.1*oldThrLen)
-    {
-        cout<< endl
-            << "==============================================="    << endl
-            << "Warning: The new lengths for elements connected"    << endl
-            << "to the pressure boundary are larger than the"       << endl
-            << "original ones. The lengths should be smaller"       << endl
-            << "since we do not want pressure drops occuring"       << endl
-            << "outside the box across which we're calculating"     << endl
-            << "relative permeability."                             << endl
-            << "============================================== "     << endl
-            << endl;
-    }
+	if(poreLength_[0] > 1.1*oldPOneLen || poreLength_[1] > 1.1*oldPTwoLen || length_ > 1.1*oldThrLen)
+	{
+		cout<< endl
+			<< "==============================================="    << endl
+			<< "Warning: The new lengths for elements connected"    << endl
+			<< "to the pressure boundary are larger than the"       << endl
+			<< "original ones. The lengths should be smaller"       << endl
+			<< "since we do not want pressure drops occuring"       << endl
+			<< "outside the box across which we're calculating"     << endl
+			<< "relative permeability."                             << endl
+			<< "============================================== "     << endl
+			<< endl;
+	}
+	ensure(poreLength_[0]>0.0);	ensure(poreLength_[1]>0.0);
 
-    m_connections.push_back(first);         // Add pore connections
-    m_connections.push_back(second);
+	connections_.push_back(p1);         // Add pore connections
+	connections_.push_back(p2);
 
-    //double minRad(100), maxRad(0.0), radSum(0.0);
-    //for(size_t i = 0; i < m_connections.size(); ++i)
-    //{
-        //double rad = m_connections[i]->model()->radius();
-        //minRad = min(minRad, rad);
-        //maxRad = max(minRad, rad);
-        //radSum += rad;
-    //}
-    //m_averageAspectRatio = m_elemModel->radius()*m_connections.size()/radSum;
-    //m_maxAspectRatio = m_elemModel->radius()/maxRad;
-    //m_minAspectRatio = m_elemModel->radius()/minRad;
+	neiPores_[0]=static_cast<Pore*>(p1);
+	neiPores_[1]=static_cast<Pore*>(p2);
 }
 
 
@@ -407,36 +252,11 @@ void Throat::addConnections(Element* first, Element* second, double inletBdr, do
 
 void Throat::modifyLength(double scaleFactor)
 {
-    m_poreLength[0] *= scaleFactor;
-    m_poreLength[1] *= scaleFactor;
-    m_length *= scaleFactor;
-
-    if(m_originalPoreLengths)
-    {
-        m_originalPoreLengths[0] *= scaleFactor;
-        m_originalPoreLengths[1] *= scaleFactor;
-        m_originalPoreLengths[2] *= scaleFactor;
-    }
-}
-
-double Throat::lenToRadRatio() const
-{
-    assert(m_poreLength.size() == 2);
-    return (m_poreLength[0]+m_poreLength[1]+m_length)/m_elemModel->radius();
+	poreLength_[0] *= scaleFactor;
+	poreLength_[1] *= scaleFactor;
+	length_ *= scaleFactor;
 }
 
 
-const Node* Throat::node() const
-{
-    //cerr << "No node associated with throats" << endl;    //exit(-1);
-    //return m_connections[0]->node();
-    return &m_node;
-}
-
-Node* Throat::node()
-{
-    //cerr << "No node associated with throats" << endl;   // exit(-1);
-    return &m_node;
-}
 
 

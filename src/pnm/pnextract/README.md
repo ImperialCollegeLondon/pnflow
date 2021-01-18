@@ -39,7 +39,7 @@ The code and executables are provided as is, without any kind of warranty;
 use at your own risk.
 
 For contact and further information see [Imperial College - pore-scale consortium] website,
-or send me an email:   a.qaseminejad-raeini09@imperial.ac.uk
+or send me an email:   a.q.raeini@imperial.ac.uk
 
 
 ### References

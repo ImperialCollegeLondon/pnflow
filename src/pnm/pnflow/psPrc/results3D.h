@@ -1,47 +1,63 @@
-#ifndef RESULTS3D_H
-#define RESULTS3D_H
+#ifndef RESULTS3D_CnM_H // possible conflict with gnflow
+#define RESULTS3D_CnM_H
 
 /*---------------------------------------------------------------------------*\
-Developed by (2015): Ali Q Raeini  email: a.qaseminejad-raeini09@imperial.ac.uk
+Developed by (2015-2019): Ali Q Raeini  email: a.q.raeini@imperial.ac.uk
 \*---------------------------------------------------------------------------*/
 
-
+#include <memory>
 #include <sstream>
 #include "Element.h"
 
-typedef   std::vector<int> CellPoints;
-typedef std::vector<int> FacePoints;
-typedef std::vector<int> CellFaces;
-typedef std::vector<int> FaceCells;
 
-class Netsim;
+
+
+class CommonData;
 
 
 class results3D
 {
 
 public:
-	results3D(const std::string& KeywordData,const Netsim * netsim, std::string outputfolder);
+	results3D(const InputFile& input,const CommonData* comn, ststr outputfolder, const std::vector<Element const *>*  elems, size_t nBP2=0, size_t n6pPors=0);
+	void init(size_t nBP2, size_t n6pPors) {nBSs_=nBP2 ; nBpPors_=n6pPors;};
 
-	void vtuWrite(const std::vector<Element const *> *  rockLattices, size_t m_numPores, double pc, double intfacTen);
+	void write3D(double pc, double intfacTen, bool endCycle = false);
 
-	std::string fileNamePrefix;
-	std::string start(size_t nPoints, size_t nCells);
-	std::string  finish();
-	void vtuWritePores(std::string suffix, const std::vector<Element const *> *  rockLattices, size_t m_numPores);
-	void vtuWriteThroats(std::string suffix, const std::vector<Element const *> *  rockLattices, size_t m_numPores, double pc, double intfacTen);
-	void vtuWriteThroatLines(string fName, const vector<Element const *> & elems, size_t nPors, double pc, double tension);
+			private: ///. depricated TODO: releqase Xdmf and remove vtu visualization data
+
+				ststr  start(size_t nPoints, size_t nCells);
+				ststr  finish();
+				void vtuWritePores(ststr suffix, double pc, double intfacTen);
+				void vtuWriteThroats(ststr suffix, double pc, double intfacTen);
+				void writeThroatLines(ststr fName, double pc, double tension, int icycl, double tstp, bool endCycle);
+
+
+
 
 private:
 
-	const Netsim * m_comn;
-	
-	bool visualise_[4];
-	std::string FullOrLight_;
-	std::string fileNamePrefix_;
-	double rScaleFactor_;
-	unsigned int thetaResulution_;
-	unsigned int iWrite;
+	const CommonData*  comn_;
+	const std::vector<Element const*>&  elems_;
+	int nBSs_;
+	int nBpPors_;
+
+	enum Format { 	 VTU_FORMAT=1, 	 XMF_FORMAT=2, 	 BOTH_FORMATS=3  };
+	Format format_;
+	unsigned int      rkw_;  //. rx4+keepx2+writex1
+	unsigned int      vLinAC21I_;
+	unsigned int      v3D_AC21I_;
+	unsigned int   iWrite_;
+	ststr          prefix_;
+	double         rScaleFactor_;
+	unsigned int   nTheta_;
+
+
+public :
+
+	bool        inform;
+
+
 };
 
 

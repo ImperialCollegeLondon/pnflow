@@ -8,10 +8,17 @@
 #include <array>
 
 
-const int LEVEL_MAX = 32767;
+const static int LEVEL_MAX = 32767;
 #define nAprox 1
 
 
+#ifdef MULTIDIRECTION
+const static int SideImax = 5;
+const static int nBP6 = 6; // 1+SideImax
+#else
+const static int SideImax = 1;
+const static int nBP6 = 2; // 1+SideImax
+#endif
 
 
 
@@ -19,7 +26,7 @@ class medialBall;
 class voxel
 {
 public:
-	voxel(const voxel& v) :  ball(v.ball),i(v.i), j(v.j), k(v.k),R(v.R) {};//,hasBall(false)
+	voxel(short ii, short jj, short kk, float rR) : ball(NULL), i(ii), j(jj), k(kk), R(rR) {};
 	voxel() : ball(NULL),i(-1), j(-1), k(-1),R(0) {};
 public:
 	medialBall* ball;
@@ -101,11 +108,11 @@ class medialBall
 	};
 
 	//inline const medialBall* smallestP() const
-	//{	register const medialBall* pvMin = this;
+	//{	register const medialBall* pMin = this;
 		//register const medialBall* v = this;
 		//while (v != v->boss)
-		//{	pvMin = v->R < pvMin->R ? v : pvMin;   v=v->boss;  }
-		//return pvMin;
+		//{	pMin = v->R < pMin->R ? v : pMin;   v=v->boss;  }
+		//return pMin;
 	//};
 
 	bool isNei(const medialBall* neib) const
@@ -170,7 +177,7 @@ public:
 	float _1() const  { return fj; }
 	float _2() const  { return fk; }
 
-	 voxel* vxl; 
+	 voxel* vxl;
 	 float fi,fj,fk;
 	 short type;
 	 float R; /// const but gcc-4.7 won't like it
@@ -213,7 +220,6 @@ public:
  int surfaceArea;
  int volumn;
 
- medialBall* balls;
 
 	int subid;
 	static int nTroatSubids;
@@ -230,15 +236,15 @@ class poreNE: public ElementO
 {
  poreNE(const poreNE&){};
 public:
- poreNE() 
- {};
- virtual ~poreNE() {};
- bool ispore() {return true;};
+ poreNE()
+ {}
+ virtual ~poreNE() {}
+ bool ispore() {return true;}
  int contact(int pid)
  { 	  std::map<int,int>::iterator it = contacts.find(pid);
 	  if (it!=contacts.end())			 return it->second;
 	  else { std::cout<<" E:noCntct ";  return -1;}
-}
+ }
  double radius() const {return  mb->R;};
 
 public:
@@ -260,15 +266,12 @@ private:
  throatNE(){};
 public:
  throatNE(int trotid, int elm1, int elm2): tid(trotid), e1(elm1),e2(elm2),nCrnrs(0),CrosArea(0.0,0.0,0.0)
- //,C{{ {{0,0,0}},{{0,0,0}},{{0,0,0}}}}
  {}//mb2(NULL),mb1(NULL),
  virtual ~throatNE() {}
  bool ispore() {return false;}
  int nToxel2Balls() const
- {	int nBs=0;
-	for (std::vector<voxel*>::const_iterator  vitr = toxels2.begin(); vitr<toxels2.end();++vitr) if ((*vitr)->ball) ++nBs;
-	return nBs;
- }
+ {  int nBs=0;  for(auto vi:toxels2){ if (vi->ball) ++nBs; }  return nBs; }
+
  double radius() const { return toxels1.empty() ? mb22()->R : 0.5*(mb22()->R+mb11()->R); }
  int neip(int i) const {return (&e1)[i];}
 public:
@@ -281,10 +284,10 @@ public:
  //std::vector<vxlface>  vxfaces;
  std::vector<voxel*>  toxels2;
  std::vector<voxel*>  toxels1;
- const medialBall* mb22() const {return (*toxels2.begin())->ball;}
- const medialBall* mb11() const  { return toxels1.empty() ? NULL :  (*toxels1.begin())->ball; }
- medialBall* mb2Ch() {return (*toxels2.begin())->ball;}
- medialBall* mb1Ch() {return (*toxels1.begin())->ball;}
+ const medialBall* mb22() const {return toxels2.front()->ball;}
+ const medialBall* mb11() const  { return toxels1.empty() ? NULL :  toxels1.front()->ball; }
+ medialBall* mb2Ch() {return toxels2.front()->ball;}
+ medialBall* mb1Ch() {return toxels1.front()->ball;}
 
 
  dbl3 CrosArea;

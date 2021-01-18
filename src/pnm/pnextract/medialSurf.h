@@ -12,13 +12,23 @@
 #include "typses.h"
 #include "inputData.h"
 
-class node;
 
 
 
 class medialSurface
 {
 public:
+
+	class node
+	{
+	public:
+	 node():i(-32768), j(-32768), k(-32768){};
+	 node(const node& v) : i(v.i), j(v.j), k(v.k) {};
+	 node(const voxel& v) : i(v.i), j(v.j), k(v.k) {};
+	 node(int ii,int jj,int kk) : i(ii), j(jj), k(kk) {};
+	 void operator = (const node& v){i = v.i;j = v.j;k = v.k;}
+	 short i, j, k;
+	};
 
 
  medialSurface(inputDataNE& cfg);
@@ -42,6 +52,7 @@ public:
  void competeForParent(medialBall* vi, medialBall* vj);
  void findBoss(medialBall*);
  void createBallsAndHierarchy();
+
 
 
 
@@ -108,7 +119,6 @@ public:
 
 	const inputDataNE& cg_;
 	int nx, ny, nz;
-	double precision;
 
 	size_t nVxls;
 	size_t nBalls;
@@ -136,7 +146,6 @@ public:
     int _nRSmoothing;
     double _RCorsnf;
     float _RCorsn;
-//	const double crossAreaFracx4;
 
 
 };

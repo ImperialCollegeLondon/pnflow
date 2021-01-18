@@ -11,16 +11,24 @@ ChangeLog,  a summary of main changes and updates:
 
 
 
+2020  Ali Raeini
+	Further cleanup - synchronization of input and output format with 
+	GNM for model validation and calibration (Wintershall Dea specific 
+	parts not included in pnflow version)
+
 2019  Ali Raeini
 	Further cleanup, outlet index changed to 0, to fix visualization.
-	inputFile.h format ditched in favor of InputFile.h C/Json-style 
-	dictionary format.
+	Old input abandoned in favour of InputFile.h Json/C-style format.
 
 2017     	Tom Bultreys and Ali Raeini
 	Validation:
 	Bultreys et al (2017), [https://doi.org/10.1103/PhysRevE.97.053104]
 	The code has been benchmarked for compatibility with pnextract
 	network extraction throat's shape factor and length assignments.
+
+2016  Jiazuo Zhang, Ali Q. Raeini and Matt Jackson: 
+	Wetted perimeter and spontanuous potential calculation
+	(not included in pnflow version)
 
 2014-2015	Ali Q Raeini
 	Added support for Hypre linear equation solver. The old  AMG solver 
@@ -69,7 +77,7 @@ List of source code files 2019:
 	netsim_imbibe.cpp
 	netsimSP.cpp
 	NetworkTransform.h
-	pnflow_input.dat
+	input_pnflow.dat
 	solver.h
 	sortedEvents.h
 	threeSome.h
@@ -79,7 +87,7 @@ List of source code files 2019:
 bu:
 	netlib_amg_solver.7z: not used, has its own (free) licence
 
-poreModel:
+polygon:
 	apex.h
 	cornerApex.cpp
 	cornerApex.h
