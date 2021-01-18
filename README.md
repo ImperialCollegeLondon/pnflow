@@ -76,7 +76,7 @@ solvers.
 ### Contact and References ###
 
 For contacts and references please see: 
-http://www.imperial.ac.uk/earth-science/research/research-groups/perm/research/pore-scale-modelling
+https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/
 or contact Ali Q. Raeini, email: a.q.raeini@imperial.ac.uk
 
 More details are given in the apps/doc directory.
