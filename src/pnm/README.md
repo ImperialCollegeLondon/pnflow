@@ -11,8 +11,6 @@ post-processing features added in preparation for the generalized network
 model [Raeini, Bijeljic and Blunt 2018], sponsored by [TOTAL]. 
 A recent validation of the pnflow and [pnextract] codes is published by [Bultreys et al. 2018].
 
-### Release notes:
-
 
 ### Release notes:
 
