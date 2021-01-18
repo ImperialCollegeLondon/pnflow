@@ -12,9 +12,6 @@ This repository hosts the classical network flow simulation code called pnflow.
  
  ----------------------------------------------------------------
 
-### Recent changes:
-
-* The code is being synchronized with the generalized network model to reduce future development efforts.  Previous version of the code can be downloaded from [pnm2019 branch](https://github.com/aliraeini/pnflow/tree/pnm2019).
 
 ## General instructions
 
