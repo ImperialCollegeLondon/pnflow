@@ -11,13 +11,17 @@ post-processing features added in preparation for the generalized network
 model [Raeini, Bijeljic and Blunt 2018], sponsored by [TOTAL]. 
 A recent validation of the pnflow and [pnextract] codes is published by [Bultreys et al. 2018].
 
-### Recent changes:
+### Release notes:
 
+
+### Release notes:
 
 - In 2020, the code has been through further restructuring and clean up as part of a sponsorship from [Wintershall Dea].
-The common components of PNM codes are kept in sync with privately developed codes and the closed-source generalized network model to reduce development effort and to allow future collaborations.  This new code is kept under `develop` branch until further testing and benchmarking with the original code.
+The common components of PNM codes are kept in sync with privately developed codes and the closed-source generalized network model to reduce development effort and to allow future collaborations. However, this code is still well behind my local branch. If you like to work on this code development, please drop me an email for updates. The physical assumptions used in the model are not affected, so if you are a user of the code, you can continue using its older versions.  The previous version of the code can be downloaded from [pnm2019 branch](https://github.com/aliraeini/pnflow/tree/pnm2019).
 
-- pnflow input keywords are changed significantly (for compatibility with the generalized network model) see the new [input_pnflow.dat](https://github.com/aliraeini/pnflow/blob/develop/doc/input_pnflow.dat) file in doc folder for more information.
+- pnflow input keywords are changed significantly (for compatibility with the generalized network model) see the new [input_pnflow.dat](https://github.com/aliraeini/pnflow/blob/master/doc/input_pnflow.dat) file in doc folder for more information.
+
+* The file [pnflow/ChangeLog](https://github.com/aliraeini/pnflow/blob/master/src/pnm/pnflow/ChangeLog) is used to document the main changes or extensions of the pnflow code.
 
 ### Instructions for Windows:
 
