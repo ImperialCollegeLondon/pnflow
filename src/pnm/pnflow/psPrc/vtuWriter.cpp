@@ -1147,6 +1147,14 @@ void results3D::writeThroatLines(string fName, double pc, double tension, int ic
 		 for(i=0; i<int(bcncs_.size()); ++i){ outp<<elems_[ib]->waterSaturation()<<_nl_; }
 		outp<<"\n		</DataArray>"<<endl;
 
+		
+		#ifdef EXTRA_FOR_TESTING_AREAS
+		outp<<"		<DataArray type = \"Float32\" Name = \"shapeFact\" format = \"ascii\">\n";
+		for(i=0; i<nElms; ++i) { outp<<elems_[i]->model()->shapeFactor()<<_nl_; }
+		for(ib=0; ib<2; ++ib)
+		 for(i=0; i<int(bcncs_.size()); ++i){ outp<<elems_[ib]->model()->shapeFactor()<<_nl_; }
+		outp<<"\n		</DataArray>"<<endl;
+		#endif
 		//outp<<"		<DataArray type = \"Float32\" Name = \"cachInd\" format = \"ascii\">\n";
 		//for(i=0; i<nElms; ++i) { outp<<elems_[i]->cachInd<<_nl_; }
 		//for(ib=0; ib<2; ++ib)
