@@ -16,6 +16,7 @@
 #include <set>
 
 #include "inputData.h"
+#include "typses.h"
 
 
 using namespace std;
@@ -74,10 +75,9 @@ using namespace std;
 const int       InputData::DUMMY_INDEX = -99;
 
 InputData::InputData(const InputFile& inputFile)
-:InputFile(inputFile,inputFile.name())
-{
-	averageThroatLength_ = 0.0;
-	networkSeparation_ = 0.0;
+:InputFile(inputFile,inputFile.name())  {
+	averageThroatLength_ = 0.;
+	networkSeparation_ = 0.;
 	connectionsRemoved_ = 0;
 	useAvrXOverThroatLen_ = false;
 	addPeriodicBC_ = false;
@@ -93,8 +93,7 @@ int InputData::randSeed() const
 	istringstream data;
 	string keyword("RAND_SEED");
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword << endl;
 		data >> seedNum;
 		checkEndOfData(data,keyword);
@@ -112,8 +111,7 @@ void InputData::prsBdrs(bool& usePrsBdr, bool& reportPrsBdr, int& numPlanes) con
 	string keyword("PRS_BDRS");
 	char usePrs, numPl;
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword << endl;
 		data >> usePrs >> numPl >> numPlanes;
 		usePrsBdr = (usePrs == 'T' || usePrs == 't');
@@ -138,8 +136,7 @@ void InputData::solverTune(double& eps, double& scaleFact, int& slvrOutput, bool
 	char verb('F');
 	string keyword("SOLVER_TUNE");
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword << endl;
 		data >> eps >> scaleFact >> slvrOutput >> verb >> condCutOff;
 		verbos = (verb == 'T' || verb == 't');
@@ -150,16 +147,16 @@ void InputData::solverTune(double& eps, double& scaleFact, int& slvrOutput, bool
 		eps = 1.0E-15;
 		scaleFact = 5;
 		slvrOutput = 0;
-		condCutOff = 0.0;
+		condCutOff = 0.;
 		verbos = false;
 	}
 }
 
 /**
 // Filling weights:
-// Oren1/2 = 0.0, 0.5, 1.0, 5.0, 10.0, 50.0
-// Blunt2 = 0.0, 15000, 15000, 15000, 15000, 15000
-// Blunt1 = 0.0, 50E-6, 50E-6, 100E-6, 200E-6, 500E-6
+// Oren1/2 = 0., 0.5, 1., 5., 10., 50.
+// Blunt2 = 0., 15000, 15000, 15000, 15000, 15000
+// Blunt1 = 0., 50E-6, 50E-6, 100E-6, 200E-6, 500E-6
 */
 void InputData::poreFillWgt(vector< double >& weights) const
 {
@@ -167,20 +164,19 @@ void InputData::poreFillWgt(vector< double >& weights) const
 	string keyword("PORE_FILL_WGT");
 	weights.resize(6);
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword ; cout.flush();
 		data >> weights[0] >> weights[1] >> weights[2] >> weights[3] >> weights[4] >> weights[5];
 		checkEndOfData(data, keyword);
 	}
 	else
 	{
-		weights[0] = 0.0;
-		weights[1] = 15000.0;
-		weights[2] = 15000.0;
-		weights[3] = 15000.0;
-		weights[4] = 15000.0;
-		weights[5] = 15000.0;
+		weights[0] = 0.;
+		weights[1] = 15000.;
+		weights[2] = 15000.;
+		weights[3] = 15000.;
+		weights[4] = 15000.;
+		weights[5] = 15000.;
 		cout<< "Using default pore filling weights" ; cout.flush();
 
 	}
@@ -193,8 +189,7 @@ void InputData::poreFillAlg(string& algorithm) const
 	istringstream data;
 	string keyword("PORE_FILL_ALG");
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword << endl;
 		data >> algorithm;
 		checkEndOfData(data, keyword);
@@ -213,8 +208,7 @@ void InputData::getModifyRadDistOptions(int& throatModel, int& poreModel, string
 	char toFile, maintainAR;
 	string keyword("MODIFY_RAD_DIST");
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword << endl;
 		getRadDist(data, throatModel, throatOptions);
 		getRadDist(data, poreModel, poreOptions);
@@ -239,8 +233,7 @@ void InputData::getModifyGDist(int& throatModel, int& poreModel, string& throatO
 	char toFile;
 	string keyword("MODIFY_G_DIST");
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword << endl;
 		getRadDist(data, throatModel, throatOptions);
 		getRadDist(data, poreModel, poreOptions);
@@ -261,16 +254,15 @@ void InputData::getModifyPoro(double& netPoroTrgt, double& clayPoroTrgt) const
 	istringstream data;
 	string keyword("MODIFY_PORO");
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword << endl;
 		data >> netPoroTrgt >> clayPoroTrgt;
 		checkEndOfData(data, keyword);
 	}
 	//else
 	//{
-		//netPoroTrgt = -1.0;
-		//clayPoroTrgt = -1.0;
+		//netPoroTrgt = -1.;
+		//clayPoroTrgt = -1.;
 	//}
 }
 
@@ -279,15 +271,14 @@ void InputData::modifyConnNum(double& targetConnNum, string& model)const
 	istringstream data;
 	string keyword("MODIFY_CONN_NUM");
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword << endl;
 		data >> targetConnNum >> model;
 		checkEndOfData(data, keyword);
 	}
 	else
 	{
-		targetConnNum = -1.0;
+		targetConnNum = -1.;
 	}
 }
 
@@ -296,15 +287,14 @@ void InputData::getModifyModelSize(double& scaleFactor) const
 	istringstream data;
 	string keyword("MODIFY_MOD_SIZE");
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword << endl;
 		data >> scaleFactor;
 		checkEndOfData(data, keyword);
    }
 	else
 	{
-		scaleFactor = -1.0;
+		scaleFactor = -1.;
 	}
 }
 
@@ -318,29 +308,16 @@ void InputData::getRadDist(istream& data, int& model, string& options) const
 }
 
 
-void InputData::fillingList(bool& isDrainage, bool& imbibition, bool& location) const
-{
+bool InputData::fillingList(int nSkip) const
+{ // @0 writeDrainList_,  @1: imbibition,  @2 location
 	istringstream data;
-	string keyword("FILLING_LIST");
-	char drain, imb, loc;
-
-	if(getData(data, keyword))
-	{
-				cout<< "Reading " << keyword<<"\n ERROR disabled\n  ERROR \n  ERROR \n  ERROR \n  ERROR \n  ERROR \n " << endl;
-
-		//if (verbose) cout<< "Reading " << keyword << endl;
-		data >> drain >> imb >> loc;
-		isDrainage = (drain == 'T' || drain == 't');
-		imbibition = (imb == 'T' || imb == 't');
-		location = (loc == 'T' || loc == 't');
-		checkEndOfData(data, keyword);
+	if(giv("FILLING_LIST", data))  {
+		string tmp("F");
+		fori0to(nSkip+1) data>>tmp;
+		cout<< "Reading FILLING_LIST@"<<nSkip<<endl;
+		return (tmp[0] == 'T' || tmp[0] == 't');
    }
-	else
-	{
-	   isDrainage = false;
-	   imbibition = false;
-	   location = false;
-	}
+	return false;
 }
 
 
@@ -351,8 +328,7 @@ void InputData::resFormat(bool& matlabFormat, bool& excelFormat, bool& mcpFormat
 	string keyword("RES_FORMAT");
 	string resForm;
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose)  cout<< "Reading " << keyword << endl;
 		data >> resForm;
 		matlabFormat = (resForm == "MATLAB" || resForm == "matlab" || resForm == "Matlab");
@@ -375,8 +351,7 @@ void InputData::fluid(double& intfacTen, double& watVisc, double& oilVisc, doubl
 	istringstream data;
 	string keyword("FLUID");
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword << endl;
 		data >> intfacTen >> watVisc >> oilVisc >> watResist >> oilResist >> watDens >> oilDens;
 		checkEndOfData(data, keyword);
@@ -390,10 +365,10 @@ void InputData::fluid(double& intfacTen, double& watVisc, double& oilVisc, doubl
 		//intfacTen = 30.0E-3;
 		//watVisc = 1.0E-3;
 		//oilVisc = 1.0E-3;
-		//watResist = 1.0;
-		//oilResist = 1000.0;
-		//watDens = 1000.0;
-		//oilDens = 1000.0;
+		//watResist = 1.;
+		//oilResist = 1000.;
+		//watDens = 1000.;
+		//oilDens = 1000.;
 	//}
 }
 
@@ -405,8 +380,7 @@ void InputData::relPermCompression(bool& useComp, double& krThres,
 	string keyword("SAT_COMPRESS");
 	char wettP('F'), nonWettP('F');
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword << endl;
 		useComp = true;
 		data >> krThres >> deltaSw >> wettP >> nonWettP;
@@ -417,7 +391,7 @@ void InputData::relPermCompression(bool& useComp, double& krThres,
 	else
 	{
 		useComp = false;
-		krThres = 0.0;
+		krThres = 0.;
 		deltaSw = 0.1;
 	}
 }
@@ -428,16 +402,15 @@ void InputData::calcBox(double& inletBdr, double& outletBdr) const
 	istringstream data;
 	string keyword("CALC_BOX");
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword << endl;
 		data >> inletBdr >> outletBdr;
 		checkEndOfData(data, keyword);
    }
 	else
 	{
-		inletBdr = 0.0;
-		outletBdr = 1.0;
+		inletBdr = 0.;
+		outletBdr = 1.;
 		cout<< "Using default  CALC_BOX: " << inletBdr << " " << outletBdr << endl;
 	}
 }
@@ -448,8 +421,7 @@ void InputData::prsDiff(double& inletPrs, double& outletPrs, bool& useGravInKr) 
 	string keyword("PRS_DIFF");
 	char grav;
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword << endl;
 		data >> inletPrs >> outletPrs >> grav;
 		useGravInKr = (grav == 'T' || grav == 't');
@@ -457,8 +429,8 @@ void InputData::prsDiff(double& inletPrs, double& outletPrs, bool& useGravInKr) 
 	}
 	else
 	{
-		inletPrs = 1.0;
-		outletPrs = 0.0;
+		inletPrs = 1.;
+		outletPrs = 0.;
 		useGravInKr = false;
 	}
 }
@@ -468,12 +440,10 @@ void InputData::prsDiff(double& inletPrs, double& outletPrs, bool& useGravInKr) 
 // The nework data is supplied back as the pores and throats are created. The input
 // streams are intially just opened and the headers read.
 */
-void InputData::network(int& numPores, int& numThroats, double& xDim, double& yDim, double& zDim)
-{
+void InputData::network(int& numPores, int& numThroats, double& xDim, double& yDim, double& zDim)  {
 	istringstream data, dataNet, dataPbc;
 
-	if(getData(dataPbc, "PERIODIC_BC"))
-	{
+	if(giv("PERIODIC_BC", dataPbc))  {
 		//if (verbose) cout<< "Reading " << "PERIODIC_BC" << endl;
 		char usePbc, avrLen;
 		dataPbc >> usePbc >> avrLen;
@@ -487,8 +457,7 @@ void InputData::network(int& numPores, int& numThroats, double& xDim, double& yD
 		useAvrPbcThroatLen_ = false;
 	}
 
-	if(getData(dataNet, "NET_SERIES"))
-	{
+	if(giv("NET_SERIES", dataNet))  {
 		//if (verbose) cout<< "Reading " << "NET_SERIES" << endl;
 		char avrLen;
 		dataNet >> numNetInSeries_ >> avrLen >> networkSeparation_;
@@ -504,9 +473,8 @@ void InputData::network(int& numPores, int& numThroats, double& xDim, double& yD
 	ststr     netNam;
 
 	binaryFiles_ = false;
-	if(!getVar(netNam, "networkFile"))
-	 if(getData(data, "NETWORK",2))
-	 {
+	if(!giv("networkFile", netNam))
+	 if(giv("NETWORK", data,2))  {
 		char binFile='F';
 		std::string line;
 		std::getline(data, line);
@@ -520,13 +488,12 @@ void InputData::network(int& numPores, int& numThroats, double& xDim, double& yD
 	// rm "Net.xmf".   If we got here then new Net.xmf format is not supported
 	if(netNam.size()>7 && netNam.substr(netNam.size()-7)=="Net.xmf") netNam=netNam.substr(0,netNam.size()-7);
 
-	if(binaryFiles_)
-	{
+	if(binaryFiles_)  {
 		string porePropFile(netNam + "_node.bin");
-		poreProp_.open(porePropFile.c_str(), ios::binary);
+		poreProp_.open(porePropFile, ios::binary);
 
 		string throatPropFile(netNam + "_link.bin");
-		throatProp_.open(throatPropFile.c_str(), ios::binary);
+		throatProp_.open(throatPropFile, ios::binary);
 
 		poreProp_.read((char *)(&numPores), sizeof(int));
 		poreProp_.read((char *)(&xDim), sizeof(double));
@@ -537,24 +504,23 @@ void InputData::network(int& numPores, int& numThroats, double& xDim, double& yD
 	else
 	{
 		string poreConnFile(netNam + "_node1.dat");          // Open file containing pore connection data
-		poreConn_.open(poreConnFile.c_str());
+		poreConn_.open(poreConnFile);
 
 		string porePropFile(netNam + "_node2.dat");          // Open file containing pore geometry data
-		poreProp_.open(porePropFile.c_str());
+		poreProp_.open(porePropFile);
 
 		string throatConnFile(netNam + "_link1.dat");        // Open file containing throat connection data
-		throatConn_.open(throatConnFile.c_str());
+		throatConn_.open(throatConnFile);
 
 		string throatPropFile(netNam + "_link2.dat");        // Open file containing throat geometry data
-		throatProp_.open(throatPropFile.c_str());
+		throatProp_.open(throatPropFile);
 
 
 		poreConn_ >> numPores >> xDim >> yDim >> zDim;
 		throatConn_ >> numThroats;
 	}
 
-	if (!poreProp_ || !throatProp_ || (!binaryFiles_ && (!poreConn_ || !throatConn_)))
-	{
+	if (!poreProp_ || !throatProp_ || (!binaryFiles_ && (!poreConn_ || !throatConn_)))  {
 		std::cout<< "======================================== " << std::endl
 			<<"Error: Unable to open network data files " << netNam << std::endl
 			<<" failed on !"<< bool(poreProp_) <<"  || !"<< bool(throatProp_)  <<" || (!"<< bool(binaryFiles_) <<" && (!"<<bool(poreConn_)<<" || !"<<bool(throatConn_)<<"))" << std::endl
@@ -593,13 +559,10 @@ void InputData::network(int& numPores, int& numThroats, double& xDim, double& yD
 // *_node2.dat:
 // index, volume, radius, shape factor, clay volume
 */
-void InputData::loadPoreData()
-{
+void InputData::loadPoreData()  {
 	poreData_.resize(origNumPores_);
-	for(int i = 0; i < origNumPores_; ++i)
-	{
-		if ((!binaryFiles_ && !poreConn_) || !poreProp_)
-		{
+	for(int i = 0; i < origNumPores_; ++i)  {
+		if ((!binaryFiles_ && !poreConn_) || !poreProp_)  {
 			cerr << "=========================" << endl
 				 << "Error while reading pores." << endl
 				 << i << endl
@@ -608,53 +571,51 @@ void InputData::loadPoreData()
 			exit( -1 );
 		}
 
-		PoreStruct *poreProp = new PoreStruct;
+		PoreStruct *pr = new PoreStruct;
 		int *connThroats, *connPores;
 
-		if(binaryFiles_)
-		{
-			poreProp_.read((char *)(poreProp), sizeof(*poreProp));
+		if(binaryFiles_)  {
+			poreProp_.read((char *)(pr), sizeof(*pr));
 
-			connThroats = new int[poreProp->connNum];
-			connPores = new int[poreProp->connNum];
-			poreProp_.read((char *)(connPores), poreProp->connNum*sizeof(int));
-			poreProp_.read((char *)(connThroats), poreProp->connNum*sizeof(int));
+			connThroats = new int[pr->connNum];
+			connPores = new int[pr->connNum];
+			poreProp_.read((char *)(connPores), pr->connNum*sizeof(int));
+			poreProp_.read((char *)(connThroats), pr->connNum*sizeof(int));
 		}
 		else
 		{
 			int idx;
 			bool isAtInletRes, isAtOutletRes;
 
-			poreProp_ >> poreProp->index
-				>> poreProp->volume
-				>> poreProp->radius
-				>> poreProp->shapeFact
-				>> poreProp->clayVol;
+			poreProp_ >> pr->index
+				>> pr->volume
+				>> pr->radius
+				>> pr->shapeFact
+				>> pr->clayVol;
 
 			poreConn_ >> idx
-				>> poreProp->x
-				>> poreProp->y
-				>> poreProp->z
-				>> poreProp->connNum;
+				>> pr->x
+				>> pr->y
+				>> pr->z
+				>> pr->connNum;
 
-			ensure(idx == poreProp->index);
+			ensure(idx == pr->index);
 
-			connThroats = new int[poreProp->connNum];
-			connPores = new int[poreProp->connNum];
+			connThroats = new int[pr->connNum];
+			connPores = new int[pr->connNum];
 
-			for(int k = 0; k < poreProp->connNum; ++k)
+			for(int k = 0; k < pr->connNum; ++k)
 				poreConn_ >> connPores[k];
 
 			poreConn_ >> isAtInletRes >> isAtOutletRes;
 
-			for(int j = 0; j < poreProp->connNum; ++j)
+			for(int j = 0; j < pr->connNum; ++j)
 				poreConn_ >> connThroats[j];
 		}
-		ThreeSome< PoreStruct*, int*, int* > elem(poreProp, connPores, connThroats);
+		tuple3< PoreStruct*, int*, int* > elem(pr, connPores, connThroats);
 		poreData_[i] = elem;
 
-		for(int conn = 0; conn < poreProp->connNum; ++conn)
-		{
+		for(int conn = 0; conn < pr->connNum; ++conn)  {
 			if(connPores[conn] == -1)
 				inletPores_.push_back(elem);
 			else if(connPores[conn] == 0)
@@ -667,44 +628,40 @@ void InputData::loadPoreData()
 	poreConn_.close();
 }
 
-void InputData::findBoundaryPores()
-{
-	int nDir = static_cast< int>(pow(origNumPores_, 1.0/3.0))+1;
+void InputData::findBoundaryPores()  {
+	int nDir = static_cast< int>(pow(origNumPores_, 1./3.))+1;
 	double xStep(origXDim_/nDir), yStep(origYDim_/nDir), zStep(origZDim_/nDir);
-	for(int i = 0; i < nDir; ++i)
-	{
-		double xPos = xStep/2.0 + i*xStep;
+	for(int i = 0; i < nDir; ++i)  {
+		double xPos = xStep/2. + i*xStep;
 		ensure(xPos < origXDim_);
-		for(int j = 0; j < nDir; ++j)
-		{
-			double yPos = yStep/2.0 + j*yStep;
-			double zPos = zStep/2.0 + j*zStep;
+		for(int j = 0; j < nDir; ++j)  {
+			double yPos = yStep/2. + j*yStep;
+			double zPos = zStep/2. + j*zStep;
 			ensure(xPos < origXDim_ && yPos < origYDim_ && zPos < origZDim_);
-			vector< ThreeSome< double, double, double > > positonData;
-			ThreeSome< double, double, double > xyMinus(xPos, yPos, 0.0);
-			positonData.push_back(xyMinus);
-			ThreeSome< double, double, double > xyPluss(xPos, yPos, origZDim_);
-			positonData.push_back(xyPluss);
-			ThreeSome< double, double, double > xzMinus(xPos, 0.0, zPos);
-			positonData.push_back(xzMinus);
-			ThreeSome< double, double, double > xzPluss(xPos, origYDim_, zPos);
-			positonData.push_back(xzPluss);
+			vector< dbl3 > pos;
+			dbl3 xyMinus(xPos, yPos, 0.);
+			pos.push_back(xyMinus);
+			dbl3 xyPluss(xPos, yPos, origZDim_);
+			pos.push_back(xyPluss);
+			dbl3 xzMinus(xPos, 0., zPos);
+			pos.push_back(xzMinus);
+			dbl3 xzPluss(xPos, origYDim_, zPos);
+			pos.push_back(xzPluss);
 
 			vector< int > poreIndecies;
 			vector< double > p2BdrLength;
-			findClosestPoreForPBC(positonData, poreIndecies, p2BdrLength);
+			findClosestPoreForPBC(pos, poreIndecies, p2BdrLength);
 			pair< int, int > xyConn(poreIndecies[0], poreIndecies[1]);
 			pair< int, int > xzConn(poreIndecies[2], poreIndecies[3]);
 
 			if(xyConn.first != xyConn.second && xyPbcConn_.count(xyConn) == 0)  // Detect 2D networks and duplicates
 			{
-				ThreeSome<int, int, double> pbcConn(xyConn.first, xyConn.second, p2BdrLength[0]+p2BdrLength[1]);
+				tuple3<int, int, double> pbcConn(xyConn.first, xyConn.second, p2BdrLength[0]+p2BdrLength[1]);
 				pbcData_.push_back(pbcConn);
 			}
 
-			if(xzConn.first != xzConn.second && xzPbcConn_.count(xzConn) == 0)
-			{
-				ThreeSome<int, int, double> pbcConn(xzConn.first, xzConn.second, p2BdrLength[2]+p2BdrLength[3]);
+			if(xzConn.first != xzConn.second && xzPbcConn_.count(xzConn) == 0)  {
+				tuple3<int, int, double> pbcConn(xzConn.first, xzConn.second, p2BdrLength[2]+p2BdrLength[3]);
 				pbcData_.push_back(pbcConn);
 			}
 
@@ -714,20 +671,17 @@ void InputData::findBoundaryPores()
 	}
 }
 
-void InputData::findClosestPoreForPBC(const vector< ThreeSome< double, double, double > >& positonData,
+void InputData::findClosestPoreForPBC(const vector<dbl3>& pos,
 									  vector< int >& poreIndecies, vector< double >& p2BdrLength) const
 {
-	poreIndecies.resize(positonData.size());
-	p2BdrLength.resize(positonData.size(), 1.0E21);
-	for(size_t i = 0; i < poreData_.size(); ++i)
-	{
-		for(size_t j = 0; j < positonData.size(); ++j)
-		{
-			double len = sqrt(pow(positonData[j].first()-poreData_[i].first()->x, 2.0)+
-				pow(positonData[j].second()-poreData_[i].first()->y, 2.0)+
-				pow(positonData[j].third()-poreData_[i].first()->z, 2.0));
-			if(len < p2BdrLength[j])
-			{
+	poreIndecies.resize(pos.size());
+	p2BdrLength.resize(pos.size(), 1.0E21);
+	for(size_t i = 0; i < poreData_.size(); ++i)  {
+		for(size_t j = 0; j < pos.size(); ++j)  {
+			double len = sqrt(pow(pos[j].x-poreData_[i].first()->x, 2.)+
+				pow(pos[j].y-poreData_[i].first()->y, 2.)+
+				pow(pos[j].z-poreData_[i].first()->z, 2.));
+			if(len < p2BdrLength[j])  {
 				p2BdrLength[j] = len;
 				poreIndecies[j] = static_cast< int >(i)+1;
 			}
@@ -737,18 +691,16 @@ void InputData::findClosestPoreForPBC(const vector< ThreeSome< double, double, d
 
 void InputData::getOutletData(MapItr itr, int numNetsInFront, int& throatIdx, int& thatIdx) const
 {
-	ThreeSome<int,int,double> entry = (*itr).second;
+	tuple3<int,int,double> entry = (*itr).second;
 	thatIdx = entry.second() + origNumPores_*(numNetsInFront+1);
 	bool throatToOutlet = outletThroat(entry.first());
 	bool throatToInlet = inletThroat(entry.first());
 	int hashedIdx(entry.first());
-	if(numNetsInFront > 0 && throatToOutlet)
-	{
+	if(numNetsInFront > 0 && throatToOutlet)  {
 		hashedIdx = reverseThroatHash_[hashedIdx-1] +
 			numNetsInFront*origNumThroats_ - (numNetsInFront-1)*connectionsRemoved_;
 	}
-	else if(throatToInlet)
-	{
+	else if(throatToInlet)  {
 		ensure(reverseThroatHash_[hashedIdx-1] != DUMMY_INDEX);
 		hashedIdx = reverseThroatHash_[hashedIdx-1] +
 			(numNetsInFront+1)*origNumThroats_ - numNetsInFront*connectionsRemoved_;
@@ -758,18 +710,16 @@ void InputData::getOutletData(MapItr itr, int numNetsInFront, int& throatIdx, in
 
 void InputData::getInletData(MapItr itr, int numNetsInFront, int& throatIdx, int& thatIdx) const
 {
-	ThreeSome<int,int,double> entry = (*itr).second;
+	tuple3<int,int,double> entry = (*itr).second;
 	thatIdx = entry.second() + origNumPores_*(numNetsInFront-1);
 	bool throatToOutlet = outletThroat(entry.first());
 	bool throatToInlet = inletThroat(entry.first());
 	int hashedIdx(entry.first());
-	if(numNetsInFront > 1 && throatToOutlet)
-	{
+	if(numNetsInFront > 1 && throatToOutlet)  {
 		hashedIdx = reverseThroatHash_[hashedIdx-1] +
 			(numNetsInFront-1)*origNumThroats_ - (numNetsInFront-2)*connectionsRemoved_;
 	}
-	else if(throatToInlet)
-	{
+	else if(throatToInlet)  {
 		hashedIdx = reverseThroatHash_[hashedIdx-1] +
 			numNetsInFront*origNumThroats_ - (numNetsInFront-1)*connectionsRemoved_;
 	}
@@ -779,8 +729,7 @@ void InputData::getInletData(MapItr itr, int numNetsInFront, int& throatIdx, int
 void InputData::poreLocation(int idx, double& xPos) const
 {
 	int stdIdx(idx), numNetsInFront(0);
-	if(idx > origNumPores_)
-	{
+	if(idx > origNumPores_)  {
 		cout<<"Error(?)";
 		numNetsInFront = (idx-1)/origNumPores_;
 		stdIdx = idx - numNetsInFront*origNumPores_;
@@ -794,17 +743,14 @@ void InputData::poreLocation(int idx, double& xPos) const
 // There is a lot of memory assosiated with storing all network data.
 // Best to clean up after ourself before proceeding
 */
-void InputData::clearNetworkData()
-{
-	for(size_t i = 0; i < poreData_.size(); ++i)
-	{
+void InputData::clearNetworkData()  {
+	for(size_t i = 0; i < poreData_.size(); ++i)  {
 		delete[] poreData_[i].second();
 		delete[] poreData_[i].third();
 		delete poreData_[i].first();
 	}
 
-	for(size_t j = 0; j < throatData_.size(); ++j)
-	{
+	for(size_t j = 0; j < throatData_.size(); ++j)  {
 		delete throatData_[j];
 	}
 
@@ -829,14 +775,11 @@ void InputData::clearNetworkData()
 // *_link2.dat:
 // index, pore 1 index, pore 2 index, length pore 1, length pore 2, length throat, volume, clay volume
 */
-void InputData::loadThroatData()
-{
+void InputData::loadThroatData()  {
 	throatData_.resize(origNumThroats_);
-	double lenSumPore(0.0), lenSumThroat(0.0);
-	for(int i = 0; i < origNumThroats_; ++i)
-	{
-		if ((!binaryFiles_ && !throatConn_) || !throatProp_)
-		{
+	double lenSumPore(0.), lenSumThroat(0.);
+	for(int i = 0; i < origNumThroats_; ++i)  {
+		if ((!binaryFiles_ && !throatConn_) || !throatProp_)  {
 			cerr << "=========================== " << endl
 				<< "Error while reading throats." << endl
 				<< "throat index: "<<i << endl
@@ -845,118 +788,108 @@ void InputData::loadThroatData()
 			exit( -1 );
 		}
 
-		ThroatStruct *throatProp = new ThroatStruct;
+		ThroatStruct *tr = new ThroatStruct;
 
-		if(binaryFiles_)
-		{
-			throatProp_.read((char *)(throatProp), sizeof(*throatProp));
+		if(binaryFiles_)  {
+			throatProp_.read((char *)(tr), sizeof(*tr));
 		}
 		else
 		{
 			int idx, tmp;
 
-			throatConn_ >> throatProp->index
-				>> throatProp->poreOne
-				>> throatProp->poreTwo
-				>> throatProp->radius
-				>> throatProp->shapeFact
-				>> throatProp->lenTot;
+			throatConn_ >> tr->index
+				>> tr->poreOne
+				>> tr->poreTwo
+				>> tr->radius
+				>> tr->shapeFact
+				>> tr->lenTot;
 
 			throatProp_ >> idx
 				>> tmp
 				>> tmp
-				>> throatProp->lenPoreOne
-				>> throatProp->lenPoreTwo
-				>> throatProp->lenThroat
-				>> throatProp->volume
-				>> throatProp->clayVol;
+				>> tr->lenPoreOne
+				>> tr->lenPoreTwo
+				>> tr->lenThroat
+				>> tr->volume
+				>> tr->clayVol;
 
-			ensure(idx == throatProp->index);
+			ensure(idx == tr->index);
 		}
-		throatData_[i] = throatProp;
-		lenSumThroat += throatProp->lenThroat;
-		lenSumPore += (throatProp->lenPoreOne+throatProp->lenPoreTwo)/2.0;
+		throatData_[i] = tr;
+		lenSumThroat += tr->lenThroat;
+		lenSumPore += (tr->lenPoreOne+tr->lenPoreTwo)/2.;
 	}
 	throatConn_.close();
 	throatProp_.close();
 	averageThroatLength_ = lenSumThroat/origNumThroats_;
 	averagePoreHalfLength_ = lenSumPore/origNumThroats_;
 
-	if(addPeriodicBC_)
-	{
+	if(addPeriodicBC_)  {
 		int index = origNumThroats_+1;
-		for(size_t conn = 0; conn < pbcData_.size(); ++conn)
-		{
-			ThroatStruct *pbcThroat = new ThroatStruct;
-			double randNum = double(rand()) / double(RAND_MAX);
+		for(size_t conn = 0; conn < pbcData_.size(); ++conn)  {
+			ThroatStruct *tr = new ThroatStruct;
+			double randNum = double(rand()) / RAND_MAX;
 			//double randNum = 0.5;   // delete me
 			int randThroatIdx = (randNum*origNumThroats_);
 			if(randThroatIdx >= origNumThroats_) randThroatIdx = origNumThroats_-1;
-			pbcThroat->clayVol = 0.0;
-			pbcThroat->index = index++;
-			pbcThroat->poreOne = pbcData_[conn].first();
-			pbcThroat->poreTwo = pbcData_[conn].second();
-			pbcThroat->radius = throatData_[randThroatIdx]->radius;
-			pbcThroat->shapeFact = throatData_[randThroatIdx]->shapeFact;
-			pbcThroat->volume = 0.0;
-			if(useAvrPbcThroatLen_ || pbcData_[conn].third() == 0.0)
-			{
-				pbcThroat->lenPoreOne = averagePoreHalfLength_;
-				pbcThroat->lenPoreTwo = averagePoreHalfLength_;
-				pbcThroat->lenThroat = averageThroatLength_;
-				pbcThroat->lenTot = averageThroatLength_+2.0*averagePoreHalfLength_;
+			tr->clayVol = 0.;
+			tr->index = index++;
+			tr->poreOne = pbcData_[conn].first();
+			tr->poreTwo = pbcData_[conn].second();
+			tr->radius = throatData_[randThroatIdx]->radius;
+			tr->shapeFact = throatData_[randThroatIdx]->shapeFact;
+			tr->volume = 0.;
+			if(useAvrPbcThroatLen_ || pbcData_[conn].third() == 0.)  {
+				tr->lenPoreOne = averagePoreHalfLength_;
+				tr->lenPoreTwo = averagePoreHalfLength_;
+				tr->lenThroat = averageThroatLength_;
+				tr->lenTot = averageThroatLength_+2*averagePoreHalfLength_;
 			}
 			else
 			{
-				pbcThroat->lenTot = pbcData_[conn].third();
-				pbcThroat->lenThroat = pbcData_[conn].third() *
-					(averageThroatLength_/(averageThroatLength_+2.0*averagePoreHalfLength_));
-				pbcThroat->lenPoreOne = (pbcThroat->lenTot-pbcThroat->lenThroat)/2.0;
-				pbcThroat->lenPoreTwo = (pbcThroat->lenTot-pbcThroat->lenThroat)/2.0;
+				tr->lenTot = pbcData_[conn].third();
+				tr->lenThroat = pbcData_[conn].third() *
+					(averageThroatLength_/(averageThroatLength_+2.*averagePoreHalfLength_));
+				tr->lenPoreOne = 0.5*(tr->lenTot - tr->lenThroat);
+				tr->lenPoreTwo = 0.5*(tr->lenTot - tr->lenThroat);
 			}
-			throatData_.push_back(pbcThroat);
-			appendPoreData(pbcThroat->poreOne, pbcThroat->index, pbcThroat->poreTwo);
-			appendPoreData(pbcThroat->poreTwo, pbcThroat->index, pbcThroat->poreOne);
+			throatData_.push_back(tr);
+			appendPoreData(tr->poreOne, tr->index, tr->poreTwo);
+			appendPoreData(tr->poreTwo, tr->index, tr->poreOne);
 		}
 		origNumThroats_ += pbcData_.size();
 	}
 
-	set<int> addedInletThroats;
+	std::set<int> addedInletThroats;
 
-	if(numNetInSeries_ > 1)
-	{
-		for(int outT = 0; outT < origNumThroats_; ++outT)
-		{
-			if(throatData_[outT]->poreOne == 0 || throatData_[outT]->poreTwo == 0)
-			{
+	if(numNetInSeries_ > 1)  {
+		for(int outT = 0; outT < origNumThroats_; ++outT)  {
+			if(throatData_[outT]->poreOne == 0 || throatData_[outT]->poreTwo == 0)  {
 				int outFacePore = throatData_[outT]->poreOne == 0 ? throatData_[outT]->poreTwo: throatData_[outT]->poreOne;
 				double xPos = poreData_[outFacePore-1].first()->x - origXDim_ - networkSeparation_;
 				double yPos = poreData_[outFacePore-1].first()->y;
 				double zPos = poreData_[outFacePore-1].first()->z;
-				double p2pLength(0.0);
+				double p2pLength(0.);
 				int inFacePore = findClosestPore(inletPores_, xPos, yPos, zPos, p2pLength);
-				ThreeSome<int, int, double> outEntry(outT+1, inFacePore, p2pLength);
-				ThreeSome<int, int, double> inEntry(outT+1, outFacePore, p2pLength);
+				tuple3<int, int, double> outEntry(outT+1, inFacePore, p2pLength);
+				tuple3<int, int, double> inEntry(outT+1, outFacePore, p2pLength);
 				inletConnections_.insert(MultiConnValType(inFacePore, inEntry));
 				outletConnections_.insert(MultiConnValType(outFacePore, outEntry));
 			}
 		}
 
-		for(int inT = 0; inT < origNumThroats_; ++inT)
-		{
-			if(throatData_[inT]->poreOne == -1 || throatData_[inT]->poreTwo == -1)
-			{
+		for(int inT = 0; inT < origNumThroats_; ++inT)  {
+			if(throatData_[inT]->poreOne == -1 || throatData_[inT]->poreTwo == -1)  {
 				int inFacePore = throatData_[inT]->poreOne == -1 ? throatData_[inT]->poreTwo: throatData_[inT]->poreOne;
-				if(inletConnections_.count(inFacePore) == 0)
-				{
+				if(inletConnections_.count(inFacePore) == 0)  {
 					addedInletThroats.insert(inT+1);
 					double xPos = poreData_[inFacePore-1].first()->x + origXDim_ + networkSeparation_;
 					double yPos = poreData_[inFacePore-1].first()->y;
 					double zPos = poreData_[inFacePore-1].first()->z;
-					double p2pLength(0.0);
+					double p2pLength(0.);
 					int outFacePore = findClosestPore(outletPores_, xPos, yPos, zPos, p2pLength);
-					ThreeSome<int, int, double> outEntry(inT+1, inFacePore, p2pLength);
-					ThreeSome<int, int, double> inEntry(inT+1, outFacePore, p2pLength);
+					tuple3<int, int, double> outEntry(inT+1, inFacePore, p2pLength);
+					tuple3<int, int, double> inEntry(inT+1, outFacePore, p2pLength);
 					inletConnections_.insert(MultiConnValType(inFacePore, inEntry));
 					outletConnections_.insert(MultiConnValType(outFacePore, outEntry));
 				}
@@ -976,8 +909,7 @@ void InputData::loadThroatData()
 
 	runningIndex = 1;
 	reverseThroatHash_.resize(origNumThroats_);
-	for(int k = 0; k < origNumThroats_; ++k)
-	{
+	for(int k = 0; k < origNumThroats_; ++k)  {
 		int hashedIdx(DUMMY_INDEX);
 		if((throatData_[k]->poreOne != -1 && throatData_[k]->poreTwo != -1) || addedInletThroats.count(k+1) > 0)
 			hashedIdx = runningIndex++;
@@ -986,18 +918,16 @@ void InputData::loadThroatData()
 	}
 }
 
-int InputData::findClosestPore(const vector< ThreeSome< PoreStruct*, int*, int* > > pores, double xPos,
+int InputData::findClosestPore(const vector< tuple3< PoreStruct*, int*, int* > > pores, double xPos,
 							   double yPos, double zPos, double& totalLen) const
 {
 	totalLen = 1.0E21;
 	int index(DUMMY_INDEX);
-	for(size_t i = 0; i < pores.size(); ++i)
-	{
-		double len = sqrt(pow(xPos-pores[i].first()->x, 2.0)+
-			pow(yPos-pores[i].first()->y, 2.0)+
-			pow(zPos-pores[i].first()->z, 2.0));
-		if(len < totalLen)
-		{
+	for(size_t i = 0; i < pores.size(); ++i)  {
+		double len = sqrt(pow(xPos-pores[i].first()->x, 2.)+
+			pow(yPos-pores[i].first()->y, 2.)+
+			pow(zPos-pores[i].first()->z, 2.));
+		if(len < totalLen)  {
 			totalLen = len;
 			index = pores[i].first()->index;
 		}
@@ -1009,11 +939,9 @@ int InputData::findClosestPore(const vector< ThreeSome< PoreStruct*, int*, int* 
 
 
 void InputData::poreData(int idx, double& xPos, double& yPos, double& zPos, int& connNum, vector< int >& connThroats,
-						 vector< int >& connPores, double& vol, double& volCl, double& rad, double& shapeFact)
-{
+						 vector< int >& connPores, double& vol, double& volCl, double& rad, double& shapeFact)  {
 	int stdIdx(idx), numNetsInFront(0);
-	if(idx > origNumPores_)
-	{
+	if(idx > origNumPores_)  {
 		numNetsInFront = (idx-1)/origNumPores_;
 		stdIdx = idx - numNetsInFront*origNumPores_;
 	}
@@ -1029,13 +957,11 @@ void InputData::poreData(int idx, double& xPos, double& yPos, double& zPos, int&
 	connThroats.resize(connNum);
 	connPores.resize(connNum);
 	bool outletPore(false), inletPore(false);
-	for(int i = 0; i < connNum; ++i)
-	{
+	for(int i = 0; i < connNum; ++i)  {
 		connPores[i] = poreData_[stdIdx-1].second()[i];
 		connThroats[i] = poreData_[stdIdx-1].third()[i];
 
-		if(connPores[i] != 0 && connPores[i] != -1 && numNetsInFront > 0)
-		{
+		if(connPores[i] != 0 && connPores[i] != -1 && numNetsInFront > 0)  {
 			connPores[i] += numNetsInFront*origNumPores_;
 			int throatStdIdx = reverseThroatHash_[connThroats[i]-1];
 			connThroats[i] = throatStdIdx + numNetsInFront*origNumThroats_ - (numNetsInFront-1)*connectionsRemoved_;
@@ -1046,13 +972,11 @@ void InputData::poreData(int idx, double& xPos, double& yPos, double& zPos, int&
 			inletPore = true;
 	}
 	//vector< int > connPores; vector< int > connThroats; int connNum;
-	if(numNetInSeries_ > 1 && (outletPore || inletPore))
-	{
+	if(numNetInSeries_ > 1 && (outletPore || inletPore))  {
 	//connNum = poreProp->connNum;
 		pair<MapItr,MapItr> mapConns;
 	//connThroats.resize(connNum);
-		if(outletPore)
-		{
+		if(outletPore)  {
 	//connPores.resize(connNum);
 			mapConns = outletConnections_.equal_range(stdIdx);
 		}
@@ -1063,32 +987,27 @@ void InputData::poreData(int idx, double& xPos, double& yPos, double& zPos, int&
 		}
 		MapItr itr = mapConns.first;
 	//for(int i = 0; i < connNum; ++i)
-		for(int j = 0; j < connNum; ++j)
-		{
-			if(numNetsInFront < numNetInSeries_-1 && connPores[j] == 0)
-			{
+		for(int j = 0; j < connNum; ++j)  {
+			if(numNetsInFront < numNetInSeries_-1 && connPores[j] == 0)  {
 				ensure(itr != mapConns.second);
 				getOutletData(itr, numNetsInFront, connThroats[j], connPores[j]);
 	//{
 		//connPores[i] = poreData_[stdIdx-1].second()[i];
 				++itr;
 			}
-			else if(numNetsInFront > 0 && connPores[j] == -1)
-			{
+			else if(numNetsInFront > 0 && connPores[j] == -1)  {
 				ensure(itr != mapConns.second);
 				getInletData(itr, numNetsInFront, connThroats[j], connPores[j]);
 		//connThroats[i] = poreData_[stdIdx-1].third()[i];
 				++itr;
 			}
-			else if(numNetsInFront > 0 && connPores[j] == 0)
-			{
+			else if(numNetsInFront > 0 && connPores[j] == 0)  {
 				int throatStdIdx = reverseThroatHash_[connThroats[j]-1];
 				connThroats[j] = throatStdIdx + numNetsInFront*origNumThroats_ - (numNetsInFront-1)*connectionsRemoved_;
 			}
 		}
 
-		while(itr != mapConns.second)
-		{
+		while(itr != mapConns.second)  {
 			int poreIdx(DUMMY_INDEX), throatIdx(DUMMY_INDEX);
 		//if(connPores[i] != 0 && connPores[i] != -1 && numNetsInFront > 0)
 			if(numNetsInFront < numNetInSeries_-1 && outletPore)
@@ -1096,8 +1015,7 @@ void InputData::poreData(int idx, double& xPos, double& yPos, double& zPos, int&
 			else if(numNetsInFront > 0 && inletPore)
 				getInletData(itr, numNetsInFront, throatIdx, poreIdx);
 		//{
-			if(poreIdx != DUMMY_INDEX)
-			{
+			if(poreIdx != DUMMY_INDEX)  {
 				connPores.push_back(poreIdx);
 				connThroats.push_back(throatIdx);
 				++connNum;
@@ -1169,11 +1087,9 @@ void InputData::poreData(int idx, double& xPos, double& yPos, double& zPos, int&
 
 
 void InputData::throatData(int idx, int& pore1, int& pore2, double& vol, double& volCl, double& rad, double& shapeFact,
-						   double& lenPore1, double& lenPore2, double& lenThroat, double& lenTot)
-{
+						   double& lenPore1, double& lenPore2, double& lenThroat, double& lenTot)  {
 	int stdIdx(idx), numNetsInFront(0);
-	if(idx > origNumThroats_)
-	{
+	if(idx > origNumThroats_)  {
 		numNetsInFront = 1+(idx-origNumThroats_-1)/(origNumThroats_-connectionsRemoved_);
 		int tmpIdx = idx - numNetsInFront*origNumThroats_ + (numNetsInFront-1)*connectionsRemoved_;
 		stdIdx = throatHash_[tmpIdx-1];
@@ -1196,39 +1112,32 @@ void InputData::throatData(int idx, int& pore1, int& pore2, double& vol, double&
 		if(pore2 != 0 && pore2 != -1)pore2 += numNetsInFront*origNumPores_;
 	}
 
-	double totalLength(0.0);
+	double totalLength(0.);
 	pair<MapItr,MapItr> mapPos;
 	bool inlet(false), good2go(false);
-	if(numNetsInFront != numNetInSeries_-1 && throatData_[stdIdx-1]->poreOne == 0)
-	{
+	if(numNetsInFront != numNetInSeries_-1 && throatData_[stdIdx-1]->poreOne == 0)  {
 		good2go = true;
 		mapPos = outletConnections_.equal_range(throatData_[stdIdx-1]->poreTwo);
 	}
-	else if(numNetsInFront != numNetInSeries_-1 && throatData_[stdIdx-1]->poreTwo == 0)
-	{
+	else if(numNetsInFront != numNetInSeries_-1 && throatData_[stdIdx-1]->poreTwo == 0)  {
 		good2go = true;
 		mapPos = outletConnections_.equal_range(throatData_[stdIdx-1]->poreOne);
 	}
-	else if(numNetsInFront > 0 && throatData_[stdIdx-1]->poreOne == -1)
-	{
+	else if(numNetsInFront > 0 && throatData_[stdIdx-1]->poreOne == -1)  {
 		good2go = true;
 		inlet = true;
 		mapPos = inletConnections_.equal_range(throatData_[stdIdx-1]->poreTwo);
 	}
-	else if(numNetsInFront > 0 && throatData_[stdIdx-1]->poreTwo == -1)
-	{
+	else if(numNetsInFront > 0 && throatData_[stdIdx-1]->poreTwo == -1)  {
 		good2go = true;
 		inlet = true;
 		mapPos = inletConnections_.equal_range(throatData_[stdIdx-1]->poreOne);
 	}
 
-	if(good2go)
-	{
+	if(good2go)  {
 		MapItr itr = mapPos.first;
-		while(itr != mapPos.second)
-		{
-			if((*itr).second.first() == stdIdx)
-			{
+		while(itr != mapPos.second)  {
+			if((*itr).second.first() == stdIdx)  {
 				int poreIdx = (*itr).second.second();
 
 				if(inlet)
@@ -1237,8 +1146,7 @@ void InputData::throatData(int idx, int& pore1, int& pore2, double& vol, double&
 					poreIdx += (numNetsInFront+1)*origNumPores_;
 
 				totalLength = (*itr).second.third();
-				if(throatData_[stdIdx-1]->poreOne == 0 || throatData_[stdIdx-1]->poreOne == -1)
-				{
+				if(throatData_[stdIdx-1]->poreOne == 0 || throatData_[stdIdx-1]->poreOne == -1)  {
 					pore1 = poreIdx;
 					lenPore1 = lenPore2;
 				}
@@ -1250,15 +1158,13 @@ void InputData::throatData(int idx, int& pore1, int& pore2, double& vol, double&
 			}
 			++itr;
 		}
-		if(useAvrXOverThroatLen_)
-		{
+		if(useAvrXOverThroatLen_)  {
 			lenThroat = averageThroatLength_;
-			lenTot = 2.0*lenPore2 + lenThroat;
+			lenTot = 2.*lenPore2 + lenThroat;
 		}
-		else if(totalLength > 2.0*lenPore2)
-		{
+		else if(totalLength > 2.*lenPore2)  {
 			lenTot = totalLength;
-			lenThroat = totalLength - 2.0*lenPore2;
+			lenThroat = totalLength - 2.*lenPore2;
 		}
 		else
 		{
@@ -1267,7 +1173,7 @@ void InputData::throatData(int idx, int& pore1, int& pore2, double& vol, double&
 			lenThroat = 1.0E-8;
 			lenTot = 3.0E-8;
 		}
-		double xSectArea(pow(rad, 2.0) / (4.0*shapeFact));  // Oren networks have 0 volume for in/outlet throats
+		double xSectArea(pow(rad, 2.) / (4.*shapeFact));  // Oren networks have 0 volume for in/outlet throats
 		vol = lenThroat*xSectArea;                          // Assign volume based on a tube
 	}
 }
@@ -1282,8 +1188,7 @@ void InputData::solverDebug(bool& watMat, bool& oilMat, bool& resMat, bool& watV
 	string keyword("SOLVER_DBG");
 	char writeWat, writeOil, writeRes, writeWatVel, writeOilVel, writeResVel, mat, forInit;
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword << endl;
 		data >> writeWat >> writeOil >> writeRes >> writeWatVel >> writeOilVel >> writeResVel >> mat >> forInit;
 		watMat = (writeWat == 'T' || writeWat == 't');
@@ -1295,8 +1200,7 @@ void InputData::solverDebug(bool& watMat, bool& oilMat, bool& resMat, bool& watV
 		matlab = (mat == 'T' || mat == 't');
 		initOnly = (forInit == 'T' || forInit == 't');
 		checkEndOfData(data, keyword);
-		if(initOnly)
-		{
+		if(initOnly)  {
 			watMat = false;
 			oilMat = false;
 			resMat = false;

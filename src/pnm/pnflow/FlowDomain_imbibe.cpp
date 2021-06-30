@@ -32,13 +32,12 @@ using namespace std;
 * that that face. If we remove both faces and all elements were previously drained, the firts imbibition
 * event will be a snap off.
  */
-void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  double deltaSw, bool wantRelPerm, bool wantResIdx,  bool entreL, bool entreR, bool exitL, bool exitR)
-{
+void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  double deltaSw, bool wantRelPerm, bool wantResIdx,  bool entreL, bool entreR, bool exitL, bool exitR)  {
 
 	out_ << "\n********************  Water-injection -- cycle "<<comn_.dispCycle()+1<<"  ********************"<<endl;
 
 
-	SortedEvents<Apex*,PceImbCmp>    evnts;
+	Events<Apex*,PceImbCmp>    evnts;
 
 	 solver_ = new hypreSolver(elemans_, krInletBoundary_, krOutletBoundary_, nBSs_,nBpPors_, debugLevel, title_+"_solverImb", writeSlvMatrixAsMatlab_);
 
@@ -56,25 +55,23 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 
 		outD<<std::endl<<std::endl<<"initializeImbibition cycle "<<comn_.dispCycle()<<" "<<endl;
 
-		cpuTimeTotal_ = 0.0;
-		cpuTimeCoal_ = 0.0;
-		cpuTimeKrw_ = 0.0;
-		cpuTimeKro_ = 0.0;
-		cpuTimeTrapping_ = 0.0;
-		cpuTimeResIdx_ = 0.0;
+		cpuTimeTotal_ = 0.;
+		cpuTimeCoal_ = 0.;
+		cpuTimeKrw_ = 0.;
+		cpuTimeKro_ = 0.;
+		cpuTimeTrapping_ = 0.;
+		cpuTimeResIdx_ = 0.;
 		totNumFillings_ = 0;
 		minCyclePc_ = Pc_;
 		comn_.setMaxPcLastDrainCycle(maxCyclePc_);
 
-		maxOilFlowErr_ = 0.0;		maxWatFlowErr_ = 0.0;		maxResIdxErr_ = 0.0;
+		maxOilFlowErr_ = 0.;		maxWatFlowErr_ = 0.;		maxResIdxErr_ = 0.;
 
 
 
 
-		if(sourceNode_>0)
-		{
-			if(sourceNode_ > nPors_)
-			{
+		if(sourceNode_>0)  {
+			if(sourceNode_ > nPors_)  {
 				cerr<<"\nError: Source pore ("<< sourceNode_<<") out of range [1,"<<nPors_<<"]."<<endl;            exit(-1);
 			}
 			trappingCriteria_ = escapeToBoth;
@@ -125,12 +122,9 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 	   
 
 		int nInWaterFlood0 = 0;
-		for(int i = nBSs_; i < int(elemans_.size()); ++i)
-		{
-			if(elemans_[i]->connectedToNetwork())
-			{
-				if(elemans_[i]->canBeAddedToEventVec(water_))
-				{
+		for(int i = nBSs_; i < int(elemans_.size()); ++i)  {
+			if(elemans_[i]->connectedToNetwork())  {
+				if(elemans_[i]->canBeAddedToEventVec(water_))  {
 					if (!elemans_[i]->model()->bulkFluid()->isOil())  		cout<< " depn" ;
 
 					elemans_[i]->calcCentreEntryPrsWatInj();
@@ -150,12 +144,9 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 
 
 		int nInWaterFlood = 0, count1WF = 0, nNotInWaterFlood = 0, count1NIWF = 0;   
-		for(int i = nBSs_; i < int(elemans_.size()); ++i)
-		{
-			if(elemans_[i]->connectedToNetwork())
-			{   Element* elem = elemans_[i];
-				if(elem->rockIndex() == 0)
-				{
+		for(int i = nBSs_; i < int(elemans_.size()); ++i)  {
+			if(elemans_[i]->connectedToNetwork())  {   Elem* elem = elemans_[i];
+				if(elem->rockIndex() == 0)  {
 					if(elem->isInWatFloodVec())			nInWaterFlood++;
 					else 								nNotInWaterFlood++;
 				}
@@ -177,41 +168,39 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 		/*///. connect oil to all elements connected to inlet, ERROR TODO DELETE TOTEST
 		//if(injAtLeftRes_)
 		//{
-			//for(int inT = 0; inT < elemans_[0]->connectionNum(); ++inT)
+			//for(int inT = 0; inT < elemans_[0]->nCncts(); ++inT)
 			//{
-				//FlowDomain::untrap_WaterGanglia(evnts, elemans_[0]->connection(inT), filmBlob);
-				//FlowDomain::untrap_WaterGanglia(evnts, elemans_[0]->connection(inT), bulkBlob);
+				//FlowDomain::untrap_WaterGanglia(evnts, elemans_[0]->neib(inT), filmBlob);
+				//FlowDomain::untrap_WaterGanglia(evnts, elemans_[0]->neib(inT), bulkBlob);
 			//}
 		//}
 	//
 		//if(entreR)
 		//{
-			//for(int outT = 0; outT < elemans_[OutI]->connectionNum(); ++outT)
+			//for(int outT = 0; outT < elemans_[OutI]->nCncts(); ++outT)
 			//{
-				//FlowDomain::untrap_WaterGanglia(evnts, elemans_[OutI]->connection(outT), filmBlob);
-				//FlowDomain::untrap_WaterGanglia(evnts, elemans_[OutI]->connection(outT), bulkBlob);
+				//FlowDomain::untrap_WaterGanglia(evnts, elemans_[OutI]->neib(outT), filmBlob);
+				//FlowDomain::untrap_WaterGanglia(evnts, elemans_[OutI]->neib(outT), bulkBlob);
 			//}
 		//}
 	//
 		//if(sourceNode_ != 0)
 		//{
-			//for(int sourceT = 0; sourceT < elemans_[sourceNode_]->connectionNum(); ++sourceT)
+			//for(int sourceT = 0; sourceT < elemans_[sourceNode_]->nCncts(); ++sourceT)
 			//{
-				//FlowDomain::untrap_WaterGanglia(evnts, elemans_[sourceNode_]->connection(sourceT), filmBlob);
-				//FlowDomain::untrap_WaterGanglia(evnts, elemans_[sourceNode_]->connection(sourceT), bulkBlob);
+				//FlowDomain::untrap_WaterGanglia(evnts, elemans_[sourceNode_]->neib(sourceT), filmBlob);
+				//FlowDomain::untrap_WaterGanglia(evnts, elemans_[sourceNode_]->neib(sourceT), bulkBlob);
 			//}
 		//}*/
 
 		amottDataImbibition_[0] = Sw_;
-		amottDataImbibition_[1] = -1.0;
+		amottDataImbibition_[1] = -1.;
 
 		usbmDataImbibition_.clear();
 		recordUSBMData(false);
 
-		if(writeImbList_)
-		{	ostringstream fileName;
-			fileName << "fill_imbcycle_" << comn_.dispCycle() << ".m";
-			imbListOut_.open(fileName.str());
+		if(input_.fillingList(1))  {
+			imbListOut_.open("fill_imbcycle_"+_s(comn_.dispCycle())+".m");
 			imbListOut_ << "% The backbone identifies which pores/throats are water filled at the start of water flooding.\n"
 			            << "% The first row is pore/throat index, followed by 1 for pores and 0 for thoats.\n";
 			imbListOut_ << "backbone = [";
@@ -235,8 +224,7 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 
 
 
-	if (debugLevel>100)
-	{	cout<<elemans_[0]->model()->Pc_pistonTypeAdv()<<"  ";
+	if (debugLevel>100)  {	cout<<elemans_[0]->model()->Pc_pistonTypeAdv()<<"  ";
 		cout<<elemans_[0]->model()->Pc_pistonTypeRec()<<endl;
 		cout<<elemans_[OutI]->model()->Pc_pistonTypeAdv()<<"  ";
 		cout<<elemans_[OutI]->model()->Pc_pistonTypeRec()<<endl;
@@ -252,20 +240,19 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 	bool residualSat(false);
 
 
-	while(/*!residualSat &&*/ Sw_ <=  requestedFinalSw && Pc_ > requestedFinalPc)
-	{
+	while(/*!residualSat &&*/ Sw_ <=  requestedFinalSw && Pc_ > requestedFinalPc)  {
 
 		FlowDomain::singleImbibeStep(evnts, SwTarget, PcTarget, residualSat);
 
-		double krw = watFlowRate_ / (singlePhaseWaterQ_+1.0e-200);
-		double kro = oilFlowRate_ / (singlePhaseOilQ_+1.0e-200);;
+		double krw = watFlowRate_ / (singlePhaseWaterQ_+1e-200);
+		double kro = oilFlowRate_ / (singlePhaseOilQ_+1e-200);;
 		//double resIdx = resistivityIdx_;
 
 
 		if(satCompress && wantRelPerm && compressWat && krw > krThreshold) dSw = deltaSw;
 		if(satCompress && wantRelPerm && compressOil && kro < krThreshold) dSw = newDeltaSw;
-		SwTarget = min(requestedFinalSw+1.0e-15, round((Sw_ + 0.75*dSw)/dSw)*dSw);
-		PcTarget = max(requestedFinalPc-1.0e-7, Pc_ - (KcIncr_+abs(Pc_)*KcIncrFactor_+1.0e-16));
+		SwTarget = min(requestedFinalSw+1e-15, round((Sw_ + 0.75*dSw)/dSw)*dSw);
+		PcTarget = max(requestedFinalPc-1e-7, Pc_ - (KcIncr_+abs(Pc_)*KcIncrFactor_+1e-16));
 	}
 
 	FlowDomain::writeResultData(wantRelPerm, wantResIdx);
@@ -277,8 +264,7 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 	//void FlowDomain::finaliseImbibition()
 	{
 
-		if(maxOilFlowErr_ > 0.1 || maxWatFlowErr_ > 0.1 || maxResIdxErr_ > 0.1)
-		{
+		if(maxOilFlowErr_ > 0.1 || maxWatFlowErr_ > 0.1 || maxResIdxErr_ > 0.1)  {
 			out_ << endl
 				<< "==================================================== "   << endl
 				<< "Warning: For some rel perm calculations there were"     << endl
@@ -294,12 +280,10 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 		vector< int > sumfillingEventsP(6);
 		vector< int > imbEventT(3);
 
-		for(int ii = nBSs_; ii < static_cast< int >(elemans_.size()); ++ii)
-		{
+		for(int ii = nBSs_; ii < static_cast< int >(elemans_.size()); ++ii)  {
 			int evntI = elemans_[ii]->eventI();
 
-			if(ii <  nBpPors_)
-			{
+			if(ii <  nBpPors_)  {
 				if(evntI == -1) ++sumfillingEventsP[0];
 				else if(evntI == 0 || evntI == 1) ++sumfillingEventsP[1];
 				else if(evntI == 2) ++sumfillingEventsP[2];
@@ -307,8 +291,7 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 				else if(evntI > 3)  ++sumfillingEventsP[4];
 				else ++sumfillingEventsP[5];
 			}
-			else if (ii >= nBpPors_)
-			{
+			else if (ii >= nBpPors_)  {
 				if(evntI == -1) ++imbEventT[0];
 				else if(evntI == 0 || evntI == 1) ++imbEventT[1];
 				else ++imbEventT[2];
@@ -323,9 +306,9 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 			<< "Solving for resistivity index:           "  << cpuTimeResIdx_                              << endl
 			<< "Identifying trapped elements:            "  << cpuTimeTrapping_                            << endl
 			<< "Coalesceing trapped water:               "  << cpuTimeCoal_                                << endl
-			<< "Max water flow solver residual:          "  << maxWatFlowErr_*100.0 << " %"                << endl
-			<< "Max oil flow solver residual:            "  << maxOilFlowErr_*100.0 << " %"                << endl
-			<< "Max resistivity index residual:          "  << maxResIdxErr_*100.0 << " %"                 << endl
+			<< "Max water flow solver residual:          "  << maxWatFlowErr_*100. << " %"                << endl
+			<< "Max oil flow solver residual:            "  << maxOilFlowErr_*100. << " %"                << endl
+			<< "Max resistivity index residual:          "  << maxResIdxErr_*100. << " %"                 << endl
 			<< endl
 			<< "===================== Network State  ===================== "                                << endl
 			<< "Minimum capillary pressure reached (Pa): "  << Pc_                                  << endl
@@ -351,18 +334,16 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 			<< endl;
 
 		amottDataImbibition_[2] = Sw_;
-		if(Pc_ > 0.0)
-			amottWaterIdx_ = 1.0;
-		else if(Pc_ < 0.0 && amottDataImbibition_[1] < 0.0)
-			amottWaterIdx_ = 0.0;
-		else
-		{
+		if(Pc_ > 0.)
+			amottWaterIdx_ = 1.;
+		else if(Pc_ < 0. && amottDataImbibition_[1] < 0.)
+			amottWaterIdx_ = 0.;
+		else  {
 			amottWaterIdx_ = (amottDataImbibition_[1]-amottDataImbibition_[0])/
 				(amottDataImbibition_[2]-amottDataImbibition_[0]);
 		}
 
-		if(comn_.dispCycle() > 1)
-		{
+		if(comn_.dispCycle() > 1)  {
 			out_ << endl
 				<< "=================Wettability State  ================ "                     << endl
 				<< "Amott water index, Iw:                  " << amottWaterIdx_                << endl
@@ -373,8 +354,7 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 		}
 
 
-		if(writeImbList_)
-		{
+		if(imbListOut_)  {
 			imbListOut_ << "];" << endl;
 			imbListOut_.close();
 		}
@@ -405,14 +385,12 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
  * reason is that as Pc increases (negatively) more and more regions might get trapped as oil
  * layers collapse, and we don't want to spend huge amounts of time checking on this.
  */
-void FlowDomain::singleImbibeStep(SortedEvents<Apex*,PceImbCmp>& evnts, double SwTarget, double& PcTarget, bool& residualSat)
-{
+void FlowDomain::singleImbibeStep(Events<Apex*,PceImbCmp>& evnts, double SwTarget, double& PcTarget, bool& residualSat)  {
 
 	clock_t startClock(clock());
 
 
-	if(SwTarget < Sw_ || PcTarget > Pc_)
-	{
+	if(SwTarget < Sw_ || PcTarget > Pc_)  {
 		out_ << "================================================="              << endl
 			<< "Nothing to be done:"                                            << endl;
 		if(SwTarget < Sw_)			out_ << "Target water saturation (" << SwTarget << ")   is lower than current saturation (" << Sw_ << ")"   << endl;
@@ -432,25 +410,22 @@ void FlowDomain::singleImbibeStep(SortedEvents<Apex*,PceImbCmp>& evnts, double S
 						int(initStepSize_*(nPors_+nTrots_)*(SwTarget-Sw_)));
 	double oldCappPress(Pc_);
 
-	while(Sw_ <= SwTarget && Pc_ > PcTarget-1.0e-32 /*&& !evnts.empty()*/)
-	{
+	while(Sw_ <= SwTarget && Pc_ > PcTarget-1e-32 /*&& !evnts.empty()*/)  {
 		double oldWaterSat(Sw_);
 		int numInv(0), invInsideBox(0);
 		bool insideBox(false);
 
 		outD<<"\n Sw = "<<Sw_<<":"<<"  Pc = "<<Pc_<<": ";outD.flush();
 
-		while(invInsideBox < fillTarget && !evnts.empty() && nextCentrInjPc(evnts) >= PcTarget)
-		{
+		while(invInsideBox < fillTarget && !evnts.empty() && nextCentrInjPc(evnts) >= PcTarget)  {
 			FlowDomain::popUpdateWaterInj(evnts,insideBox, cappPressCh_, PcTarget);
 			comn_.GuessCappPress(Pc_);                   // Use local maxima for Pc
 			++numInv;
 			if(insideBox) ++invInsideBox;
-			if(Pc_==0.0 || Pc_*oldCappPress < 0.0)
-			{
+			if(Pc_==0. || Pc_*oldCappPress < 0.)  {
 
 				FlowDomain::checkUntrapOilIfUnstableConfigsImb(evnts);
-				oldCappPress=Pc_-1.0e-12;
+				oldCappPress=Pc_-1e-12;
 				updateSatAndConductances(Pc_);
 				out_ << "Pc cross over at Sw = " << setw(6) << Sw_ << "; ";
 				amottDataImbibition_[1] = Sw_;//FlowDomain::recordAmottData(false);
@@ -460,25 +435,22 @@ void FlowDomain::singleImbibeStep(SortedEvents<Apex*,PceImbCmp>& evnts, double S
 
 		///. Third inner loop, only when option stableFilling_, until no layer ready for pop(?)
 			if(stableFilling_)  
-			 while(nextCentrInjPc(evnts) >= Pc_-1.0e-32)
-				{	//cout<<" StableFilling ";
+			 while(nextCentrInjPc(evnts) >= Pc_-1e-32)  {	//cout<<" StableFilling ";
 					FlowDomain::popUpdateWaterInj(evnts, insideBox, cappPressCh_, PcTarget);
 					++numInv;
 					if(insideBox) ++invInsideBox;
 				 }
 		}
 
-		if (nextCentrInjPc(evnts) < PcTarget && (Pc_ > PcTarget) )
-		{
+		if (nextCentrInjPc(evnts) < PcTarget && (Pc_ > PcTarget) )  {
 			cappPressCh_ = PcTarget;
 
 			FlowDomain::updateSatAndConductances(Pc_);
 
-			if(Pc_==0.0 || Pc_*oldCappPress < 0.0)
-			{
+			if(Pc_==0. || Pc_*oldCappPress < 0.)  {
 				out_ << "Pc cross over at Sw = " << setw(6) << Sw_ << "\n";
 				amottDataImbibition_[1] = Sw_;//FlowDomain::recordAmottData(false);
-				oldCappPress=Pc_-1.0e-12;
+				oldCappPress=Pc_-1e-12;
 			}
 
 		}
@@ -510,12 +482,9 @@ void FlowDomain::singleImbibeStep(SortedEvents<Apex*,PceImbCmp>& evnts, double S
 
 
 
-inline void FlowDomain::insertReCalcImbibeEntryPrs(SortedEvents<Apex*,PceImbCmp>& evnts, Element* elem, double cappPrs)
-{
-	if(elem->isInWatFloodVec())
-	{
-		if (evnts.remove(elem))
-		{   ///. order is important
+inline void FlowDomain::insertReCalcImbibeEntryPrs(Events<Apex*,PceImbCmp>& evnts, Elem* elem, double cappPrs)  {
+	if(elem->isInWatFloodVec())  {
+		if (evnts.remove(elem))  {   ///. order is important
 				elem->calcCentreEntryPrsWatInj();
 				evnts.insert(elem);
 				if (!elem->model()->bulkFluid()->isOil()) cout<< " deaw " ;
@@ -524,8 +493,7 @@ inline void FlowDomain::insertReCalcImbibeEntryPrs(SortedEvents<Apex*,PceImbCmp>
 		{
 			elem->setInWatFloodVec(false);
 			elem->calcCentreEntryPrsWatInj();
-			if (elem->canBeAddedToEventVec(water_))
-			{
+			if (elem->canBeAddedToEventVec(water_))  {
 
 				evnts.insert(elem);		elem->setInWatFloodVec(true);
 				//cout<<"|";
@@ -538,8 +506,7 @@ inline void FlowDomain::insertReCalcImbibeEntryPrs(SortedEvents<Apex*,PceImbCmp>
 	}
 	else
 	{
-		if (elem->canBeAddedToEventVec(water_))
-		{
+		if (elem->canBeAddedToEventVec(water_))  {
 			elem->ChModel()->initWaterInjection(cappPrs);
 			elem->calcCentreEntryPrsWatInj();
 			evnts.insert(elem);
@@ -553,17 +520,13 @@ inline void FlowDomain::insertReCalcImbibeEntryPrs(SortedEvents<Apex*,PceImbCmp>
 
 
 
-inline void FlowDomain::addElemTo_layerImbibeEvents(SortedEvents<Apex*,PceImbCmp>& evnts, Element* elem)
-{
+inline void FlowDomain::addElemTo_layerImbibeEvents(Events<Apex*,PceImbCmp>& evnts, Elem* elem)  {
 	Polygon* shyp = dynamic_cast< Polygon* >(elem->ChModel());
-	if(shyp)
-	{
+	if(shyp)  {
 		vector<int> addCrns;
-		if(elem->addToLayerVec(water_, shyp, addCrns))
-		{
+		if(elem->addToLayerVec(water_, shyp, addCrns))  {
 			ensure(!addCrns.empty());
-			for(size_t i = 0; i < addCrns.size(); ++i)
-			{
+			for(size_t i = 0; i < addCrns.size(); ++i)  {
 				ensure(!shyp->oilLayerConst()[addCrns[i]].isInWatFloodVec());
 				evnts.insert(&shyp->oilLayerCh()[addCrns[i]]);
 				shyp->oilLayerCh()[addCrns[i]].setInWatFloodVec(true);
@@ -573,15 +536,12 @@ inline void FlowDomain::addElemTo_layerImbibeEvents(SortedEvents<Apex*,PceImbCmp
 }
 
 
-inline void FlowDomain::clearTrappedOilFromEvents(SortedEvents<Apex*,PceImbCmp>&    evnts)
-{
-	while(!evnts.empty() && evnts.peek()->parentModel()->eleman()->isTrappedOil())
-	{
+inline void FlowDomain::clearTrappedOilFromEvents(Events<Apex*,PceImbCmp>&    evnts)  {
+	while(!evnts.empty() && evnts.peek()->parentModel()->eleman()->isTrappedOil())  {
 		evnts.pop()->setInWatFloodVec(false);
 	}
 
-	while(!evnts.empty() && evnts.peek()->trappingCL().first>-1)
-	{
+	while(!evnts.empty() && evnts.peek()->trappingCL().first>-1)  {
 		evnts.pop()->setInWatFloodVec(false);
 	}
 }
@@ -597,11 +557,9 @@ inline void FlowDomain::clearTrappedOilFromEvents(SortedEvents<Apex*,PceImbCmp>&
  * that element which now contains water. New elements now available for injection are inserted
  * into the queue. The entry pressure rquired to do that invasion is returned.
  */
-void FlowDomain::popUpdateWaterInj(SortedEvents<Apex*,PceImbCmp>& evnts, bool& insideBox, double& localPc, double localPcTarget)
-{
+void FlowDomain::popUpdateWaterInj(Events<Apex*,PceImbCmp>& evnts, bool& insideBox, double& localPc, double localPcTarget)  {
 
-	while (evnts.peek()->subIndex()>=0 && !evnts.empty() && evnts.peek()->gravCorrectedEntryPress() > localPcTarget)
-	{
+	while (evnts.peek()->subIndex()>=0 && !evnts.empty() && evnts.peek()->gravCorrectedEntryPress() > localPcTarget)  {
 		FlowDomain::popUpdate_layerInj_Water(evnts.pop(), evnts, localPc);
 
 		clearTrappedOilFromEvents(evnts); ///. skip trapped regions
@@ -611,11 +569,10 @@ void FlowDomain::popUpdateWaterInj(SortedEvents<Apex*,PceImbCmp>& evnts, bool& i
 	if(evnts.empty() ||  evnts.peek()->gravCorrectedEntryPress() < localPcTarget) return;
 
 	{
-		Element *currElemCh = evnts.pop()->parentModel()->ChParent();
+		Elem *currElemCh = evnts.pop()->parentModel()->ChParent();
 		FlowDomain::popUpdateCentreInj_Water(currElemCh, evnts, localPc);
 
-		if(writeImbList_)
-		{
+		if(imbListOut_)  {
 			bool isAPore(dynamic_cast< Pore* >(currElemCh) != 0);
 			imbListOut_ << currElemCh->indexOren() << ", ";
 			imbListOut_ << isAPore << "; ..." << endl;
@@ -636,16 +593,14 @@ void FlowDomain::popUpdateWaterInj(SortedEvents<Apex*,PceImbCmp>& evnts, bool& i
  * from the list and then reinsert them with the new entry pressure, while keeping the
  * computational cost as low as possible. Just resorting the list would cost O(N) whreas
  * extracting the elements, O(logN), and then reinserting them, O(logN), have a total
- * cost of 2*connectionNum*O(logN). For large networks this should be cheaper.
+ * cost of 2*nCncts*O(logN). For large networks this should be cheaper.
  */
-void FlowDomain::popUpdateCentreInj_Water(Element* currElemCh, SortedEvents<Apex*,PceImbCmp>& evnts, double& localPc)
-{
+void FlowDomain::popUpdateCentreInj_Water(Elem* currElemCh, Events<Apex*,PceImbCmp>& evnts, double& localPc)  {
 
-	const Element *currElem = currElemCh;
+	const Elem *currElem = currElemCh;
 	double currentPc = currElem->gravCorrectedEntryPress();
 	 if (evnts.remove(currElemCh)) cout<<" dblInsWInj " ;
-	if(!currElemCh->model()->conductCOil())
-	{
+	if(!currElemCh->model()->conductCOil())  {
 		currElemCh->setInWatFloodVec(false);
 		cout<<"dsfgfg "<<currElemCh->canBeAddedToEventVec(water_)<<endl;
 		if (evnts.remove(currElemCh)) cout<<" dblInsElm" ;
@@ -667,23 +622,20 @@ void FlowDomain::popUpdateCentreInj_Water(Element* currElemCh, SortedEvents<Apex
 	if(currElem->isTrappedWat(filmBlob) && !currElem->model()->disConectedCentreWCornerW())
 	   untrap_WaterGanglia(evnts, currElemCh, filmBlob);
 
-	for(int j = 0; j < currElem->connectionNum(); ++j)
-	{
-		if(HadNoInvading) FlowDomain::untrap_WaterGanglia(evnts, currElem->connection(j), filmBlob);///. invading fluid coalescence
-		untrap_WaterGanglia(evnts, currElem->connection(j), bulkBlob);
+	for(int j = 0; j < currElem->nCncts(); ++j)  {
+		if(HadNoInvading) FlowDomain::untrap_WaterGanglia(evnts, currElem->neib(j), filmBlob);///. invading fluid coalescence
+		untrap_WaterGanglia(evnts, currElem->neib(j), bulkBlob);
 	}
 
 	FlowDomain::addElemTo_layerImbibeEvents(evnts, currElemCh);///. for film and centre coalescence
 
 	bool disconnectRetreading(!currElem->model()->conductsAnyOil());
 
-	for(int i = 0; i < currElem->connectionNum(); ++i)
-	{
-		Element *connection = currElem->connection(i);
+	for(int i = 0; i < currElem->nCncts(); ++i)  {
+		Elem *connection = currElem->neib(i);
 		if(!connection->isEntryOrExitRes())///. ! in out, check for water trapping after oil injection
 		{///. THE RULES TO BE CHECKED
-			if(disconnectRetreading)
-			{
+			if(disconnectRetreading)  {
 				 FlowDomain::findMarkStoreTrappedOil(evnts,connection,localPc);
 			}
 
@@ -699,29 +651,22 @@ void FlowDomain::popUpdateCentreInj_Water(Element* currElemCh, SortedEvents<Apex
 
 /** trapping routine
  */
-void FlowDomain::findMarkStoreTrappedOil(SortedEvents<Apex*,PceImbCmp>& evnts, Element* elem, double localPc)
-{
-	vector<Element*> trappingStorage;
+void FlowDomain::findMarkStoreTrappedOil(Events<Apex*,PceImbCmp>& evnts, Elem* elem, double localPc)  {
+	vector<Elem*> trappingStorage;
 
 	elem->findMarkTrappedOilGanglia(localPc-elem->gravityCorrection(), trappingStorage, cpuTimeTrapping_, trappingCriteria_);
 
-	if(!trappingStorage.empty())
-	{
+	if(!trappingStorage.empty())  {
 		outD<<' '<<trappingStorage.size()<<'t'<<'o'<<elem->rockIndex()<<" ";outD.flush();
-		for(auto& elm:trappingStorage)
-		{
-			if(elm->isInWatFloodVec())
-			{
+		for(auto& elm:trappingStorage)  {
+			if(elm->isInWatFloodVec())  {
 				evnts.remove(elm);
 				elm->setInWatFloodVec(false);
 			}
 			Polygon* shyp = dynamic_cast< Polygon* >(elm->ChModel());
-			if(shyp)
-			{
-				for(int cor = 0; cor < shyp->numCorners(); ++cor)
-				{
-					if(shyp->oilLayerConst()[cor].isInWatFloodVec())
-					{
+			if(shyp)  {
+				for(int cor = 0; cor < shyp->numCorners(); ++cor)  {
+					if(shyp->oilLayerConst()[cor].isInWatFloodVec())  {
 						evnts.remove(&shyp->oilLayerCh()[cor]);
 						shyp->oilLayerCh()[cor].setInWatFloodVec(false);
 					}
@@ -756,8 +701,7 @@ void FlowDomain::findMarkStoreTrappedOil(SortedEvents<Apex*,PceImbCmp>& evnts, E
 
 
 
-void FlowDomain::popUpdate_layerInj_Water(Apex*apex,  SortedEvents<Apex*,PceImbCmp>& evnts, double & localPc)
-{///. oil layer collapse
+void FlowDomain::popUpdate_layerInj_Water(Apex*apex,  Events<Apex*,PceImbCmp>& evnts, double & localPc)  {///. oil layer collapse
 
 		outD<<'L'<<'w';outD.flush();
 
@@ -772,50 +716,42 @@ void FlowDomain::popUpdate_layerInj_Water(Apex*apex,  SortedEvents<Apex*,PceImbC
 	   localPc = min(currentPc, localPc);
 		ensure(evnts.empty() || currentPc >= evnts.peek()->entryPc());
 
-		if(poly->numLayers() == poly->numCorners()-1)
-		{  // Oblique corner  => water in center and corner is joined, check for coalescing
+		if(poly->numLayers() == poly->numCorners()-1)  {  // Oblique corner  => water in center and corner is joined, check for coalescing
 			FlowDomain::untrap_WaterGanglia(evnts, poly->ChParent(), filmBlob);
 			FlowDomain::untrap_WaterGanglia(evnts, poly->ChParent(), bulkBlob);
 		}
 		else if(poly->numLayers()==0)//cornerIndex == 0)   ///. last element in W-W, first element in O-W OInj
 		{           //Sharpest corner  => no more oil, check for oil trapping
 			if (poly->numLayers()==0) cout<<"dsknb";
-			for(int i = 0; i < poly->eleman()->connectionNum(); ++i)
-			{
-				FlowDomain::findMarkStoreTrappedOil(evnts, poly->eleman()->connection(i),localPc);
+			for(int i = 0; i < poly->eleman()->nCncts(); ++i)  {
+				FlowDomain::findMarkStoreTrappedOil(evnts, poly->eleman()->neib(i),localPc);
 			}
 		}
 }
 
 
 
-void FlowDomain::untrap_WaterGanglia(SortedEvents<Apex*,PceImbCmp>& evnts, Element* elem, FluidBlob blob)
-{
+void FlowDomain::untrap_WaterGanglia(Events<Apex*,PceImbCmp>& evnts, Elem* elem, FluidBlob blob)  {
 	pair<int, double> trapWatInfo = elem->trappingWat(blob);
 
 	if(trapWatInfo.first > -1)                                                      // We need to untrap this water blob
 	{
 		clock_t startCoalesce(clock());
-		const vector< pair<Element*,FluidBlob> >& newElems = comn_.trappedRegionsWat(trapWatInfo.first);
+		const vector< pair<Elem*,FluidBlob> >& newElems = comn_.trappedRegionsWat(trapWatInfo.first);
 		trapWatInfo.second += elem->gravityCorrection();
 		double localPc = trapWatInfo.second;
 
 		outD<<'['<<newElems.size()<<'u'<<'w';outD.flush();
 
-		for(auto& elm:newElems)
-		{
-			if(elm.first->isInWatFloodVec())
-			{
+		for(auto& elm:newElems)  {
+			if(elm.first->isInWatFloodVec())  {
 				if (!evnts.remove(elm.first)) (cout<<" sykr1 ").flush();
 				elm.first->setInWatFloodVec(false);
 			}
 			Polygon* shyp = dynamic_cast< Polygon* >(elm.first->ChModel());
-			if(shyp)
-			{
-				for(int i = 0; i < shyp->numCorners(); ++i)
-				{
-					if(shyp->oilLayerConst()[i].isInWatFloodVec())
-					{
+			if(shyp)  {
+				for(int i = 0; i < shyp->numCorners(); ++i)  {
+					if(shyp->oilLayerConst()[i].isInWatFloodVec())  {
 						if (!evnts.remove(&shyp->oilLayerCh()[i])) cout<<" gonwi ";
 						shyp->oilLayerCh()[i].setInWatFloodVec(false);
 					}
@@ -826,8 +762,7 @@ void FlowDomain::untrap_WaterGanglia(SortedEvents<Apex*,PceImbCmp>& evnts, Eleme
 			///. start from the local ganglia Pc and gradually equlibriate
 			//elm.first->ChModel()->finitWaterInjection(max(localPc, mcappPress)-elm.first->gravityCorrection());
 			elm.first->unTrapWat(elm.second);
-			if(shyp)
-			{
+			if(shyp)  {
 				shyp->calcOilLayerPc_markUntrappedFilms(localPc-elm.first->gravityCorrection());
 			}
 		}
@@ -839,22 +774,19 @@ void FlowDomain::untrap_WaterGanglia(SortedEvents<Apex*,PceImbCmp>& evnts, Eleme
 			{const Fluid* OldInv=invadingFluid; invadingFluid=retreatingFluid; retreatingFluid=OldInv;}
 			comn_.injectant(invadingFluid); //=================================================
 
-			for(auto& elm:newElems)
-			{
+			for(auto& elm:newElems)  {
 				elm.first->ChModel()->finitWaterInjection(localPc-elm.first->gravityCorrection());
 				elm.first->ChModel()->initOilInjection(localPc-elm.first->gravityCorrection());
 			}
 
-			SortedEvents< Apex*, PceDrainCmp > oilFillingEvents;
+			Events< Apex*, PceDrainCmp > oilFillingEvents;
 
 			for(size_t i = 0; i < newElems.size(); ++i)               // First stage: check for unstable configurations
 			{                                                       // when the pressure in the coalesced blob is
 				Polygon* shyp = dynamic_cast< Polygon* >(newElems[i].first->ChModel());  // equilibrated with the rest
-				if(shyp)
-				{
+				if(shyp)  {
 					shyp->insertOilSnapEvent_IfSnapPcLgPc(oilFillingEvents, Pc_-newElems[i].first->gravityCorrection());       //  => insert oil snap off
-					if(shyp->hasOilLayer_TrappedOutside_PcHsnapPc(Pc_))
-					{
+					if(shyp->hasOilLayer_TrappedOutside_PcHsnapPc(Pc_))  {
 						outD<<'D';outD.flush();
 						cout<<"D";cout.flush();
 					}
@@ -865,8 +797,7 @@ void FlowDomain::untrap_WaterGanglia(SortedEvents<Apex*,PceImbCmp>& evnts, Eleme
 			{   //do the events
 				oilFillingEvents.sortEvents();
 				//FlowDomain::increasePressureInCoalescedBlobTrue(oilFillingEvents,localPc, Pc_); 
-				while(!oilFillingEvents.empty() &&  oilFillingEvents.peek()->gravCorrectedEntryPress() < Pc_)
-				{
+				while(!oilFillingEvents.empty() &&  oilFillingEvents.peek()->gravCorrectedEntryPress() < Pc_)  {
 					outD<<'^';outD.flush();
 
 					bool tmp;
@@ -874,16 +805,14 @@ void FlowDomain::untrap_WaterGanglia(SortedEvents<Apex*,PceImbCmp>& evnts, Eleme
 				}
 
 			}
-			for(auto& elm:newElems)
-			{
+			for(auto& elm:newElems)  {
 					elm.first->ChModel()->finitOilInjection(Pc_-elm.first->gravityCorrection());
 			}
 			{const Fluid* OldInv=invadingFluid; invadingFluid=retreatingFluid; retreatingFluid=OldInv;}
 			comn_.injectant(invadingFluid); //=================================================
 
 			//double highestPc=max(trapWatInfo.second,Pc_);
-			for(auto& elm:newElems)
-			{
+			for(auto& elm:newElems)  {
 				elm.first->ChModel()->initWaterInjection(localPc-elm.first->gravityCorrection());
 			}
 
@@ -899,10 +828,9 @@ void FlowDomain::untrap_WaterGanglia(SortedEvents<Apex*,PceImbCmp>& evnts, Eleme
 			{
 				insertReCalcImbibeEntryPrs(evnts, elm.first,localPc);
 				addElemTo_layerImbibeEvents(evnts, elm.first);
-				for(int k = 0; k < elm.first->connectionNum(); ++k)
-				{
-					insertReCalcImbibeEntryPrs(evnts, elm.first->connection(k),localPc);
-					addElemTo_layerImbibeEvents(evnts, elm.first->connection(k));
+				for(int k = 0; k < elm.first->nCncts(); ++k)  {
+					insertReCalcImbibeEntryPrs(evnts, elm.first->neib(k),localPc);
+					addElemTo_layerImbibeEvents(evnts, elm.first->neib(k));
 				}
 			}
 		}
@@ -911,8 +839,7 @@ void FlowDomain::untrap_WaterGanglia(SortedEvents<Apex*,PceImbCmp>& evnts, Eleme
 		cpuTimeCoal_ += cpuTimeElapsed(startCoalesce);
 
 
-		while(!evnts.empty() && evnts.peek()->gravCorrectedEntryPress() >= Pc_)
-		{
+		while(!evnts.empty() && evnts.peek()->gravCorrectedEntryPress() >= Pc_)  {
 			bool tmp;
 			popUpdateWaterInj(evnts, tmp, localPc, Pc_);
 		}
@@ -924,24 +851,20 @@ void FlowDomain::untrap_WaterGanglia(SortedEvents<Apex*,PceImbCmp>& evnts, Eleme
 
 
 ///. never does anything TO DELETE
-void FlowDomain::checkUntrapOilIfUnstableConfigsImb(SortedEvents<Apex*,PceImbCmp>& evnts)
-{
+void FlowDomain::checkUntrapOilIfUnstableConfigsImb(Events<Apex*,PceImbCmp>& evnts)  {
 	outD<<"[";outD.flush();
-	for(Element* elem:elemans_)
-	{
-		if(elem->model()->waterLayer_UntrappedCorner_PcLsnapPc(Pc_-elem->gravityCorrection()))
-		{
+	for(Elem* elem:elemans_)  {
+		if(elem->model()->waterLayer_UntrappedCorner_PcLsnapPc(Pc_-elem->gravityCorrection()))  {
 			outD<<'I';outD.flush();
 			cout<<'I';cout.flush();
 
-			if(elem->isInWatFloodVec())
-			{
+			if(elem->isInWatFloodVec())  {
 				if (evnts.remove(elem)) elem->setInWatFloodVec(false);
 				else  (cout<<" clei ").flush();
 			}
 			ensure(elem->model()->bulkFluid()->isOil());
 
-			double capillaryPressure=1000000000.0;
+			double capillaryPressure=1000000000.;
 		   FlowDomain::popUpdateCentreInj_Water(elem, evnts, capillaryPressure);
 
 		}

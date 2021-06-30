@@ -16,7 +16,6 @@
 #include "Element.h"
 #include "elem_Model.h"
 #include "polygon.h"
-#include "apex.h"
 
 #include "cornerApex.h"
 #include "layerApex.h"
@@ -31,34 +30,32 @@ using namespace std;
 
 void LayerApex::getCAApexDistUntraped(double& apxDist, double& conAng, const double& halfAng, double pc, double intfacTen, bool itr) const
 {
-	double delta = itr ? 0.0: SMALL_NUM;
-	if(pc > advancingPc_-delta && pc < receedingPc_+delta)
-	{
+	double delta = itr ? 0.: SMALL_NUM;
+	if(pc > advancingPc_-delta && pc < receedingPc_+delta)  {
 		conAng = (acos(pc*initedOLApexDist_*sin(halfAng)/intfacTen)+halfAng);
-		conAng = std::max(std::min(PI, conAng), 0.0);
+		conAng = std::max(std::min(PI, conAng), 0.);
 		apxDist = initedOLApexDist_;
 	}
 	else
 	{
 		apxDist = (intfacTen/pc)*cos(conAng-halfAng)/sin(halfAng);
-		if(itr && apxDist <=  0.0) apxDist=1.0E-15;
-		ensure(apxDist > 0.0);
-		ensure(conAng >= 0.0 && conAng <=  PI);
+		if(itr && apxDist <=  0.) apxDist=1.0E-15;
+		ensure(apxDist > 0.);
+		ensure(conAng >= 0. && conAng <=  PI);
 	}
 }
 
 
 /*double LayerApex::hingingConAngUntraped(double pc, double conAng, double halfAng, double intfacTen, bool accurat) const
 {
-	double delta = accurat ? 0.0: SMALL_NUM;
-	if(pc > advancingPc_-delta && pc < receedingPc_+delta)
-	{
+	double delta = accurat ? 0.: SMALL_NUM;
+	if(pc > advancingPc_-delta && pc < receedingPc_+delta)  {
 		double hingAng(acos(pc*initedOLApexDist_*sin(halfAng)/intfacTen)+halfAng);
-		hingAng = std::max(std::min(PI, hingAng), 0.0);
+		hingAng = std::max(std::min(PI, hingAng), 0.);
 		return hingAng;
 	}
 
-	ensure(conAng >= 0.0 && conAng <=  PI, "k");
+	ensure(conAng >= 0. && conAng <=  PI, "k");
 	return conAng;
 }
 
@@ -68,8 +65,8 @@ double LayerApex::getApexDistanceUntraped(double pc, double conAng, double halfA
 		return initedOLApexDist_;
 
 	double apxDist = (intfacTen/pc)*cos(conAng-halfAng)/sin(halfAng);
-	if(itrRoutine && apxDist <=  0.0) return 1.0E-15;
-	ensure(apxDist > 0.0, "iu");
+	if(itrRoutine && apxDist <=  0.) return 1.0E-15;
+	ensure(apxDist > 0., "iu");
 	return apxDist;
 }
 */
@@ -81,42 +78,38 @@ void LayerApex::getCAApexDist(double& apxDist, double& conAng, const double& hal
 
 	ensure(inited_ || trappedCL_.first>-1 || parentShape_->eleman()->trappingWatBulk().first>-1);
 
-	const double delta = itr ? 0.0: SMALL_NUM;
-	if(trappedCL_.first>-1)
-	{
+	const double delta = itr ? 0.: SMALL_NUM;
+	if(trappedCL_.first>-1)  {
 		conAng = (acos(trappedCL_.second*initedOLApexDist_*sin(halfAng)/intfacTen)+halfAng);
-		conAng = std::max(std::min(PI, conAng), 0.0);
+		conAng = std::max(std::min(PI, conAng), 0.);
 		apxDist = initedOLApexDist_;
-		//ensure(conAng >= 0.0 && conAng <=  PI, "j");
+		//ensure(conAng >= 0. && conAng <=  PI, "j");
 		return;
 	}
-	else if (parentShape_->eleman()->trappingWatBulk().first>-1)
-	{
+	else if (parentShape_->eleman()->trappingWatBulk().first>-1)  {
 		conAng = (acos(parentShape_->eleman()->trappingWatBulk().second*initedOLApexDist_*sin(halfAng)/intfacTen)+halfAng);
-		conAng = std::max(std::min(PI, conAng), 0.0);
-		//ensure(conAng >= 0.0 && conAng <=  PI, "j");
+		conAng = std::max(std::min(PI, conAng), 0.);
+		//ensure(conAng >= 0. && conAng <=  PI, "j");
 		apxDist = initedOLApexDist_;
 		return;
 	}
-	else if (pc > advancingPc_-delta && pc < receedingPc_+delta)
-	{
+	else if (pc > advancingPc_-delta && pc < receedingPc_+delta)  {
 		conAng  = (acos(pc*initedOLApexDist_*sin(halfAng)/intfacTen)+halfAng);
-		conAng = std::max(std::min(PI, conAng), 0.0);
-		//ensure(conAng >= 0.0 && conAng <=  PI, "j");
+		conAng = std::max(std::min(PI, conAng), 0.);
+		//ensure(conAng >= 0. && conAng <=  PI, "j");
 		apxDist = initedOLApexDist_;
 		return;
 	}
 	else
 	{
-		ensure(conAng >= 0.0 && conAng <=  PI);
+		ensure(conAng >= 0. && conAng <=  PI);
 
 		apxDist = (intfacTen/pc)*cos(conAng-halfAng)/sin(halfAng);
 
 
-		if(itr && apxDist <=  0.0) apxDist = 1.0E-15;
-		ensure(apxDist > 0.0);
-		if(apxDist < 0.0)
-		{
+		if(itr && apxDist <=  0.) apxDist = 1.0E-15;
+		ensure(apxDist > 0.);
+		if(apxDist < 0.)  {
 			cout<< apxDist<<"  "<< pc<<"  "<< receedingPc_<<"  "<< advancingPc_<<"  "<<conAng<<"  "<<halfAng<<"  "<<intfacTen<<"  "<< itr<<endl;
 		}
 	}
@@ -131,31 +124,28 @@ void LayerApex::getCAApexDist(double& apxDist, double& conAng, const double& hal
 
 /*double LayerApex::hingingConAng(double pc, double conAng, double halfAng, double intfacTen, bool accurat) const
 {
-	const double delta = accurat ? 0.0: SMALL_NUM;
-	if(trappedCL_.first>-1)
-	{
+	const double delta = accurat ? 0.: SMALL_NUM;
+	if(trappedCL_.first>-1)  {
 		double hingAng(acos(trappedCL_.second*initedOLApexDist_*sin(halfAng)/intfacTen)+halfAng);
-		hingAng = std::max(std::min(PI, hingAng), 0.0);
-		//ensure(hingAng >= 0.0 && hingAng <=  PI, "j");
+		hingAng = std::max(std::min(PI, hingAng), 0.);
+		//ensure(hingAng >= 0. && hingAng <=  PI, "j");
 		return hingAng;
 	}
-	else if (parentShape_->eleman()->trappingWatBulk().first>-1)
-	{
+	else if (parentShape_->eleman()->trappingWatBulk().first>-1)  {
 		double hingAng(acos(parentShape_->eleman()->trappingWatBulk().second*initedOLApexDist_*sin(halfAng)/intfacTen)+halfAng);
-		hingAng = std::max(std::min(PI, hingAng), 0.0);
-		//ensure(hingAng >= 0.0 && hingAng <=  PI, "j");
+		hingAng = std::max(std::min(PI, hingAng), 0.);
+		//ensure(hingAng >= 0. && hingAng <=  PI, "j");
 		return hingAng;
 	}
-	else if (pc > advancingPc_-delta && pc < receedingPc_+delta)
-	{
+	else if (pc > advancingPc_-delta && pc < receedingPc_+delta)  {
 		double hingAng(acos(pc*initedOLApexDist_*sin(halfAng)/intfacTen)+halfAng);
-		hingAng = std::max(std::min(PI, hingAng), 0.0);
-		//ensure(hingAng >= 0.0 && hingAng <=  PI, "j");
+		hingAng = std::max(std::min(PI, hingAng), 0.);
+		//ensure(hingAng >= 0. && hingAng <=  PI, "j");
 		return hingAng;
 	}
 	else
 	{
-		ensure(conAng >= 0.0 && conAng <=  PI, "k");
+		ensure(conAng >= 0. && conAng <=  PI, "k");
 		return conAng;
 	}
 }
@@ -170,10 +160,9 @@ double LayerApex::getApexDistance(double pc, double conAng, double halfAng, doub
 	double apxDist = (intfacTen/pc)*cos(conAng-halfAng)/sin(halfAng);
 
 
-	if(itrRoutine && apxDist <=  0.0) return 1.0E-15;
-	ensure(apxDist > 0.0, "i");
-	if(apxDist < 0.0)
-	{
+	if(itrRoutine && apxDist <=  0.) return 1.0E-15;
+	ensure(apxDist > 0., "i");
+	if(apxDist < 0.)  {
 		cout<< apxDist<<"  "<< pc<<"  "<< receedingPc_<<"  "<< advancingPc_<<"  "<<conAng<<"  "<<halfAng<<"  "<<intfacTen<<"  "<< itrRoutine<<endl;
 	}
 	return apxDist;
@@ -188,11 +177,10 @@ double LayerApex::getApexDistance(double pc, double conAng, double halfAng, doub
 
 
 //bool LayerApex::create Film(double pc, double conAng, double maxSpontConAng, double halfAng, double intfacTen)
-bool LayerApex::createOLayer(double pc, double conAngRec, double conAngAdv, double maxSpontConAng, double halfAng, double intfacTen, bool oilInj)
-{
+bool LayerApex::createOLayer(double pc, double conAngRec, double conAngAdv, double maxSpontConAng, double halfAng, double intfacTen, bool oilInj)  {
 	ensure(!exists_);
 	double conAng = oilInj ? conAngRec: conAngAdv;
-	exists_ = conAng > PI/2.0 + halfAng  && conAng > maxSpontConAng;
+	exists_ = conAng > PI/2. + halfAng  && conAng > maxSpontConAng;
 
 	gravityCorrection_ = parentShape_->eleman()->gravityCorrection();
 
@@ -203,9 +191,8 @@ bool LayerApex::createOLayer(double pc, double conAngRec, double conAngAdv, doub
 	initedOLApexDist_ = (intfacTen/pc)*cos(conAng-halfAng)/sin(halfAng);
 
 
-	if(initedOLApexDist_ < innerCornerApex_->pinnedApexDist())
-	{
-		 initedOLApexDist_= -1.0; ///. used in re-creation
+	if(initedOLApexDist_ < innerCornerApex_->pinnedApexDist())  {
+		 initedOLApexDist_= -1.; ///. used in re-creation
 		 exists_ = false;
 		return false;                               
 	}
@@ -222,7 +209,7 @@ bool LayerApex::createOLayer(double pc, double conAngRec, double conAngAdv, doub
 		entryPc_ = layerCollapsePc(pc, conAng, halfAng, intfacTen,oilInj);
 
 	exists_ = pc > entryPc_; 
-	if (!exists_) { inited_=false; initedOLApexDist_= -1.0; }
+	if (!exists_) { inited_=false; initedOLApexDist_= -1.; }
 	ensure(initedOLApexDist_>0);
 
 
@@ -232,8 +219,7 @@ bool LayerApex::createOLayer(double pc, double conAngRec, double conAngAdv, doub
 	return exists_;
 }
 
-bool LayerApex::finitLayerApex(double pc, double conAngRec, double conAngAdv, double halfAng, double intfacTen, bool oilInj, bool overwriteTrapping)
-{   ///. called from initOilInjection/initWaterInjection
+bool LayerApex::finitLayerApex(double pc, double conAngRec, double conAngAdv, double halfAng, double intfacTen, bool oilInj, bool overwriteTrapping)  {   ///. called from initOilInjection/initWaterInjection
 	if(!exists()) return true;
 	ensure(inited_ ||  trappedCL_.first > -1 || parentShape_->eleman()->trappingWatBulk().first>-1); //,"opin"
 	ensure(!parentShape_->containCOil());//,"finx"
@@ -241,8 +227,7 @@ bool LayerApex::finitLayerApex(double pc, double conAngRec, double conAngAdv, do
 	double conAng = oilInj ? conAngRec : conAngAdv;
 
 	int nTraps= parentShape_->eleman()->isTrappedOil() + (parentShape_->eleman()->trappingWatBulk().first>-1); 
-	if( inited_ || /*(overwriteTrapping && nTraps  < 2) ||*/ nTraps < 1 )
-	{ 
+	if( inited_ || /*(overwriteTrapping && nTraps  < 2) ||*/ nTraps < 1 )  { 
 
 		///. initedOLApexDist_ = 
 		getCAApexDist(initedOLApexDist_, conAng, halfAng, pc, intfacTen);//const
@@ -256,8 +241,7 @@ bool LayerApex::finitLayerApex(double pc, double conAngRec, double conAngAdv, do
 	advancingPc_ = intfacTen*cos(conAngAdv-halfAng)/(initedOLApexDist_*sin(halfAng)); ///.  set
 	receedingPc_ = intfacTen*cos(conAngRec-halfAng)/(initedOLApexDist_*sin(halfAng)); ///.  set  
 
-	if(initedOLApexDist_ < innerCornerApex_->pinnedApexDist())
-	{
+	if(initedOLApexDist_ < innerCornerApex_->pinnedApexDist())  {
 		 cout<<" fdraw "; cout.flush();
 		 cout<<"  "<<initedOLApexDist_<<"   " << innerCornerApex_->pinnedApexDist(); cout.flush();
 		 //removeLayer();
@@ -272,17 +256,14 @@ bool LayerApex::finitLayerApex(double pc, double conAngRec, double conAngAdv, do
 
 
 
-bool LayerApex::initLayerApex(double pc, double conAngRec, double conAngAdv, double halfAng, double intfacTen, bool oilInj, bool silent)
-{   ///. called from initOilInjection/initWaterInjection
+bool LayerApex::initLayerApex(double pc, double conAngRec, double conAngAdv, double halfAng, double intfacTen, bool oilInj, bool silent)  {   ///. called from initOilInjection/initWaterInjection
 
 
-	if( (!oilInj && !exists()) || trappedCL_.first > -1 || parentShape_->eleman()->trappingWatBulk().first>-1 )
-	{
+	if( (!oilInj && !exists()) || trappedCL_.first > -1 || parentShape_->eleman()->trappingWatBulk().first>-1 )  {
 		return true;
 	}
-	else if (oilInj && !exists())
-	{ ///. calc layer creation Pc
-		if (conAngRec <= PI/2.0 + halfAng  || initedOLApexDist_ <= 0.0 ) return true; ///. will not form
+	else if (oilInj && !exists())  { ///. calc layer creation Pc
+		if (conAngRec <= PI/2. + halfAng  || initedOLApexDist_ <= 0. ) return true; ///. will not form
 
 		inited_ = true;
 
@@ -306,8 +287,7 @@ bool LayerApex::initLayerApex(double pc, double conAngRec, double conAngAdv, dou
 		bool stable = true;
 
 
-		if(initedOLApexDist_ < innerCornerApex_->pinnedApexDist())
-		{
+		if(initedOLApexDist_ < innerCornerApex_->pinnedApexDist())  {
 			 cout<<"\nWarning118   ";cout.flush();
 			//removeLayer();
 
@@ -322,8 +302,7 @@ bool LayerApex::initLayerApex(double pc, double conAngRec, double conAngAdv, dou
 		double currConAng = oilInj ? conAngRec : conAngAdv;
 		entryPc_ = layerCollapsePc(pc, currConAng, halfAng, intfacTen, oilInj); ///.  set
 
-		if(pc < entryPc_)
-		{
+		if(pc < entryPc_)  {
 			 cout<<"\nWarning168   ";cout.flush();
 			 //removeLayer();
 			  stable = false;                               
@@ -342,27 +321,24 @@ double LayerApex::layerCollapsePc_FromCentre(double outPc, double inPc, double c
 
 	double inerApexDist, innerConAng(parentShape_->minInitRecCntAng()); innerCornerApex_->getCApexDistConAng(inerApexDist, innerConAng, inPc, halfAng, intfacTen);
 	ensure(innerConAng != conAng);
-	double ki = (intfacTen/inPc)*(cos(innerConAng)/sin(halfAng)-1.0);
+	double ki = (intfacTen/inPc)*(cos(innerConAng)/sin(halfAng)-1.);
 
-	if(inited_)
-	{
+	if(inited_)  {
 		double slipPrs = advancingPc_;
-		double ko = (intfacTen/slipPrs)*(cos(advConAng_)/sin(halfAng)+1.0);
-		if(ko - ki < NEG_ALMOST_ZERO)
-		{
+		double ko = (intfacTen/slipPrs)*(cos(advConAng_)/sin(halfAng)+1.);
+		if(ko - ki < NEG_ALMOST_ZERO)  {
 			double oldRad(intfacTen/(slipPrs+SMALL_NUM));    // Don't get caught by rounding errors
-			for(int itr = 0; itr < MAX_ITR; ++itr)
-			{
+			for(int itr = 0; itr < MAX_ITR; ++itr)  {
 				double outConAng = acos(initedOLApexDist_*sin(halfAng)/oldRad)+halfAng;
 				double outConAngDr = initedOLApexDist_*sin(halfAng)/(sin(outConAng-halfAng)*oldRad*oldRad);
-				double func = oldRad*(cos(outConAng)/sin(halfAng)+1.0)-ki;
-				double funcDr = (cos(outConAng)-oldRad*outConAngDr*sin(outConAng))/sin(halfAng) + 1.0;
+				double func = oldRad*(cos(outConAng)/sin(halfAng)+1.)-ki;
+				double funcDr = (cos(outConAng)-oldRad*outConAngDr*sin(outConAng))/sin(halfAng) + 1.;
 				double newRad = oldRad - func/funcDr;
-				if(fabs((newRad-oldRad)/newRad) < EPSILON)
-				{	colType_ =30;
+				if(fabs((newRad-oldRad)/newRad) < EPSILON)  {
+					colType_ =30;
 
 					double pc(intfacTen/newRad);
-					ensure(fabs(ki-newRad*(cos(outConAng)/sin(halfAng)+1.0)) < EPSILON);
+					ensure(fabs(ki-newRad*(cos(outConAng)/sin(halfAng)+1.)) < EPSILON);
 					return pc;
 				}
 				oldRad = newRad;
@@ -373,7 +349,7 @@ double LayerApex::layerCollapsePc_FromCentre(double outPc, double inPc, double c
 				<< "Error: failed to converge to a solution for"    << std::endl
 				<< "layer collapsing pressure.   "                     << std::endl
 				<< "============================================"   << std::endl;    exit(-1);
-			return 0.0;
+			return 0.;
 
 		}
 	}
@@ -387,8 +363,8 @@ double LayerApex::layerCollapsePc_FromCentre(double outPc, double inPc, double c
 
 	double collPc2 = intfacTen*(cos(advConAng_)+sin(halfAng))/(ki*sin(halfAng));
 	double collPc = max(collPc1, collPc2);
-	ensure(collPc < 0.0);
-	if (collPc > 0.0) cout<<"CA"<<advConAng_<<" "<<conAng<<" ";
+	ensure(collPc < 0.);
+	if (collPc > 0.) cout<<"CA"<<advConAng_<<" "<<conAng<<" ";
 	return collPc;
 }
 
@@ -400,31 +376,28 @@ double LayerApex::layerCollapsePc_FromCorner(double outPc, double inPc, double c
 
 	double outerConAng(conAng), apxDistDummy;// = hingingConAng(outPc, conAng, halfAng, intfacTen);
 	getCAApexDist(apxDistDummy, outerConAng, halfAng, outPc, intfacTen);
-	double ko = (intfacTen/outPc)*(cos(outerConAng)/sin(halfAng)+1.0);
+	double ko = (intfacTen/outPc)*(cos(outerConAng)/sin(halfAng)+1.);
 	 //inited_ ? acos(initedOLApexDist_*sin(halfAng)*outPc/intfacTen)+halfAng: conAng;
 	double innerSlipPrs = innerCornerApex_->advancingPc();
-	double ki = (intfacTen/innerSlipPrs)*(cos(advConAng_)/sin(halfAng)-1.0);
+	double ki = (intfacTen/innerSlipPrs)*(cos(advConAng_)/sin(halfAng)-1.);
 
-	if(ko - ki < NEG_ALMOST_ZERO  && inPc < innerCornerApex_->advancingPc())
-	{
+	if(ko - ki < NEG_ALMOST_ZERO  && inPc < innerCornerApex_->advancingPc())  {
 		double oldRad(intfacTen/(innerSlipPrs+SMALL_NUM));
 		double bi = innerCornerApex_->pinnedApexDist();
-		for(int itr = 0; itr < MAX_ITR; ++itr)
-		{
-			ensure((innerCornerApex_->pinnedApexDist()*sin(halfAng)/oldRad) >= -1.0 &&
-				(innerCornerApex_->pinnedApexDist()*sin(halfAng)/oldRad) <=  1.0);
+		for(int itr = 0; itr < MAX_ITR; ++itr)  {
+			ensure((innerCornerApex_->pinnedApexDist()*sin(halfAng)/oldRad) >= -1. &&
+				(innerCornerApex_->pinnedApexDist()*sin(halfAng)/oldRad) <=  1.);
 
 			double inConAng = acos(bi*sin(halfAng)/oldRad)-halfAng;
 			double inConAngDr = bi*sin(halfAng)/(sin(inConAng+halfAng)*oldRad*oldRad);
-			double func = oldRad*(cos(inConAng)/sin(halfAng)-1.0)-ko;
-			double funcDr = (cos(inConAng)-oldRad*inConAngDr*sin(inConAng))/sin(halfAng) - 1.0;
+			double func = oldRad*(cos(inConAng)/sin(halfAng)-1.)-ko;
+			double funcDr = (cos(inConAng)-oldRad*inConAngDr*sin(inConAng))/sin(halfAng) - 1.;
 
 			double newRad = oldRad - func/funcDr;
-			if(fabs((newRad-oldRad)/newRad) < EPSILON)
-			{				colType_ =10;
+			if(fabs((newRad-oldRad)/newRad) < EPSILON)  {				colType_ =10;
 
 				double pc(intfacTen/newRad);
-				ensure(fabs(ko-(intfacTen/pc)*(cos(inConAng)/sin(halfAng)-1.0)) < EPSILON);//, "outTrap"
+				ensure(fabs(ko-(intfacTen/pc)*(cos(inConAng)/sin(halfAng)-1.)) < EPSILON);//, "outTrap"
 				return pc;
 			}
 			oldRad = newRad;
@@ -450,7 +423,7 @@ double LayerApex::layerCollapsePc_FromCorner(double outPc, double inPc, double c
 			<< "Error: Failed to converge to a solution     "    << std::endl
 			<< "for layer collapsing pressure.      "                     << std::endl
 			<< "============================================"   << std::endl;    exit(-1);
-		return 0.0;
+		return 0.;
 	}
 
 	colType_ =11;
@@ -463,25 +436,22 @@ double LayerApex::layerCollapsePc_FromCorner(double outPc, double inPc, double c
 
 inline double dimLessCornerArea(double halfAng, double contactAng) 
 {
-	if(fabs(contactAng + halfAng - ElemModel::PI/2.0) < 0.01)
-	{
+	if(fabs(contactAng + halfAng - ElemModel::PI/2.) < 0.01)  {
 		return sin(halfAng)*cos(halfAng);
 	}
 	else
 	{
-		return pow(sin(halfAng)/cos(halfAng+contactAng), 2.0)
-		* (cos(contactAng)*cos(halfAng+contactAng)/sin(halfAng) + halfAng + contactAng - ElemModel::PI/2.0);
+		return pow(sin(halfAng)/cos(halfAng+contactAng), 2.)
+		* (cos(contactAng)*cos(halfAng+contactAng)/sin(halfAng) + halfAng + contactAng - ElemModel::PI/2.);
 	}
 }
 
-double LayerApex::layerCollapsePc_fromEitherSide(double pc, double conAng, double halfAng, double intfacTen,bool debug) const
-{
+double LayerApex::layerCollapsePc_fromEitherSide(double pc, double conAng, double halfAng, double intfacTen,bool debug) const  {
 	ensure(trappedCL_.first<0);
 
 //if (debug)
 //{
-	if((exists_ && !inited_) || (!exists_ && inited_))
-	{
+	if((exists_ && !inited_) || (!exists_ && inited_))  {
 	ensure(inited_); 
 	//ensure(exists_,"kfh");
 		//parentShape_->ChParent()[1000000].setInOilFloodVec(true);
@@ -491,37 +461,34 @@ double LayerApex::layerCollapsePc_fromEitherSide(double pc, double conAng, doubl
 	//{
 	double slipPrs = inited_ ? advancingPc_ : pc;
 	double innerSlipPrs = innerCornerApex_->cornerExists() ? innerCornerApex_->advancingPc() : pc;
-	ensure(slipPrs < 0.0);
+	ensure(slipPrs < 0.);
 	//double innerHingConAng = innerCornerApex_->cornerExists() ? innerCornerApex_->getCA pexDistConAng(innerSlipPrs, conAng, halfAng, intfacTen) : parentShape_->minInitRecCntAng();
 	double bi, innerHingConAng(parentShape_->minInitRecCntAng()); 
 	if (innerCornerApex_->cornerExists()) innerCornerApex_->getCApexDistConAng(bi, innerHingConAng, innerSlipPrs, halfAng, intfacTen,true);
 
 
-	double /*ki*/innerApexDistThroughCentre = (intfacTen/innerSlipPrs)*(cos(innerHingConAng)/sin(halfAng)-1.0);
-	double ko = (intfacTen/slipPrs)*(cos(advConAng_)/sin(halfAng)+1.0);
-ensure(ko>0);
-	if(ko - innerApexDistThroughCentre < NEG_ALMOST_ZERO   && pc < innerSlipPrs +0.1)//
-	{
+	double /*ki*/innerApexDistThroughCentre = (intfacTen/innerSlipPrs)*(cos(innerHingConAng)/sin(halfAng)-1.);
+	double ko = (intfacTen/slipPrs)*(cos(advConAng_)/sin(halfAng)+1.);
+		ensure(ko>0);
+	if(ko - innerApexDistThroughCentre < NEG_ALMOST_ZERO   && pc < innerSlipPrs +0.1)  {
 		double oldRad(intfacTen/(slipPrs+SMALL_NUM));
 
 		//innerCornerApex_->getCApexDistConAng(bi, innerHingConAng, innerSlipPrs, halfAng, intfacTen,true);
 
 		double bo = initedOLApexDist_;
-		for(int itr = 0; itr < MAX_ITR; ++itr)
-		{
+		for(int itr = 0; itr < MAX_ITR; ++itr)  {
 			double inConAng = acos(bi*sin(halfAng)/oldRad)-halfAng;
 			double outConAng = acos(bo*sin(halfAng)/oldRad)+halfAng;
 			double inConAngDr = bi*sin(halfAng)/(sin(inConAng+halfAng)*oldRad*oldRad);
 			double outConAngDr = bo*sin(halfAng)/(sin(outConAng-halfAng)*oldRad*oldRad);
 
-			double func = (cos(inConAng)-cos(outConAng))/sin(halfAng)-2.0;
+			double func = (cos(inConAng)-cos(outConAng))/sin(halfAng)-2.;
 			double funcDr = (outConAngDr*sin(outConAng)-inConAngDr*sin(inConAng))/sin(halfAng);
 			double newRad = oldRad - func/funcDr;
-			if(fabs((newRad-oldRad)/newRad) < EPSILON)
-			{
-				ensure(fabs(newRad*(cos(innerHingConAng)/sin(halfAng)-1.0) -
-					newRad*(cos(advConAng_)/sin(halfAng)+1.0)) < EPSILON);
-				ensure(intfacTen/newRad < 0.0);
+			if(fabs((newRad-oldRad)/newRad) < EPSILON)  {
+				ensure(fabs(newRad*(cos(innerHingConAng)/sin(halfAng)-1.) -
+					newRad*(cos(advConAng_)/sin(halfAng)+1.)) < EPSILON);
+				ensure(intfacTen/newRad < 0.);
 
 
 			colType_ =20;
@@ -549,21 +516,21 @@ ensure(ko>0);
 
 
 
-		return 0.0;
+		return 0.;
 	}
-	//else if(pc >= innerSlipPrs)
+	//else if(pc >= innerSlipPrs)  
 	{
-	double collPc1;
+		double collPc1;
 
 
 		innerApexDistThroughCentre=/*innerCornerApex_->getCApexDistanceUntraped(pc, innerHingConAng, halfAng, intfacTen)**/
-		bi*(cos(halfAng)+sin(halfAng)*sin(0.5*(innerHingConAng+halfAng-PI/2.0))/cos(0.5*(innerHingConAng+halfAng-PI/2.0)));
+		bi*(cos(halfAng)+sin(halfAng)*sin(0.5*(innerHingConAng+halfAng-PI/2.))/cos(0.5*(innerHingConAng+halfAng-PI/2.)));
 		//double outertouchApexDist=innerApexDistThroughCentre/(cos(halfAng)+sin(halfAng)*cos(PI-conAng+halfAng)/sin(PI-conAng+halfAng))WRONG;
 
 
 
 
-		double outertouchApexRad=innerApexDistThroughCentre/(cos(advConAng_)/sin(halfAng)+1.0);
+		double outertouchApexRad=innerApexDistThroughCentre/(cos(advConAng_)/sin(halfAng)+1.);
 		collPc1= intfacTen/outertouchApexRad;//(outertouchApexDist*sin(halfAng)); 
 
 
@@ -573,10 +540,9 @@ ensure(ko>0);
 
 		double pinnedOLApexDist = outertouchApexRad*cos(advConAng_-halfAng)/(sin(halfAng));
 
-		ensure (dimLessCornerArea(halfAng,PI-advConAng_)*pinnedOLApexDist*pinnedOLApexDist > dimLessCornerArea(halfAng,innerHingConAng)*bi*bi-1.0e-18);
+		ensure (dimLessCornerArea(halfAng,PI-advConAng_)*pinnedOLApexDist*pinnedOLApexDist > dimLessCornerArea(halfAng,innerHingConAng)*bi*bi-1e-18);
 
-		if (debug || !(dimLessCornerArea(halfAng,PI-advConAng_)*pinnedOLApexDist*pinnedOLApexDist > dimLessCornerArea(halfAng,innerHingConAng)*bi*bi-1.0e-18))
-		{
+		if (debug || !(dimLessCornerArea(halfAng,PI-advConAng_)*pinnedOLApexDist*pinnedOLApexDist > dimLessCornerArea(halfAng,innerHingConAng)*bi*bi-1e-18))  {
 			cout<< "  layerCollapsePc_fromEitherSide:"<<"  inCorExists:"<< innerCornerApex_->cornerExists()<<"  hAng:"<<halfAng<<"  CAAdv"<<advConAng_<<"  ";
 			//exit(-1);
 		}
@@ -594,11 +560,10 @@ ensure(ko>0);
 
 
 
-		if (debug)
-		{
+		if (debug)  {
 
 			//double outertouchApexDist=outertouchApexRad*cos(conAng-halfAng)/sin(halfAng);
-	double outerApexDistThroughCentre = outertouchApexRad*(cos(advConAng_)/sin(halfAng)+1.0);
+	double outerApexDistThroughCentre = outertouchApexRad*(cos(advConAng_)/sin(halfAng)+1.);
 
 			cout<<colType_<<"\n  innerHingConAng "<<innerHingConAng<<" "//<<innerCornerApex_->getCApex DistConAng(innerSlipPrs, conAng, halfAng, intfacTen)<<" "
 				<<"  advConAng_ "<<advConAng_<<"  conAng"<<conAng
@@ -609,9 +574,8 @@ ensure(ko>0);
 		//exit(-1);
 		}
 
-		ensure(collPc2 < 0.0);
-		if (collPc1<collPc2)
-		{
+		ensure(collPc2 < 0.);
+		if (collPc1<collPc2)  {
 			colType_ = 22;
 			//cout<<"colPcvk"<<collPc2<<"  "<<conAng<<"  "<<advConAng_<<"  "<<halfAng<<endl;
 			return collPc2;
@@ -627,12 +591,10 @@ ensure(ko>0);
 
 
 
-double LayerApex::layerCollapsePc(double pc, double conAng, double halfAng, double intfacTen, bool injOil) const
-{
+double LayerApex::layerCollapsePc(double pc, double conAng, double halfAng, double intfacTen, bool injOil) const  {
 	double collPrs;
 	colType_=0;
-	if(!innerCornerApex_->cornerExists())
-	{
+	if(!innerCornerApex_->cornerExists())  {
 		//ensure(exists(), "quacki di quack");
 		///WarningFiEnableensure;
 		collPrs = LOWEST_LAYER_PC;                      // No water in corner  => never to collapse

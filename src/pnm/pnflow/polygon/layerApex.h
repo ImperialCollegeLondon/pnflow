@@ -18,10 +18,10 @@ class LayerApex : public Apex
 {
 public:
 
-	LayerApex() : initedOLApexDist_(-1.0) {};
+	LayerApex() : initedOLApexDist_(-1.) {};
 
 	//LayerApex(CornerApex* innerCornerApex, Polygon* parent, int subIndex) 
-		//: Apex(parent, subIndex),  parentShape_(parent), /*lastStablePc_(0.0),*/, innerCornerApex_(innerCornerApex)
+		//: Apex(parent, subIndex),  parentShape_(parent), /*lastStablePc_(0.),*/, innerCornerApex_(innerCornerApex)
 
 
 	void setLayerConnections(CornerApex* innerCornerApex, Polygon* parent, int subIndex)
@@ -37,7 +37,7 @@ public:
 	void getCAApexDistUntraped(double& apxDist, double& conA, const double& halfA, double pc, double ten, bool itr = false) const;
 	void getCAApexDist(double& apxDist, double& conA, const double& halfA, double pc, double ten, bool itr = false) const;
 
-	inline void markCentreLayerTrappings(const std::pair< int, double >&, double, double, double, double, double, bool);
+	inline void markCentreLayerTrappings(const std::pair<int,double>&, double, double, double, double, double, bool);
 	double layerCollPc() const {return entryPc_;}
 	inline void removeLayer();
 	const std::pair<int, double>& trappedOLayer() const {return trappedCL_;}
@@ -71,7 +71,7 @@ private:
 
 
 
-inline void LayerApex::markCentreLayerTrappings(const std::pair< int, double >& trap, double pc, double conAngRec, double conAngAdv,
+inline void LayerApex::markCentreLayerTrappings(const std::pair<int,double>& trap, double pc, double conAngRec, double conAngAdv,
 									  double halfAng, double intfacTen, bool injOil)
 {
 	if(!exists()) return;
@@ -105,7 +105,7 @@ inline void LayerApex::removeLayer()
 	inited_ = false;
 	trappedCL_.first = -1;
 	isInWatFloodVec_ = false;
-	advancingPc_=receedingPc_+10000.0; ///.to affect unpinned calculations 
+	advancingPc_=receedingPc_+10000.; ///.to affect unpinned calculations 
 }
 
 
@@ -121,7 +121,7 @@ inline bool LayerApex::freeAtPrs(double pc) const { return (exists() && pc > ent
 
 
 inline bool LayerApex::forcedSnapOff(double prs) const
-{    return prs > receedingPc_ && prs > 0.0;	}
+{    return prs > receedingPc_ && prs > 0.;	}
 
 
 

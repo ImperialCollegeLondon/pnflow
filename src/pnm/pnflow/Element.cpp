@@ -8,34 +8,32 @@
 #include <cassert>
 
 #include "fluid.h"
-#include "Element.h"
 #include "inputData.h"
 #include "polygon.h"
-#include "apex.h"
 #include "cornerApex.h"
 #include "layerApex.h"
+#include "CommonData.h"
 
 
 using namespace std;
 
-bool Element::USE_GRAV_IN_KR = false;
-double Element::COND_CUT_OFF = 1.0e-29;
-const double Element::PI = acos(-1.0);
+bool Elem::USE_GRAV_IN_KR = false;
+double Elem::COND_CUT_OFF = 1e-29;
+const double Elem::PI = acos(-1.);
 
-int Element::nErrs = 0;
+int Elem::nErrs = 0;
 
-double Element::RRR() const {return model_->RRR();}
+double Elem::RRR() const {return model_->RRR();}
 
-Element::Element(const CommonData& comn, int indx, dbl3 nod, double radius, double volume,
+Elem::Elem(const CommonData& comn, int indx, dbl3 nod, double radius, double volume,
 				 double volClay, double shapeFact, int connNum, bool amPore, int typ) 
-	 :  Apex(), iAmAPore_(amPore), rockIndex_(typ),comn_(comn), flowVolume_(volume), clayVolume_(volClay), connectionNum_(connNum), 
-	trapIndexOil_(-1, 0.0),
-	trapIndexWatBulk_(-1, 0.0),
-	trapIndexWatFilm_(-1, 0.0),
+	 :  Apex(), iAmAPore_(amPore), rockIndex_(typ),comn_(comn), flowVolume_(volume), clayVolume_(volClay), nCncts_(connNum), 
+	trapIndexOil_(-1, 0.),
+	trapIndexWatBulk_(-1, 0.),
+	trapIndexWatFilm_(-1, 0.),
 	numOilCentreFeederNeis_(0),
-	numWatCentreFeederNeis_(connNum), index_(indx), node_(nod)
-{
-	waterSaturation_ = 1.0;
+	numWatCentreFeederNeis_(connNum), index_(indx), node_(nod)  {
+	waterSaturation_ = 1.;
 	isInsideSolverBox_ = false;
 	isInCalcBox_ = false;
 	isInWatFloodVec_ = false;
@@ -57,20 +55,20 @@ Element::Element(const CommonData& comn, int indx, dbl3 nod, double radius, doub
 
 
 
-	if(shapeFact <=  sqrt(3.0)/36.0+0.00001)                   // Triangular:  0 >= G >= sqrt(3.0)/36.0
+	if(shapeFact <=  sqrt(3.)/36.+0.00001)                   // Triangular:  0 >= G >= sqrt(3.)/36.
 	{
-		model_ = new Triangle(*this, comn_, radius, min(shapeFact, sqrt(3.0)/36.0-0.00005), connectionNum_, typ);
+		model_ = new Triangle(*this, comn_, radius, min(shapeFact, sqrt(3.)/36.-0.00005), nCncts_, typ);
 		 comn.countTriangle();
 
 	}
-	else if(shapeFact < 0.07)                         // Square:      G == 1.0/16/0
+	else if(shapeFact < 0.07)                         // Square:      G == 1./16/0
 	{
-		model_ = new Square(*this, comn_, radius, connectionNum_, typ);
+		model_ = new Square(*this, comn_, radius, nCncts_, typ);
 		comn.countSquare();
 	}
-	else                                                // Circular:    G == 1.0/4.0*PI
+	else                                                // Circular:    G == 1./4.*PI
 	{
-		model_ = new Circle(*this, comn_, radius, connectionNum_, typ);
+		model_ = new Circle(*this, comn_, radius, nCncts_, typ);
 		comn.countCircle();
 	}
 
@@ -85,67 +83,61 @@ Element::Element(const CommonData& comn, int indx, dbl3 nod, double radius, doub
 }
 
 
-bool Element::convertToMicroPorosityForSven(bool entry1Exit0)
-{
+bool Elem::convertToMicroPorosityForSven(bool entry1Exit0)  {
 		return false;
 }
 
-int Element::ffaz() const {return int(model_->containCOil())+1;} ///. Viz only
-//double Element::saturation() const 
+int Elem::ffaz() const {return int(model_->containCOil())+1;} ///. Viz only
+//double Elem::saturation() const 
 //{ return
 	//(flowVolume_*waterSaturation()+
-	//connections_[0]->waterSaturation()*connections_[0]->flowVolume()/connections_[0]->connectionNum()+ 
-	//connections_[1]->waterSaturation()*connections_[1]->flowVolume()/connections_[1]->connectionNum() ) /
+	//cnctions_[0]->waterSaturation()*cnctions_[0]->flowVolume()/cnctions_[0]->nCncts()+ 
+	//cnctions_[1]->waterSaturation()*cnctions_[1]->flowVolume()/cnctions_[1]->nCncts() ) /
 	//(flowVolume_+
-	 //connections_[0]->flowVolume()/connections_[0]->connectionNum()+
-	 //connections_[1]->flowVolume()/connections_[1]->connectionNum()
+	 //cnctions_[0]->flowVolume()/cnctions_[0]->nCncts()+
+	 //cnctions_[1]->flowVolume()/cnctions_[1]->nCncts()
 	//);
 //}
 
-Element::~Element(){delete model_;}
+Elem::~Elem(){delete model_;}
 
 
-void Element::checkConnections() const
+void Elem::checkConnections() const
 {
-	if(connectionNum_ != int(connections_.size()))
-	{
+	if(nCncts_ != int(cnctions_.size()))  {
 		cout<< "========================================" << endl
 			<< "Error: The connection number is incorrect" << endl
 			<< "=========================================" << endl;				exit(-1);//ERROR_STATE = true;
 	}
 
-	for(int ij = 0; ij < connectionNum_; ++ij)
-	{
-		if(connections_[ij] == NULL)
-		{ 
+	for(int ij = 0; ij < nCncts_; ++ij)  {
+		if(cnctions_[ij] == NULL)  { 
 			cout<< "==================================="         << endl
 				<< "Error: missing network connecetions"          << endl
 				<< "Interanl pointer remains NULL      "          << endl
-				<< "Element index: " << indexOren()               << endl
-				<< "Element type: " << typeid(*this).name()       << endl
+				<< "Elem index: " << indexOren()               << endl
+				<< "Elem type: " << typeid(*this).name()       << endl
 				<< "Connection: " << ij                         << endl
-				<< "Total connection number: " << connectionNum_ << endl
+				<< "Total connection number: " << nCncts_ << endl
 				<< "==================================="          << endl;	//exit(-1);//ERROR_STATE = true;
 		}
 
-		Element* nextElem = connections_[ij];
+		Elem* nextElem = cnctions_[ij];
 
 		bool connExist(false);
-		for(int ii = 0; ii < nextElem->connectionNum(); ++ii)
-		{
-			connExist = (nextElem->connection(ii) == this);
+		for(int ii = 0; ii < nextElem->nCncts(); ++ii)  {
+			connExist = (nextElem->neib(ii) == this);
 			if (connExist) break;
 		}
 
-		if(!connExist)
-		{
+		if(!connExist)  {
 			cout<< "==================================="                               << endl
 				<< "Error: mismatch in network connecetions"                                << endl
 				<< "Interanal links do not match up    "                                << endl
 				<< typeid(*this).name() <<" index: " << indexOren()                     << endl
 				<< "Connection: " << ij                                               << endl
 				<< "Neighbouring " <<typeid(*nextElem).name() << " index: " << nextElem->indexOren()    << endl
-				<< "Neighbouring " <<typeid(*nextElem).name() << "  number of connections: " << nextElem->connectionNum()    << endl
+				<< "Neighbouring " <<typeid(*nextElem).name() << "  number of connections: " << nextElem->nCncts()    << endl
 				<< "===================================" << endl;			//exit(-1);
 		}
 	}
@@ -161,14 +153,11 @@ void Element::checkConnections() const
 // during secondary drainage when this region again might be connected they can all be
 // quickly unmarked.
 */
-void Element::findMarkTrappedOilGanglia(double prs, vector<Element*>& trappingStorageOil,
-								   double& elapsed, TrappingCriteria criteria)
-{
-	if(!isEntryOrExitRes() && model_->conductsAnyOil())
-	{
+void Elem::findMarkTrappedOilGanglia(double prs, vector<Elem*>& trappingStorageOil,
+								   double& elapsed, TrappingCriteria criteria)  {
+	if(!isEntryOrExitRes() && model_->conductsAnyOil())  {
 		clock_t startTrapRoutine(clock());
-		if(criteria == escapeToBoth)
-		{
+		if(criteria == escapeToBoth)  {
 		   if ( foundEscapePathOil_trapOtherwise(prs, trappingStorageOil, escapeToOutlet)) ;
 		   else foundEscapePathOil_trapOtherwise(prs, trappingStorageOil, escapeToInlet)   ;       
 		}
@@ -187,8 +176,7 @@ void Element::findMarkTrappedOilGanglia(double prs, vector<Element*>& trappingSt
 // Marking during the trapping routine is done by increasing the trapping index.
 // If the outlet is subsequently found, it is reset down to 0.
 */
-inline void Element::trapOil(double prs)
-{
+inline void Elem::trapOil(double prs)  {
 	trapIndexOil_.first = comn_.newOilTrappingIndex();
 	trapIndexOil_.second = prs;
 }
@@ -201,46 +189,39 @@ inline void Element::trapOil(double prs)
 	* after an elemnt. This will be an element that is not marked and contains
 	* the fluid in question (oil in this case)
 	*/
-	inline Element* Element::nextUntrappedOil(TrappingCriteria criteria)
-	{
+	inline Elem* Elem::nextUntrappedOil(TrappingCriteria criteria)  {
 		if(criteria == escapeToOutlet)  ///.  escapeToInlet does not make any difference
 		{
-			for(short i = 0; i < connectionNum_; ++i)
-			{
-				if(!connections_[i]->isEntryRes() &&
-					!connections_[i]->isTrappedOil() &&
-					connections_[i]->model()->conductsAnyOil())
-					return connections_[i];
+			for(short i = 0; i < nCncts_; ++i)  {
+				if(!cnctions_[i]->isEntryRes() &&
+					!cnctions_[i]->isTrappedOil() &&
+					cnctions_[i]->model()->conductsAnyOil())
+					return cnctions_[i];
 			}
 		}    
-		else if(criteria == escapeToEither)
-		{
-			for(short i = 0; i < connectionNum_; ++i)
-			{
-				if(// !connections_[i]->isEntryOrExitRes() &&
-					!connections_[i]->isTrappedOil() &&
-					connections_[i]->model()->conductsAnyOil())
-					return connections_[i];
+		else if(criteria == escapeToEither)  {
+			for(short i = 0; i < nCncts_; ++i)  {
+				if(// !cnctions_[i]->isEntryOrExitRes() &&
+					!cnctions_[i]->isTrappedOil() &&
+					cnctions_[i]->model()->conductsAnyOil())
+					return cnctions_[i];
 			}
 		}
-		else if(criteria == escapeToInlet)
-		{
-			for(short i = connectionNum_-1; i >= 0; --i)
-			{
-				if(!connections_[i]->isExitRes() &&
-					!connections_[i]->isTrappedOil() &&
-					connections_[i]->model()->conductsAnyOil())///. assumes elem oil is connected to all connections
-					return connections_[i];
+		else if(criteria == escapeToInlet)  {
+			for(short i = nCncts_-1; i >= 0; --i)  {
+				if(!cnctions_[i]->isExitRes() &&
+					!cnctions_[i]->isTrappedOil() &&
+					cnctions_[i]->model()->conductsAnyOil())///. assumes elem oil is connected to all connections
+					return cnctions_[i];
 			}
 		}
 		else
 		{
-			for(short i = 0; i < connectionNum_; ++i)
-			{
-				if(//!connections_[i]->isEntryOrExitRes() &&
-					!connections_[i]->isTrappedOil() &&
-					connections_[i]->model()->conductsAnyOil())
-					return connections_[i];
+			for(short i = 0; i < nCncts_; ++i)  {
+				if(//!cnctions_[i]->isEntryOrExitRes() &&
+					!cnctions_[i]->isTrappedOil() &&
+					cnctions_[i]->model()->conductsAnyOil())
+					return cnctions_[i];
 			}
 		}
 		return NULL;
@@ -254,21 +235,17 @@ inline void Element::trapOil(double prs)
 // respect to fluid, however that would have reduced efficiency due to *MANY* checks for fluid.
 // This concern was strong enough to warrant separate implementations for each fluid
 */
-bool Element::foundEscapePathOil_trapOtherwise(double pc, vector<Element*>& trappingStorage, TrappingCriteria criteria)
-{
+bool Elem::foundEscapePathOil_trapOtherwise(double pc, vector<Elem*>& trappingStorage, TrappingCriteria criteria)  {
 
-	Element* elemPtr = this;
-	stack<Element*> elemStack;                      // Simulate recursive behavior using a stack
+	Elem* elemPtr = this;
+	stack<Elem*> elemStack;                      // Simulate recursive behavior using a stack
 	//elemStack.push(this);
 	double datumPc(pc+gravityCorrection());
 
-	while(elemPtr)
-	{
+	while(elemPtr)  {
 		if(  (elemPtr->isConnectedToEntry() && (criteria == escapeToInlet || criteria == escapeToEither))
-		  || (elemPtr->isConnectedToExit() && (criteria == escapeToOutlet || criteria == escapeToEither))  )
-		{
-			for(size_t i = 0; i < trappingStorage.size(); ++i)
-			{
+		  || (elemPtr->isConnectedToExit() && (criteria == escapeToOutlet || criteria == escapeToEither))  )  {
+			for(size_t i = 0; i < trappingStorage.size(); ++i)  {
 				trappingStorage[i]->unTrapOil();
 			}
 			trappingStorage.clear();
@@ -295,14 +272,11 @@ bool Element::foundEscapePathOil_trapOtherwise(double pc, vector<Element*>& trap
 
 
 
-void Element::findMarkTrappedWaterGanglia(double prs, FluidBlob startPt, vector< pair<Element*,FluidBlob> >& trappingStorageWat,
-								   double& elapsed, TrappingCriteria criteria)
-{
-	if(!isEntryOrExitRes() && model_->conductAnyWaterBlob(startPt))
-	{
+void Elem::findMarkTrappedWaterGanglia(double prs, FluidBlob startPt, vector< pair<Elem*,FluidBlob> >& trappingStorageWat,
+								   double& elapsed, TrappingCriteria criteria)  {
+	if(!isEntryOrExitRes() && model_->conductAnyWaterBlob(startPt))  {
 		clock_t startTrapRoutine(clock());
-		if(criteria == escapeToBoth)
-		{
+		if(criteria == escapeToBoth)  {
 			if  (foundEscapePathWat_trapOtherwise(prs, startPt, trappingStorageWat, escapeToOutlet)) ;
 			else foundEscapePathWat_trapOtherwise(prs, startPt, trappingStorageWat, escapeToInlet );            
 		}
@@ -315,10 +289,8 @@ void Element::findMarkTrappedWaterGanglia(double prs, FluidBlob startPt, vector<
 
 
 
-	inline void Element::trapWat(double prs, FluidBlob blob)
-	{
-		if(blob == bulkBlob)
-		{
+	inline void Elem::trapWat(double prs, FluidBlob blob)  {
+		if(blob == bulkBlob)  {
 			trapIndexWatBulk_.first = comn_.newWatTrappingIndex();
 			trapIndexWatBulk_.second = prs;
 		}
@@ -333,34 +305,29 @@ void Element::findMarkTrappedWaterGanglia(double prs, FluidBlob startPt, vector<
 
 
 
-	inline Element* Element::nextSuccessorWat(TrappingCriteria criteria, FluidBlob& blob)
-	{
-		if(criteria == escapeToInlet)
-		{
-			for(short i = connectionNum_; i > 0; --i)
-			{
-				if(!connections_[i-1]->isEntryOrExitRes() &&
-					!connections_[i-1]->isTrappedWat(blob) &&
-					connections_[i-1]->model()->conductAnyWaterBlob(blob))
-					//(connections_[i-1]->model()->conductsAnyWaterBlob(blob) || connections_[i-1]->connectedToEntryOrExit()))
-					return connections_[i-1];
+	inline Elem* Elem::nextSuccessorWat(TrappingCriteria criteria, FluidBlob& blob)  {
+		if(criteria == escapeToInlet)  {
+			for(short i = nCncts_; i > 0; --i)  {
+				if(!cnctions_[i-1]->isEntryOrExitRes() &&
+					!cnctions_[i-1]->isTrappedWat(blob) &&
+					cnctions_[i-1]->model()->conductAnyWaterBlob(blob))
+					//(cnctions_[i-1]->model()->conductsAnyWaterBlob(blob) || cnctions_[i-1]->connectedToEntryOrExit()))
+					return cnctions_[i-1];
 			}
 		}
 		else
 		{
-			for(short i = 0; i < connectionNum_; ++i)
-			{
-				if(!connections_[i]->isEntryOrExitRes() &&
-					!connections_[i]->isTrappedWat(blob) &&
-					connections_[i]->model()->conductAnyWaterBlob(blob))
-					//(connections_[i]->model()->conductsAnyWaterBlob(blob) || connections_[i]->connectedToEntryOrExit()))
-					return connections_[i];
+			for(short i = 0; i < nCncts_; ++i)  {
+				if(!cnctions_[i]->isEntryOrExitRes() &&
+					!cnctions_[i]->isTrappedWat(blob) &&
+					cnctions_[i]->model()->conductAnyWaterBlob(blob))
+					//(cnctions_[i]->model()->conductsAnyWaterBlob(blob) || cnctions_[i]->connectedToEntryOrExit()))
+					return cnctions_[i];
 			}
 		}
 
 		FluidBlob blobbo(blob == filmBlob ? bulkBlob: filmBlob);
-		if(!model_->disConectedCentreWCornerW() && model_->conductAnyWaterBlob(blobbo) && !isTrappedWat(blobbo))
-		{
+		if(!model_->disConectedCentreWCornerW() && model_->conductAnyWaterBlob(blobbo) && !isTrappedWat(blobbo))  {
 			blob = blobbo;
 			return this;
 		}
@@ -368,19 +335,16 @@ void Element::findMarkTrappedWaterGanglia(double prs, FluidBlob startPt, vector<
 		return NULL;
 	}
 
-inline bool Element::foundEscapePathWat_trapOtherwise(double pc, FluidBlob startPt, vector< pair<Element*,FluidBlob> >& trappingStorage,
-										TrappingCriteria criteria)
-{
-	pair<Element*, FluidBlob> elem(this, startPt);
-	stack< pair<Element*, FluidBlob> > elemStack;
+inline bool Elem::foundEscapePathWat_trapOtherwise(double pc, FluidBlob startPt, vector< pair<Elem*,FluidBlob> >& trappingStorage,
+										TrappingCriteria criteria)  {
+	pair<Elem*, FluidBlob> elem(this, startPt);
+	stack< pair<Elem*, FluidBlob> > elemStack;
 	elemStack.push(elem);
 	double datumPc(pc+gravityCorrection());
 
-	while(elem.first)
-	{
+	while(elem.first)  {
 		if((elem.first->isConnectedToEntry() && (criteria == escapeToInlet || criteria == escapeToEither)) ||
-			(elem.first->isConnectedToExit() && (criteria == escapeToOutlet || criteria == escapeToEither)))
-		{
+			(elem.first->isConnectedToExit() && (criteria == escapeToOutlet || criteria == escapeToEither)))  {
 			for(size_t i = 0; i < trappingStorage.size(); ++i)
 				trappingStorage[i].first->unTrapWat(trappingStorage[i].second);
 			trappingStorage.clear();
@@ -394,8 +358,7 @@ inline bool Element::foundEscapePathWat_trapOtherwise(double pc, FluidBlob start
 		ensure(elem.first);
 		elem.first = elem.first->nextSuccessorWat(criteria, elem.second);
 
-		while(!elem.first)
-		{
+		while(!elem.first)  {
 			elemStack.pop();
 			if(elemStack.empty()) break;
 			elem = elemStack.top();
@@ -413,29 +376,25 @@ inline bool Element::foundEscapePathWat_trapOtherwise(double pc, FluidBlob start
 /// network due to diagenesis processes. These parts will remain water filled but are not
 /// available for displacement. Identify these elements during initialization by doing a
 /// graph traversal from the inlet.
-void Element::identifyConnectedPoreElems()
-{
+void Elem::identifyConnectedPoreElems()  {
 	setConnectedToNetwork(true);      // Do allow escapes through entry reservoir
 
-	for(int throat = 0; throat < connectionNum_; ++throat)
-	{
-		if(!connections_[throat]->connectedToNetwork())                // Might have been marked previously
+	for(int throat = 0; throat < nCncts_; ++throat)  {
+		if(!cnctions_[throat]->connectedToNetwork())                // Might have been marked previously
 		{
-			set< Element * > frontier, oldFrontier;
-			frontier.insert(connections_[throat]);
+			set< Elem * > frontier, oldFrontier;
+			frontier.insert(cnctions_[throat]);
 
-			while(!frontier.empty())
-			{
+			while(!frontier.empty())  {
 				oldFrontier = frontier;
 				frontier.clear();
 
-				for(auto elm:oldFrontier)
-				{
+				for(auto elm:oldFrontier)  {
 					if(!elm->connectedToNetwork())                   // Flag is not set
 					{
 						elm->setConnectedToNetwork(true);               // Set flag
-						for(int i = 0; i < elm->connectionNum(); ++i)
-							frontier.insert(elm->connection(i));
+						for(int i = 0; i < elm->nCncts(); ++i)
+							frontier.insert(elm->neib(i));
 					}
 				}
 			}
@@ -448,29 +407,25 @@ void Element::identifyConnectedPoreElems()
 /// We have the option to not drain pores that are connected to the network through a
 /// single throat. These pores (and throats) are removed completley from the network
 /// initially. This is found to greatly improve solver convergence
-int Element::removeFromNetwork()
-{
+int Elem::removeFromNetwork()  {
 	int numRemoved(1);
-	for(int i = 0; i < connectionNum_; ++i)
-	{
-		if(connections_[i]->connectedToNetwork())
-		{
-			if(connections_[i]->connectionNum() > 2)  connections_[i]->severConnection(this);
-			else                                      numRemoved += connections_[i]->removeFromNetwork();
+	for(int i = 0; i < nCncts_; ++i)  {
+		if(cnctions_[i]->connectedToNetwork())  {
+			if(cnctions_[i]->nCncts() > 2)  cnctions_[i]->severConnection(this);
+			else                                      numRemoved += cnctions_[i]->removeFromNetwork();
 		}
 	}
-	connections_.clear(); connectionNum_=0; connectedToNetwork_=false;
+	cnctions_.clear(); nCncts_=0; connectedToNetwork_=false;
 	return numRemoved;
 }
 
 /// Physically remove the single connetion to the network. This cluster is now isolated
-void Element::severConnection(Element* elm)
-{
-	ensure(connectionNum_ > 0);
-	vector<Element*>::iterator delm = find(connections_.begin(), connections_.end(), elm);
-	if(*delm == elm)  connections_.erase(delm);
+void Elem::severConnection(Elem* elm)  {
+	ensure(nCncts_ > 0);
+	vector<Elem*>::iterator delm = find(cnctions_.begin(), cnctions_.end(), elm);
+	if(*delm == elm)  cnctions_.erase(delm);
 	else              cerr << endl << "oooops..." << endl;
-	--connectionNum_;
+	--nCncts_;
 }
 
 
@@ -485,8 +440,23 @@ void Element::severConnection(Element* elm)
 
 
 
+int Throat::indexOren() const { return index_-comn_.numPores()-1; }
 
 
+double Elem::rhogh(double rho, dbl3 dh) const {return comn_.rhogh(rho,dh);}
+
+void Elem::setGravityCorrection(const dbl3& nod)  {
+	gravityCorrection_ = (comn_.water().density()-comn_.oil().density())*(comn_.gravConst()&nod);
+
+		gravityCorrection_ = 0.;///. ERROR
+
+}
+
+void Elem::setGravityCorrection(const dbl3& nod1, const dbl3& nod2)  {
+	gravityCorrection_ = (comn_.water().density()-comn_.oil().density())*(comn_.gravConst()&((nod1+nod2)*0.5));
+
+		gravityCorrection_ = 0.;///. ERROR
+}
 
 
 
@@ -495,13 +465,12 @@ void Element::severConnection(Element* elm)
 // Elements that are trapped have their capillary pressure frozen at the time they're
 // identified as being trapped.
 */
-double Element::updateSat_calcR(double cappPrs)
-{
-	if(isEntryOrExitRes()) return 0.0;
+double Elem::updateSat_calcR(double cappPrs)  {
+	if(isEntryOrExitRes()) return 0.;
 
 	waterSaturation_ = model_->calcR(cappPrs);
 
-	return isInCalcBox_ ? waterSaturation_ * flowVolume_ + clayVolume_ : 0.0;
+	return isInCalcBox_ ? waterSaturation_ * flowVolume_ + clayVolume_ : 0.;
 }
 
 
@@ -509,8 +478,7 @@ double Element::updateSat_calcR(double cappPrs)
 // As an elemnt is drained, its neighbours have an increase in number of elems
 // containing oil.
 */
-void Element::fillElemCentreWithOilRemoveLayers()
-{
+void Elem::fillElemCentreWithOilRemoveLayers()  {
 	//ensure((comn_.water()));
 	//double warninnng;
 	if(model_->bulkFluid()->isOil()) return;
@@ -520,22 +488,20 @@ void Element::fillElemCentreWithOilRemoveLayers()
 	isInOilFloodVec_ = false;
 	model_->fillCentreWithOilRemoveLayers();
 
-	for(int i = 0; i < connectionNum_; ++i)
-	{
-		connections_[i]->IncreaseNumOilCentreFeederNeis();
-		if (!rockIndex())	connections_[i]->ReduceNumWatCentreFeederNeis();
+	for(int i = 0; i < nCncts_; ++i)  {
+		cnctions_[i]->IncreaseNumOilCentreFeederNeis();
+		if (!rockIndex())	cnctions_[i]->ReduceNumWatCentreFeederNeis();
 	}
 
 	///. rubbish 
-	if(model_->displacementType() == 'S')
-	{
+	if(model_->displacementType() == 'S')  {
 		//model_->addFillingEventToHistory(2);
 		eventI_ = -1;
 	}
 	else
 	{
 		//model_->addFillingEventToHistory(1);
-		eventI_ = connectionNum_ - numOilCentreFeederNeis();
+		eventI_ = nCncts_ - numOilCentreFeederNeis();
 	}
 }
 
@@ -543,10 +509,8 @@ void Element::fillElemCentreWithOilRemoveLayers()
 // As an elemt is imbided we need to update the imbibition entry pressures of
 // neighbouring elements.
 */
-void Element::fillElemCentreWithWaterCreateLayers(bool snapOffOverRide)
-{
-	if (debugLevel>0)
-	{
+void Elem::fillElemCentreWithWaterCreateLayers(bool snapOffOverRide)  {
+	if (debugLevel>0)  {
 		if (!snapOffOverRide && !isInWatFloodVec_) cout<<"Qw";
 		else if (snapOffOverRide && isInWatFloodVec_) cout<<"Qi";
 	}
@@ -557,14 +521,12 @@ void Element::fillElemCentreWithWaterCreateLayers(bool snapOffOverRide)
 
 	model_->fillCentreWithWaterCreateLayers(snapOffOverRide);
 
-	for(int i = 0; i < connectionNum_; ++i)
-	{
-		connections_[i]->ReduceNumOilCentreFeederNeis(); ///. 
-		if (!rockIndex())	connections_[i]->IncreaseNumWatCentreFeederNeis(); 
+	for(int i = 0; i < nCncts_; ++i)  {
+		cnctions_[i]->ReduceNumOilCentreFeederNeis(); ///. 
+		if (!rockIndex())	cnctions_[i]->IncreaseNumWatCentreFeederNeis(); 
 	}
 
-	if(model_->displacementType() == 'S')
-	{
+	if(model_->displacementType() == 'S')  {
 		//model_->addFillingEventToHistory(4);
 		eventI_ = -1;
 	}
@@ -577,13 +539,12 @@ void Element::fillElemCentreWithWaterCreateLayers(bool snapOffOverRide)
 
 
 
-bool Element::canBeAddedToEventVec(const Fluid& injectant) const
+bool Elem::canBeAddedToEventVec(const Fluid& injectant) const
 {
 	if(model_->canNOTReconfigure(injectant) || !connectedToNetwork_)
 		return false;
 
-   if(injectant.isOil())
-   {
+   if(injectant.isOil())  {
 		if (model_->containCOil() && rockIndex() == 0) 
 		{
 			if (debugLevel>0) cout<<" sgsobqbd ";
@@ -595,9 +556,8 @@ bool Element::canBeAddedToEventVec(const Fluid& injectant) const
 		if (model_->conductsAnyOil()) return true;//         || nonTrappedOilCentreNeighbour(injectant));
 
 
-		for(int i = 0; i < connectionNum_; ++i)
-		{
-			if(connections_[i]->model()->conductCOil() && !connections_[i]->isTrappedOil()) /// second is extra to delete
+		for(int i = 0; i < nCncts_; ++i)  {
+			if(cnctions_[i]->model()->conductCOil() && !cnctions_[i]->isTrappedOil()) /// second is extra to delete
 				return true;
 		}
 
@@ -618,8 +578,8 @@ bool Element::canBeAddedToEventVec(const Fluid& injectant) const
 		if (model_->conductAnyWater() ) return true;//         || notTrapdWNeighbour(injectant));
 
 
-		for(int i = 0; i < connectionNum_; ++i)
-			if(connections_[i]->model()->conductCWater())
+		for(int i = 0; i < nCncts_; ++i)
+			if(cnctions_[i]->model()->conductCWater())
 				return true;
 
 
@@ -635,7 +595,7 @@ bool Element::canBeAddedToEventVec(const Fluid& injectant) const
 
 
 ///.  rare funcs
-bool Element::addToLayerVec(const Fluid& injectant, Polygon* shyp, std::vector< int >& cornToAdd) const
+bool Elem::addToLayerVec(const Fluid& injectant, Polygon* shyp, std::vector< int >& cornToAdd) const
 {
 	if( !shyp->hasOilLayer() || shyp->containCOil() || trapIndexOil_.first != -1 ) return false;
 
@@ -645,8 +605,7 @@ bool Element::addToLayerVec(const Fluid& injectant, Polygon* shyp, std::vector< 
 	if(oilInj)     // Layer refcreation  
 	{
 
-	  if(isInOilFloodVec())
-	  {
+	  if(isInOilFloodVec())  {
 		for(int i = 0; i < shyp->numCorners(); ++i)
 			if(!shyp->oilLayerConst()[i].isInOilFloodVec() &&
 				 ! shyp->oilLayerConst()[i].exists() 
@@ -664,8 +623,8 @@ bool Element::addToLayerVec(const Fluid& injectant, Polygon* shyp, std::vector< 
 		}
 
 		if(!cornToAdd.empty())
-			for(size_t j = 0; j < connections_.size(); ++j)
-				if(connections_[j]->model()->conductsAnyOil()) 
+			for(size_t j = 0; j < cnctions_.size(); ++j)
+				if(cnctions_[j]->model()->conductsAnyOil()) 
 					return true;
 
 		return false;
@@ -690,13 +649,11 @@ bool Element::addToLayerVec(const Fluid& injectant, Polygon* shyp, std::vector< 
 
 
 
-void Element::calcCentreEntryPrsOilInj()
-{
+void Elem::calcCentreEntryPrsOilInj()  {
 	entryPc_=model_->centreEntryPrsOilInj();
 }
 
-void Element::calcCentreEntryPrsWatInj()
-{
+void Elem::calcCentreEntryPrsWatInj()  {
 	entryPc_=model_->centreEntryPrsWatInj();
 }
 

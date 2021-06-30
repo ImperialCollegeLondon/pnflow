@@ -19,7 +19,6 @@ Developed by (2015): Ali Q Raeini  email: a.q.raeini@imperial.ac.uk
 
 #include "elem_Model.h"
 #include "polygon.h"
-#include "apex.h"
 #include "cornerApex.h"
 #include "layerApex.h"
 
@@ -31,28 +30,23 @@ Developed by (2015): Ali Q Raeini  email: a.q.raeini@imperial.ac.uk
 
 
 template<class Elemnt,  class Elemp>
-double accumulate(std::function<double(double, double)> operatorFunc, const std::vector< Elemnt const * >& elems,  double (Elemp::*radFunc)() const,  double result=0.0)
-{	for(const Elemnt* v : elems)	result = operatorFunc(result,(v->*radFunc)());	return result; }
+double accumulate(std::function<double(double, double)> operatorFunc, const std::vector< Elemnt const * >& elems,  double (Elemp::*radFunc)() const,  double result=0.)  {	for(const Elemnt* v : elems)	result = operatorFunc(result,(v->*radFunc)());	return result; }
 
 template<class IterT,  class Elemp>
-double accumulate(std::function<double(double, double)> operatorFunc, IterT iter, const IterT last,  double (Elemp::*radFunc)() const,  double result=0.0)
-{	for(;iter<last;++iter)	result = operatorFunc(result,((*iter)->*radFunc)());	return result; }
+double accumulate(std::function<double(double, double)> operatorFunc, IterT iter, const IterT last,  double (Elemp::*radFunc)() const,  double result=0.)  {	for(;iter<last;++iter)	result = operatorFunc(result,((*iter)->*radFunc)());	return result; }
 
 template<typename T>
-std::valarray<std::valarray<T> > transpose(const std::valarray<std::valarray<T> >& vecvec)
-{
+std::valarray<std::valarray<T> > transpose(const std::valarray<std::valarray<T> >& vecvec)  {
 	if(!vecvec.size()) return std::valarray<std::valarray<T> >();
 
-	std::valarray<std::valarray<T> > trans(std::valarray<T>(0.0,vecvec.size()), vecvec[0].size());
-	for (size_t i=0; i<vecvec[0].size();++i)
-	{
+	std::valarray<std::valarray<T> > trans(std::valarray<T>(0.,vecvec.size()), vecvec[0].size());
+	for (size_t i=0; i<vecvec[0].size();++i)  {
 		for (size_t j=0; j<vecvec.size();++j) trans[i][j] = vecvec[j][i] ;
 	}
 	return trans;
 }
 template<typename T>
-std::ostream & operator << (std::ostream & outstream, const std::valarray<T>& vec)
-{
+std::ostream & operator << (std::ostream & outstream, const std::valarray<T>& vec)  {
 	if(vec.size() && vec.size()<10)  for (auto v : vec) outstream << v << ' ';
 	else                             for (auto v : vec) outstream << v << '\n';
 	return outstream;
@@ -64,19 +58,17 @@ using namespace std;
 //const static double PI = 3.14159265358979;
 
 
-void printRadiusStatistics( const std::vector<Element const*>&  elemans, int nBSs_, int nBpPors_)
-{
+void printRadiusStatistics( const std::vector<Elem const*>&  elemans, int nBSs_, int nBpPors_)  {
 		cout<<"\n\n//           \t arithmetic \t volume-weighted\n";
 
 	{
-		vector< Element const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
+		vector< Elem const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
 		sort(elms.begin(), elms.end(), ElemRadCmpRed());
 		//double medianRadPore = elms[elms.size()/2]->model()->RRR();
-		double RadAvgPore=0.0; ///VolWeighted pore shape factor
-		double VWRadAvgPore=0.0; ///VolWeighted pore shape factor
-		double sumFlowVolume=0.0;
-		for(size_t i = 0; i < elms.size(); ++i)
-		{
+		double RadAvgPore=0.; ///VolWeighted pore shape factor
+		double VWRadAvgPore=0.; ///VolWeighted pore shape factor
+		double sumFlowVolume=0.;
+		for(size_t i = 0; i < elms.size(); ++i)  {
 			sumFlowVolume+=elms[i]->flowVolume();
 			VWRadAvgPore+= elms[i]->flowVolume()*elms[i]->model()->RRR();
 			RadAvgPore+= elms[i]->model()->RRR();
@@ -90,14 +82,13 @@ void printRadiusStatistics( const std::vector<Element const*>&  elemans, int nBS
 
 	{
 		double nTrots=elemans.size()-nBpPors_;
-		vector< Element const * > elms(elemans.begin()+nBpPors_, elemans.end());
+		vector< Elem const * > elms(elemans.begin()+nBpPors_, elemans.end());
 		sort(elms.begin(), elms.end(), ElemRadCmpRed());
 		//double medianRadThroat = elms[elms.size()/2]->model()->RRR();
-		double RadAvgThroat=0.0; ///VolWeighted pore shape factor
-		double VWRadAvgThroat=0.0; ///VolWeighted pore shape factor
-		double sumFlowVolume=0.0;
-		for(size_t i = 0; i < elms.size(); ++i)
-		{
+		double RadAvgThroat=0.; ///VolWeighted pore shape factor
+		double VWRadAvgThroat=0.; ///VolWeighted pore shape factor
+		double sumFlowVolume=0.;
+		for(size_t i = 0; i < elms.size(); ++i)  {
 			sumFlowVolume+=elms[i]->flowVolume();
 			VWRadAvgThroat+= elms[i]->flowVolume()*elms[i]->model()->RRR();
 			RadAvgThroat+= elms[i]->model()->RRR();
@@ -114,15 +105,14 @@ void printRadiusStatistics( const std::vector<Element const*>&  elemans, int nBS
 
 	{
 		double numElems_=elemans.size()-nBSs_;
-		vector< Element const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
+		vector< Elem const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
 		elms.insert(elms.end(), elemans.begin()+nBpPors_, elemans.end());
 		sort(elms.begin(), elms.end(), ElemRadCmpRed());
 		//double medianRadElem = elms[elms.size()/2]->model()->RRR();
-		double RadAvgElem=0.0; ///VolWeighted pore shape factor
-		double VWRadAvgElem=0.0; ///VolWeighted pore shape factor
-		double sumFlowVolume=0.0;
-		for(size_t i = 0; i < elms.size(); ++i)
-		{
+		double RadAvgElem=0.; ///VolWeighted pore shape factor
+		double VWRadAvgElem=0.; ///VolWeighted pore shape factor
+		double sumFlowVolume=0.;
+		for(size_t i = 0; i < elms.size(); ++i)  {
 			sumFlowVolume+=elms[i]->flowVolume();
 			VWRadAvgElem+= elms[i]->flowVolume()*elms[i]->model()->RRR();
 			RadAvgElem+= elms[i]->model()->RRR();
@@ -138,59 +128,52 @@ void printRadiusStatistics( const std::vector<Element const*>&  elemans, int nBS
 
 
 
-void printDistanceMapStatistics( const std::vector<Element const *>&  elemans, int nBSs_, int nBpPors_)
-{
+void printDistanceMapStatistics( const std::vector<Elem const *>&  elemans, int nBSs_, int nBpPors_)  {
 
 		int nsteps = 32;
 
 //int ErOrr; //trote->length() is assumed to be total length CHECK needed
 		///. max radius:
-		double maxRad = accumulate((double const & (*) (double const &, double const &))(std::max<double>), elemans, &Element::RRR)+1.0e-15;
-		double dr = maxRad/nsteps*(1.0+1.0e-14);
+		double maxRad = accumulate((double const & (*) (double const &, double const &))(std::max<double>), elemans, &Elem::RRR)+1e-15;
+		double dr = maxRad/nsteps*(1.+1e-14);
 		cout<<"dr: "<<dr<< "   maxRad: "<<maxRad<<endl;
 
-		std::valarray<std::valarray<double> > distribG(std::valarray<double>(0.0, nsteps),2);
-		for (int i=0; i<nsteps; ++i)	distribG[0][i] = 0.0+dr/2+i*dr;
-		for(size_t i = nBpPors_; i < elemans.size(); ++i) if(elemans[i]->connectionNum()==2)
-		{
+		std::valarray<std::valarray<double> > distribG(std::valarray<double>(0., nsteps),2);
+		for (int i=0; i<nsteps; ++i)	distribG[0][i] = 0.+dr/2+i*dr;
+		for(size_t i = nBpPors_; i < elemans.size(); ++i) if(elemans[i]->nCncts()==2)  {
 			const Throat* trote = dynamic_cast<const Throat*>(elemans[i]);
 
 			const Polygon* shyp0 = dynamic_cast<const Polygon*>(elemans[i]->model());
 			double rt=trote->RRR();
-			for (double rr=0.5*dr; rr<rt; rr+=dr)
-			{
+			for (double rr=0.5*dr; rr<rt; rr+=dr)  {
 				if(shyp0)
 				 for(int ic=0;ic<shyp0->numCorners();++ic)
-					  distribG[1][rr/dr] += 2.0*((rt-rr)/tan(shyp0->cornerHalfAngles(ic)))*max(0.0,(trote->throatLength())); //int Warn = -trote->poreLength(0)-trote->poreLength(1)  /// dA
+					  distribG[1][rr/dr] += 2.*((rt-rr)/tan(shyp0->cornerHalfAngles(ic)))*max(0.,(trote->throatLength())); //int Warn = -trote->poreLength(0)-trote->poreLength(1)  /// dA
 				else 
-					 distribG[1][rr/dr] += 2.0*PI*((rt-rr))*(trote->throatLength()); //int Warn = -trote->poreLength(0)-trote->poreLength(1)  /// dA
+					 distribG[1][rr/dr] += 2.*PI*((rt-rr))*(trote->throatLength()); //int Warn = -trote->poreLength(0)-trote->poreLength(1)  /// dA
 			}
 
-			rt=elemans[i]->connection(0)->RRR();
-			const Polygon*  shyp1 = dynamic_cast<const Polygon*>(elemans[i]->connection(0)->model());
-			for (double rr=0.5*dr; rr<rt; rr+=dr)
-			{
+			rt=elemans[i]->neib(0)->RRR();
+			const Polygon*  shyp1 = dynamic_cast<const Polygon*>(elemans[i]->neib(0)->model());
+			for (double rr=0.5*dr; rr<rt; rr+=dr)  {
 				if(shyp1)
-				for(int ic=0;ic<shyp1->numCorners();++ic)
-				{
+				for(int ic=0;ic<shyp1->numCorners();++ic)  {
 					//double dA =  dA;
-					distribG[1][rr/dr] += 2.0*((rt-rr)/tan(shyp1->cornerHalfAngles(ic)))*(trote->poreLength(0));
+					distribG[1][rr/dr] += 2.*((rt-rr)/tan(shyp1->cornerHalfAngles(ic)))*(trote->poreLength(0));
 				}
 				else 
-					distribG[1][rr/dr] += 2.0*PI*((rt-rr))*(trote->poreLength(0));  /// dA
+					distribG[1][rr/dr] += 2.*PI*((rt-rr))*(trote->poreLength(0));  /// dA
 			}
-			rt=elemans[i]->connection(1)->RRR();
-			const Polygon*  shyp2 = dynamic_cast<const Polygon*>(elemans[i]->connection(1)->model());
-			for (double rr=0.5*dr; rr<rt; rr+=dr)
-			{
+			rt=elemans[i]->neib(1)->RRR();
+			const Polygon*  shyp2 = dynamic_cast<const Polygon*>(elemans[i]->neib(1)->model());
+			for (double rr=0.5*dr; rr<rt; rr+=dr)  {
 				if(shyp2)
-				for(int ic=0;ic<shyp2->numCorners();++ic)
-				{
+				for(int ic=0;ic<shyp2->numCorners();++ic)  {
 					//double dA = dA;
-					distribG[1][rr/dr] += 2.0*((rt-rr)/tan(shyp2->cornerHalfAngles(ic)))*(trote->poreLength(1));
+					distribG[1][rr/dr] += 2.*((rt-rr)/tan(shyp2->cornerHalfAngles(ic)))*(trote->poreLength(1));
 				}
 				else 
-					distribG[1][rr/dr] += 2.0*PI*((rt-rr))*(trote->poreLength(1));  /// dA
+					distribG[1][rr/dr] += 2.*PI*((rt-rr))*(trote->poreLength(1));  /// dA
 			}
 
 		}
@@ -204,28 +187,25 @@ void printDistanceMapStatistics( const std::vector<Element const *>&  elemans, i
 
 
 
-void printCornerAngStatistics( const std::vector<Element const*>&  elemans, int nBSs_, int nBpPors_)
-{
+void printCornerAngStatistics( const std::vector<Elem const*>&  elemans, int nBSs_, int nBpPors_)  {
 
 	{
-		vector< Element const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
+		vector< Elem const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
 		sort(elms.begin(), elms.end(), ElemGCmpRed());
-		double hAng=0.0; ///VolWeighted pore shape factor
-		double VWhAng=0.0; ///VolWeighted pore shape factor
-		double sumFlowVolume=1.0e-32;
-		double sumhAng=1.0e-32;
-		for(size_t i = 0; i < elms.size(); ++i)
-		{
+		double hAng=0.; ///VolWeighted pore shape factor
+		double VWhAng=0.; ///VolWeighted pore shape factor
+		double sumFlowVolume=1e-32;
+		double sumhAng=1e-32;
+		for(size_t i = 0; i < elms.size(); ++i)  {
 			const Polygon* shyp0 = dynamic_cast<const Polygon*>(elms[i]->model());
 			if(shyp0)
-			 for(int ic=0;ic<shyp0->numCorners();++ic)
-			 {
+			 for(int ic=0;ic<shyp0->numCorners();++ic)  {
 				double rt=shyp0->RRR();
 				double vol = (rt*rt/tan(shyp0->cornerHalfAngles(ic)))/shyp0->area()*elms[i]->flowVolume();
 				VWhAng += vol*shyp0->cornerHalfAngles(ic);  /// dA
 				sumFlowVolume += vol;  /// dA
 				hAng += shyp0->cornerHalfAngles(ic);  /// dA
-				sumhAng += 1.0;  /// dA
+				sumhAng += 1.;  /// dA
 			 }
 		}
 		hAng=hAng/sumhAng;
@@ -235,24 +215,22 @@ void printCornerAngStatistics( const std::vector<Element const*>&  elemans, int 
 
 
 	{
-		vector< Element const * > elms(elemans.begin()+nBpPors_, elemans.end());
+		vector< Elem const * > elms(elemans.begin()+nBpPors_, elemans.end());
 		sort(elms.begin(), elms.end(), ElemGCmpRed());
-		double hAng=0.0; ///VolWeighted pore shape factor
-		double VWhAng=0.0; ///VolWeighted pore shape factor
-		double sumFlowVolume=1.0e-32;
-		double sumhAng=1.0e-32;
-		for(size_t i = 0; i < elms.size(); ++i)
-		{
+		double hAng=0.; ///VolWeighted pore shape factor
+		double VWhAng=0.; ///VolWeighted pore shape factor
+		double sumFlowVolume=1e-32;
+		double sumhAng=1e-32;
+		for(size_t i = 0; i < elms.size(); ++i)  {
 			const Polygon* shyp0 = dynamic_cast<const Polygon*>(elms[i]->model());
 			if(shyp0)
-			 for(int ic=0;ic<shyp0->numCorners();++ic)
-			 {
+			 for(int ic=0;ic<shyp0->numCorners();++ic)  {
 				double rt=shyp0->RRR();
 				double vol = (rt*rt/tan(shyp0->cornerHalfAngles(ic)))/shyp0->area()*elms[i]->flowVolume();
 				VWhAng += vol*shyp0->cornerHalfAngles(ic);  /// dA
 				sumFlowVolume += vol;  /// dA
 				hAng += shyp0->cornerHalfAngles(ic);  /// dA
-				sumhAng += 1.0;  /// dA
+				sumhAng += 1.;  /// dA
 			 }
 		}
 		hAng=hAng/sumhAng;
@@ -263,25 +241,23 @@ void printCornerAngStatistics( const std::vector<Element const*>&  elemans, int 
 
 
 	{
-		vector< Element const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
+		vector< Elem const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
 		elms.insert(elms.end(), elemans.begin()+nBpPors_, elemans.end());
 		sort(elms.begin(), elms.end(), ElemGCmpRed());
-		double hAng=0.0; ///VolWeighted pore shape factor
-		double VWhAng=0.0; ///VolWeighted pore shape factor
-		double sumFlowVolume=1.0e-32;
-		double sumhAng=1.0e-32;
-		for(size_t i = 0; i < elms.size(); ++i)
-		{
+		double hAng=0.; ///VolWeighted pore shape factor
+		double VWhAng=0.; ///VolWeighted pore shape factor
+		double sumFlowVolume=1e-32;
+		double sumhAng=1e-32;
+		for(size_t i = 0; i < elms.size(); ++i)  {
 			const Polygon* shyp0 = dynamic_cast<const Polygon*>(elms[i]->model());
 			if(shyp0)
-			 for(int ic=0;ic<shyp0->numCorners();++ic)
-			 {
+			 for(int ic=0;ic<shyp0->numCorners();++ic)  {
 				double rt=shyp0->RRR();
 				double vol = (rt*rt/tan(shyp0->cornerHalfAngles(ic)))/shyp0->area()*elms[i]->flowVolume();
 				VWhAng += vol*shyp0->cornerHalfAngles(ic);  /// dA
 				sumFlowVolume += vol;  /// dA
 				hAng += shyp0->cornerHalfAngles(ic);  /// dA
-				sumhAng += 1.0;  /// dA
+				sumhAng += 1.;  /// dA
 			 }
 		}
 		hAng=hAng/sumhAng;
@@ -293,17 +269,15 @@ void printCornerAngStatistics( const std::vector<Element const*>&  elemans, int 
 
 
 
-void printCornerNumStatistics( const std::vector<Element const*>&  elemans, int nBSs_, int nBpPors_)
-{
+void printCornerNumStatistics( const std::vector<Elem const*>&  elemans, int nBSs_, int nBpPors_)  {
 
 	{
-		vector< Element const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
+		vector< Elem const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
 		sort(elms.begin(), elms.end(), ElemGCmpRed());
-		double Ncor=0.0; ///VolWeighted pore shape factor
-		double VWNcor=0.0; ///VolWeighted pore shape factor
-		double sumFlowVolume=0.0;
-		for(size_t i = 0; i < elms.size(); ++i)
-		{
+		double Ncor=0.; ///VolWeighted pore shape factor
+		double VWNcor=0.; ///VolWeighted pore shape factor
+		double sumFlowVolume=0.;
+		for(size_t i = 0; i < elms.size(); ++i)  {
 			sumFlowVolume+=elms[i]->flowVolume();
 			VWNcor+= elms[i]->flowVolume()*elms[i]->model()->numCorners();
 			Ncor+= elms[i]->model()->numCorners();
@@ -316,13 +290,12 @@ void printCornerNumStatistics( const std::vector<Element const*>&  elemans, int 
 
 	{
 		double nTrots=elemans.size()-nBpPors_;
-		vector< Element const * > elms(elemans.begin()+nBpPors_, elemans.end());
+		vector< Elem const * > elms(elemans.begin()+nBpPors_, elemans.end());
 		sort(elms.begin(), elms.end(), ElemGCmpRed());
-		double NcorThroat=0.0; ///VolWeighted pore shape factor
-		double VWNcorThroat=0.0; ///VolWeighted pore shape factor
-		double sumFlowVolume=0.0;
-		for(size_t i = 0; i < elms.size(); ++i)
-		{
+		double NcorThroat=0.; ///VolWeighted pore shape factor
+		double VWNcorThroat=0.; ///VolWeighted pore shape factor
+		double sumFlowVolume=0.;
+		for(size_t i = 0; i < elms.size(); ++i)  {
 			sumFlowVolume+=elms[i]->flowVolume();
 			VWNcorThroat+= elms[i]->flowVolume()*elms[i]->model()->numCorners();
 			NcorThroat+= elms[i]->model()->numCorners();
@@ -336,14 +309,13 @@ void printCornerNumStatistics( const std::vector<Element const*>&  elemans, int 
 
 	{
 		double numElems_=elemans.size()-nBSs_;
-		vector< Element const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
+		vector< Elem const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
 		elms.insert(elms.end(), elemans.begin()+nBpPors_, elemans.end());
 		sort(elms.begin(), elms.end(), ElemGCmpRed());
-		double NcorElem=0.0; ///VolWeighted pore shape factor
-		double VWNcorElem=0.0; ///VolWeighted pore shape factor
-		double sumFlowVolume=0.0;
-		for(size_t i = 0; i < elms.size(); ++i)
-		{
+		double NcorElem=0.; ///VolWeighted pore shape factor
+		double VWNcorElem=0.; ///VolWeighted pore shape factor
+		double sumFlowVolume=0.;
+		for(size_t i = 0; i < elms.size(); ++i)  {
 			sumFlowVolume+=elms[i]->flowVolume();
 			VWNcorElem+= elms[i]->flowVolume()*elms[i]->model()->numCorners();
 			NcorElem+= elms[i]->model()->numCorners();
@@ -355,18 +327,16 @@ void printCornerNumStatistics( const std::vector<Element const*>&  elemans, int 
 }
 
 
-void printShapeFactorStatistics( const std::vector<Element const*>&  elemans, int nBSs_, int nBpPors_)
-{
+void printShapeFactorStatistics( const std::vector<Elem const*>&  elemans, int nBSs_, int nBpPors_)  {
 
 	{
-		vector< Element const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
+		vector< Elem const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
 		sort(elms.begin(), elms.end(), ElemGCmpRed());
 		//double medianGPore = elms[elms.size()/2]->model()->shapeFactor();
-		double GAvgPore=0.0; ///VolWeighted pore shape factor
-		double VWGAvgPore=0.0; ///VolWeighted pore shape factor
-		double sumFlowVolume=0.0;
-		for(size_t i = 0; i < elms.size(); ++i)
-		{
+		double GAvgPore=0.; ///VolWeighted pore shape factor
+		double VWGAvgPore=0.; ///VolWeighted pore shape factor
+		double sumFlowVolume=0.;
+		for(size_t i = 0; i < elms.size(); ++i)  {
 			sumFlowVolume+=elms[i]->flowVolume();
 			VWGAvgPore+= elms[i]->flowVolume()*elms[i]->model()->shapeFactor();
 			GAvgPore+= elms[i]->model()->shapeFactor();
@@ -380,14 +350,13 @@ void printShapeFactorStatistics( const std::vector<Element const*>&  elemans, in
 
 	{
 		double nTrots=elemans.size()-nBpPors_;
-		vector< Element const * > elms(elemans.begin()+nBpPors_, elemans.end());
+		vector< Elem const * > elms(elemans.begin()+nBpPors_, elemans.end());
 		sort(elms.begin(), elms.end(), ElemGCmpRed());
 		//double medianGThroat = elms[elms.size()/2]->model()->shapeFactor();
-		double GAvgThroat=0.0; ///VolWeighted pore shape factor
-		double VWGAvgThroat=0.0; ///VolWeighted pore shape factor
-		double sumFlowVolume=0.0;
-		for(size_t i = 0; i < elms.size(); ++i)
-		{
+		double GAvgThroat=0.; ///VolWeighted pore shape factor
+		double VWGAvgThroat=0.; ///VolWeighted pore shape factor
+		double sumFlowVolume=0.;
+		for(size_t i = 0; i < elms.size(); ++i)  {
 			sumFlowVolume+=elms[i]->flowVolume();
 			VWGAvgThroat+= elms[i]->flowVolume()*elms[i]->model()->shapeFactor();
 			GAvgThroat+= elms[i]->model()->shapeFactor();
@@ -404,15 +373,14 @@ void printShapeFactorStatistics( const std::vector<Element const*>&  elemans, in
 
 	{
 		double numElems_=elemans.size()-nBSs_;
-		vector< Element const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
+		vector< Elem const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
 		elms.insert(elms.end(), elemans.begin()+nBpPors_, elemans.end());
 		sort(elms.begin(), elms.end(), ElemGCmpRed());
 		//double medianGElem = elms[elms.size()/2]->model()->shapeFactor();
-		double GAvgElem=0.0; ///VolWeighted pore shape factor
-		double VWGAvgElem=0.0; ///VolWeighted pore shape factor
-		double sumFlowVolume=0.0;
-		for(size_t i = 0; i < elms.size(); ++i)
-		{
+		double GAvgElem=0.; ///VolWeighted pore shape factor
+		double VWGAvgElem=0.; ///VolWeighted pore shape factor
+		double sumFlowVolume=0.;
+		for(size_t i = 0; i < elms.size(); ++i)  {
 			sumFlowVolume+=elms[i]->flowVolume();
 			VWGAvgElem+= elms[i]->flowVolume()*elms[i]->model()->shapeFactor();
 			GAvgElem+= elms[i]->model()->shapeFactor();
@@ -427,39 +395,36 @@ void printShapeFactorStatistics( const std::vector<Element const*>&  elemans, in
 }
 
 
-void printAspectRatioStatistics( const std::vector<Element const*>&  elemans, int nBSs_, int nBpPors_)
-{
+void printAspectRatioStatistics( const std::vector<Elem const*>&  elemans, int nBSs_, int nBpPors_)  {
 
 	{
-		vector< Element const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
+		vector< Elem const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
 		//sort(elms.begin(), elms.end(), ElemGCmpRed());
 		//double medianAspRatioPore = elms[elms.size()/2]->model()->shapeFactor();
-		double AspRatioAvgPore=0.0; ///VolWeighted pore shape factor
-		double VWAspRatioAvgPore=0.0; ///VolWeighted pore shape factor
-		double VWAWAspRatioAvgPore=0.0; ///VolWeighted pore shape factor
-		double VWQWAspRatioAvgPore=0.0; ///VolWeighted pore shape factor
-		double sumFlowVolume=0.0;
-		for(size_t i = 0; i < elms.size(); ++i)
-		{
+		double AspRatioAvgPore=0.; ///VolWeighted pore shape factor
+		double VWAspRatioAvgPore=0.; ///VolWeighted pore shape factor
+		double VWAWAspRatioAvgPore=0.; ///VolWeighted pore shape factor
+		double VWQWAspRatioAvgPore=0.; ///VolWeighted pore shape factor
+		double sumFlowVolume=0.;
+		for(size_t i = 0; i < elms.size(); ++i)  {
 			const Pore* pore = dynamic_cast< Pore const * >(elms[i]); 
-			//if (pore->connectionNum()>0)
-			double AvgAspectRatio=0.0;
-			double AWAvgAspectRatio=0.0,sumAW=1.0e-31;
-			double QWAvgAspectRatio=0.0,sumQW=1.0e-31;
-			//double maxAspectRatio=0.0;
+			//if (pore->nCncts()>0)
+			double AvgAspectRatio=0.;
+			double AWAvgAspectRatio=0.,sumAW=1e-31;
+			double QWAvgAspectRatio=0.,sumQW=1e-31;
+			//double maxAspectRatio=0.;
 			double poreR=pore->model()->RRR();
-			for(int conn = 0; conn < pore->connectionNum(); ++conn)
-			{
-				const ElemModel* shape = pore->connection(conn)->model();
+			for(int conn = 0; conn < pore->nCncts(); ++conn)  {
+				const ElemModel* shape = pore->neib(conn)->model();
 				double AspectRatio= shape->RRR()/poreR;
 				AvgAspectRatio+= AspectRatio;
 				sumAW+=shape->area();  
 				 AWAvgAspectRatio+= shape->area()*AspectRatio; 
-				sumQW+=shape->SPConductance(shape->area(),1.0);  
-				 QWAvgAspectRatio+=shape->SPConductance(shape->area(),1.0)*AspectRatio;
+				sumQW+=shape->SPConductance(shape->area(),1.);  
+				 QWAvgAspectRatio+=shape->SPConductance(shape->area(),1.)*AspectRatio;
 				//maxAspectRatio=max(maxAspectRatio,AspectRatio);
 			}
-				AvgAspectRatio/=pore->connectionNum()+1.0e-16;
+				AvgAspectRatio/=pore->nCncts()+1e-16;
 				AWAvgAspectRatio/=sumAW; 
 				QWAvgAspectRatio/=sumQW;
 			sumFlowVolume+=elms[i]->flowVolume();
@@ -487,40 +452,37 @@ void printAspectRatioStatistics( const std::vector<Element const*>&  elemans, in
 
 
 
-void printCoordinaNumStatistics( const std::vector<Element const*>&  elemans, int nBSs_, int nBpPors_)
-{
+void printCoordinaNumStatistics( const std::vector<Elem const*>&  elemans, int nBSs_, int nBpPors_)  {
 
 	{
-		vector< Element const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
+		vector< Elem const * > elms(elemans.begin()+nBSs_, elemans.begin()+nBpPors_);
 		//sort(elms.begin(), elms.end(), ElemGCmpRed());
 		//double medianCoordNPore = elms[elms.size()/2]->model()->shapeFactor();
-		double CoordNAvgPore=0.0; ///VolWeighted pore shape factor
-		double VWCoordNAvgPore=0.0; ///VolWeighted pore shape factor
-		double VWAWCoordNAvgPore=0.0; ///VolWeighted pore shape factor
-		double VWQWCoordNAvgPore=0.0; ///VolWeighted pore shape factor
-		double sumFlowVolume=0.0;
-		for(size_t i = 0; i < elms.size(); ++i)
-		{
+		double CoordNAvgPore=0.; ///VolWeighted pore shape factor
+		double VWCoordNAvgPore=0.; ///VolWeighted pore shape factor
+		double VWAWCoordNAvgPore=0.; ///VolWeighted pore shape factor
+		double VWQWCoordNAvgPore=0.; ///VolWeighted pore shape factor
+		double sumFlowVolume=0.;
+		for(size_t i = 0; i < elms.size(); ++i)  {
 			const Pore* pore = dynamic_cast< Pore const * >(elms[i]); 
-			//if (pore->connectionNum()>0)
-			double AvgCoordN=0.0;
-			double AWAvgCoordN=0.0,sumAW=0.0;
-			double QWAvgCoordN=0.0,sumQW=0.0;
-			//double maxCoordN=0.0;
+			//if (pore->nCncts()>0)
+			double AvgCoordN=0.;
+			double AWAvgCoordN=0.,sumAW=0.;
+			double QWAvgCoordN=0.,sumQW=0.;
+			//double maxCoordN=0.;
 			//double poreR=pore->model()->RRR();
-			for(int conn = 0; conn < pore->connectionNum(); ++conn)
-			{
-				const ElemModel* shape = pore->connection(conn)->model();
+			for(int conn = 0; conn < pore->nCncts(); ++conn)  {
+				const ElemModel* shape = pore->neib(conn)->model();
 				AvgCoordN+= 1;
 				sumAW+=shape->area();  
 				 AWAvgCoordN+= shape->area()*shape->area(); 
-				sumQW+=shape->SPConductance(shape->area(),1.0);  
-				 QWAvgCoordN+=shape->SPConductance(shape->area(),1.0)*shape->SPConductance(shape->area(),1.0);
+				sumQW+=shape->SPConductance(shape->area(),1.);  
+				 QWAvgCoordN+=shape->SPConductance(shape->area(),1.)*shape->SPConductance(shape->area(),1.);
 				//maxCoordN=max(maxCoordN,CoordN);
 			}
 				AvgCoordN/=1;
-				AWAvgCoordN=sumAW*sumAW/(AWAvgCoordN+1.0e-63); 
-				QWAvgCoordN=sumQW*sumQW/(QWAvgCoordN+1.0e-63); 
+				AWAvgCoordN=sumAW*sumAW/(AWAvgCoordN+1e-63); 
+				QWAvgCoordN=sumQW*sumQW/(QWAvgCoordN+1e-63); 
 			sumFlowVolume+=elms[i]->flowVolume();
 			VWAWCoordNAvgPore+= elms[i]->flowVolume()*AWAvgCoordN;
 			VWQWCoordNAvgPore+= elms[i]->flowVolume()*QWAvgCoordN;

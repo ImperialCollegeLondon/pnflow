@@ -9,942 +9,861 @@ developed by Ali Qaseminejad Raeini for handelling 3D raw images.
 
 
 Please see our website for relavant literature making use of this code:
-http://www3.imperial.ac.uk/earthscienceandengineering/research/perm/porescalemodelling
+https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/
 
 For further information please contact us by email:
 Ali Q Raeini: a.q.raeini@imperial.ac.uk
 
 \*-------------------------------------------------------------------------*/
-
+#include <memory>
 #include <sstream>
 #include "shapeToVoxel.h"
+#include "voxelEndian.h"
+#include "globals.h"  // ensure...
+#include "voxelRegions.h"
+#include "InputFile.h"
 
-#ifndef GLOBALS_SkipH
-#define Dbg_SkipH
-#include "globals.h"
-#undef  Dbg_SkipH
-#endif
+using namespace std; //cin cout endl string stringstream  istream istringstream regex*
 
-namespace MCTProcessing
-{
+#ifdef LPNG  // PRI_0:
+#include "voxelPng.h"
+#endif       // PRI_0;
 
-template<typename T> bool ignore( std::stringstream & ins, voxelImageT<T>& vImg)  {
-	if (ins.good() && vImg.nx()==-1) std::cout<<" ";
-	
-	return true;
+
+int maxNz = 50000;
+
+
+								namespace MCTProcessing _begins_
+
+
+template<typename T> bool ignore( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("{ section to ignore }");
+	return 0;
 }
 
-template<typename T> bool fillHoles( std::stringstream & ins, voxelImageT<T>& vImg)  {
+template<typename T> bool fillHoles( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("maxHoleSize // fill small isolated features");
 	unsigned int maxHoleSize;
 	ins>>maxHoleSize;
 
-	std::cout<<"fillHoles: eliminating isolated rocks/pores; maxHoleSize:" <<maxHoleSize<<" (default is 2) "<<std::endl;
+	cout<<"  fillHoles: eliminating isolated rocks/pores; maxHoleSize:" <<maxHoleSize<<" (default is 2) "<<endl;
 	vImg.fillHoles(maxHoleSize);
 
 	vImg.FaceMedian06(1,5);
 	//vImg.FaceMedian07(2,5);
 	//vImg.FaceMedian07(2,5);
-	return true;
+	return 0;
 }
 
-template<typename T> bool info( std::stringstream & ins, voxelImageT<T>& vImg)  {
+template<typename T> bool info( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("// print porosity...");
 	vImg.printInfo();
-	return true;
+	return 0;
 }
 
-template<typename T> bool selectPore( std::stringstream & ins, voxelImageT<T>& vImg)  {
-	std::cout<<"  converting to binary (0 and 1):"<<std::endl
-		 <<"  selecting pore (->0) with values between:";
+template<typename T> bool selectPore( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("thresholdBegin ThresholdEnd;// segment the image");
+	cout<<"  Converting to binary (0 and 1):";
 	unsigned int  thresholdMin=0,thresholdMax=0;
 	ins>>thresholdMin;
 	ins>>thresholdMax;
 
-	std::cout<<" "<<int(thresholdMin)<<"  and "<<int(thresholdMax)<<"  inclusive."<<std::endl;
-	vImg.threshold101(thresholdMin,thresholdMax);
-	return true;
+	(cout<<"  pore (=0) <- ["<<int(thresholdMin)<<" "<<int(thresholdMax)<<"] ").flush();
+	vImg.threshold101(thresholdMin,std::min(unsigned(maxT(T)),thresholdMax));
+	return 0;
 }
 
 template<typename T,  enable_if_t<std::is_arithmetic<T>::value, int> = 0> 
-bool rescale( std::stringstream & ins, voxelImageT<T>& vImg)  {
-	(std::cout<<"  rescaling voxel values to [ ").flush();
+bool rescale( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("range_min range_max;// rescale values to be within range");
+	(cout<<"  rescaling voxel values to [ ").flush();
 	unsigned int  thresholdMin=0,thresholdMax=0;
 	ins>>thresholdMin;
 	ins>>thresholdMax;
 
-	(std::cout<<thresholdMin<<", "<<thresholdMax<<" ]    ").flush();
+	(cout<<thresholdMin<<", "<<thresholdMax<<" ]    ").flush();
 	rescale(vImg,T(thresholdMin),T(thresholdMax));
-	(std::cout<<".").flush();
-	return true;
+	(cout<<".").flush();
+	return 0;
 }
 
-template<typename T> bool growPore( std::stringstream & ins, voxelImageT<T>& vImg)  {
-		std::cout<<"  growing voxels:"<<std::endl;
-		int voxelValueTogrow; ins>>voxelValueTogrow;
- 		char growingAlgorithm; ins>>growingAlgorithm;
+template<typename T> bool growPore( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("valToGrow(0/1) Algorithm(f) ...;// grow labels to adjacent voxels");
+	cout<<"  growing voxels: ";
+	int vvalTogrow(0); ins>>vvalTogrow;
+	char alg('f'); ins>>alg;
 
-		while (ins.good())		  // loop while extraction from file is possible
-		{
-			if (growingAlgorithm!='f')
+	while (ins.good())		  // loop while extraction from file is possible
+	{
+		if (alg=='f')  {
+		cout<<"   "<<vvalTogrow<<" "<<alg<<" ";
+
+			if(vvalTogrow==0)
+				vImg.growPore();
+			else if (vvalTogrow==1)
+				vImg.shrinkPore();
+			else
 			{
-				if(voxelValueTogrow==0)
-					vImg.growPore();
-				else if (voxelValueTogrow==0)
-					vImg.shrinkPore();
-				else
-				{
-					std::cerr<<"growing is only implemented for binary images: "<<
-					"selected voxel value to grow is "<<voxelValueTogrow << ", which is not acceptable"<<std::endl;
-					return false;
-				}
-			} else {
-				std::cerr<<"selected growing algorithm: "<<growingAlgorithm<<
-				" the only implemented algorithm is f which stands for faceGrowing"<<std::endl;
+				std::cerr<<"growing is only implemented for binary images: "<<
+				"selected voxel value to grow is "<<vvalTogrow << ", which is not acceptable"<<endl;
 				return false;
 			}
-
-			ins>>voxelValueTogrow;
-			ins>>growingAlgorithm;
+		} else {
+			std::cerr<<"selected growing algorithm: "<<alg<<
+			" the only implemented algorithm is f which stands for faceGrowing"<<endl;
+			return false;
 		}
-		std::cout<<" done"<<std::endl;
-		return true;
+
+		ins>>vvalTogrow;
+		ins>>alg;
+	}
+	cout<<"."<<endl;
+	return 0;
 }
 
 
-template<typename T> bool resampleMean( std::stringstream & ins, voxelImageT<T>& vImg)  {
+template<typename T> bool resampleMean( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("by_resampleFactor // assigning mean val");
 	double nResample=1;
-		ins>>nResample, std::cout<<__FUNCTION__<<" factor: "<<nResample<<std::endl;
-		vImg = resampleMean(vImg,nResample);
-		return true;
+	(ins>>nResample, cout<<__FUNCTION__<<" factor: "<<nResample<<" ").flush();
+	vImg = resampleMean(vImg,nResample);
+	return 0;
 }
 
 
-template<typename T> bool resampleMax( std::stringstream & ins, voxelImageT<T>& vImg)  {
+template<typename T> bool resampleMax( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("by_resampleFactor // assigning max val");
 	double nResample=1;
-		ins>>nResample, std::cout<<__FUNCTION__<<" factor: "<<nResample<<std::endl;
-		vImg = resampleMax(vImg,nResample);
-		return true;
+	(ins>>nResample, cout<<__FUNCTION__<<" factor: "<<nResample<<" ").flush();
+	vImg = resampleMax(vImg,nResample);
+	return 0;
 }
 
-template<typename T> bool resliceZ( std::stringstream & ins, voxelImageT<T>& vImg)  {
+template<typename T> bool resliceZ( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("nResample(-1)// reslize z to make dz same as dx and dy");
+	double nResample=-1;
+	(ins>>nResample, cout<<__FUNCTION__<<" factor: "<<nResample<<" ").flush();
+	vImg = resliceZ(vImg,nResample);
+	return 0;
+}
+
+template<typename T> bool resampleMode( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("nResample //  assigning mode val");
 	double nResample=1;
-		ins>>nResample, std::cout<<__FUNCTION__<<" factor: "<<nResample<<std::endl;
-		vImg = resliceZ(vImg,nResample);
-		return true;
+	(ins>>nResample, cout<<__FUNCTION__<<" factor: "<<nResample<<" ").flush();
+	vImg = resampleMode(vImg,nResample);
+	return 0;
 }
 
-template<typename T> bool resampleMode( std::stringstream & ins, voxelImageT<T>& vImg)  {
-	double nResample=1;
-		ins>>nResample, std::cout<<__FUNCTION__<<" factor: "<<nResample<<std::endl;
-		vImg = resampleMode(vImg,nResample);
-		return true;
+template<typename T> bool redirect( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("directiom(y/z) // flip x with y or z axes");
+	char axs;
+	ins>>axs;
+	(cout<<axs<<", swapping x and "<<axs<<" axes").flush();
+
+	vImg.rotate(axs);
+	cout<<endl;
+	return 0;
 }
 
-template<typename T> bool redirect( std::stringstream & ins, voxelImageT<T>& vImg)  {
-		char direction;
-		ins>>direction;
-		(std::cout<<direction<<", swapping x and "<<direction<<" directions").flush();
-
-		vImg.rotate(direction);
-		std::cout<<std::endl;
-		return true;
-}
-
-template<typename T> bool replaceRange( std::stringstream & ins, voxelImageT<T>& vImg)  {
-	int  thresholdMin(0),thresholdMax(0); ///. Warning don't use T, uchar wont work
+template<typename T> bool replaceRange( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("FromVal ToValue NewValue");
+	int  thresholdMin(0),thresholdMax(0); //. Warning don't use T, uchar wont work
 	ins >> thresholdMin >> thresholdMax;
 
-	int  value=(thresholdMin+thresholdMax)/2; ///. Warning don't use T, uchar wont work
+	int  value=(thresholdMin+thresholdMax)/2; //. Warning don't use T, uchar wont work
 	ins >> value;
 
-	std::cout<<" Replacing range  ["<<thresholdMin<<"  "<<thresholdMax<<"] with "<<value<<";   ";
+	cout<<"  Replacing range  ["<<thresholdMin<<"  "<<thresholdMax<<"] with "<<value<<", ";
 	replaceRange(vImg,T(thresholdMin),T(thresholdMax),T(value));
-	(std::cout<<".").flush();
-	return true;
+	(cout<<".").flush();
+	return 0;
 }
 
-//template<typename T> bool crop( std::stringstream & ins, voxelImageT<T>& vImg)
-//{
-	//int cropBegin[3], cropEnd[3];
 
-	//std::cout<<"Crop:   ";
-	//for (int i=0; i<3;++i)   ins>>cropBegin[i] >>cropEnd[i],  std::cout<<cropBegin[i]<<' '<<cropEnd[i]<<"	";
-	//std::cout<<' '<<std::endl;
-
-	//vImg.cropD(cropBegin,cropEnd);
-	//return true;
-//}
-
-
-template<typename T> bool cropD( std::stringstream & ins, voxelImageT<T>& vImg)  {
+template<typename T> bool cropD( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("cropBegin(0 0 0) cropEnd(nx ny nz)");
 	int3 cropBegin(0,0,0), cropEnd=vImg.size3();
 	int nLayers(0); int value(1);
-	std::cout<<"cropD:   ";
-	ins>>cropBegin[0] >>cropBegin[1] >>cropBegin[2];  std::cout<<" "<<cropBegin[0] <<" "<<cropBegin[1] <<" "<<cropBegin[2]<<" -- ";
-	ins>>cropEnd[0] >>cropEnd[1] >>cropEnd[2];		std::cout<<cropEnd[0] <<" "<<cropEnd[1] <<" "<<cropEnd[2]<<"  +  ";;
-	ins >> nLayers >> value;
-	std::cout<<nLayers<<" layers of "<<value<<std::endl;
-	vImg.cropD(cropBegin,cropEnd,nLayers,value);
-	return true;
+	ins>>cropBegin>>cropEnd >> nLayers >> value;  
+	(cout<<" "<<cropBegin<<" -- "<<cropEnd<<" ").flush();
+	if (nLayers) { cout<<"  + "<<nLayers<<" layers of "<<value<<" "<<endl; } 
+	vImg.cropD(cropBegin,cropEnd,nLayers,value,true);
+	return 0;
 }
 
-template<typename T> bool write( std::stringstream & ins, voxelImageT<T>& vImg)  {
-	std::string outName("dump.tif");
-	ins >> outName;
+template<typename T> bool cropf( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("beginFraction(0 0 0) endFraction(0.5 0.5 0.5)");
+	dbl3 bgn(0,0,0), end(1,1,1);
+	int nLayers(0); int value(1);
+	ins>>bgn>>end >> nLayers >> value;  
+	(cout<<" "<<bgn<<" -- "<<end<<" ").flush();
+	if (nLayers) { cout<<"  + "<<nLayers<<" layers of "<<value<<" "<<endl; } 
+	vImg.cropD(bgn*dbl3(vImg.size3())+0.5,end*dbl3(vImg.size3())+0.5,nLayers,value,true);
+	return 0;
+}
+
+template<typename T> bool write( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("outputImageName.raw/mhd/tif/am/.raw.gz");
+	string outName("dump.tif");	ins >> outName;
 	vImg.write(outName);
-	(std::cout<<".").flush();
-	return true;
+	(cout<<".").flush();
+	return 0;
 }
 
-template<typename T> bool writeUchar( std::stringstream & ins, voxelImageT<T>& vImg)  {
-	std::string outName("dump.tif");
-	ins >> outName;
-	double minv=-0.5, maxv=255.0;
-	ins>>minv>>maxv;
+template<typename T> bool write8bit( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("outputImageName_8bit.raw/mhd/tif/am/.raw.gz");
+	string outName("dump.tif");	ins >> outName;
+	double minv=-0.5, maxv=255.;   ins>>minv>>maxv;
 	double delv=255.499999999/(maxv-minv);
-	(std::cout<<minv<<" "<<maxv).flush();
+	(cout<<minv<<" "<<maxv).flush();
 	voxelImageT<unsigned char> voxels(vImg.size3(),vImg.dx(),vImg.X0(),255);
 	forAlliii_(voxels) voxels(iii)=std::max(0,std::min(255,int(delv*(vImg(iii)-minv))));
 	voxels.write(outName);
-	(std::cout<<".").flush();
-	return true;
+	(cout<<".").flush();
+	return 0;
 }
 
-template<typename T> bool read( std::stringstream & ins, voxelImageT<T>& vImg)  {
+template<typename T> bool read( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("ImageToRead.mhd/.am/.tif");
 	int3 nnn = vImg.size3();
-	std::string fnam;
-	ins>>fnam;
-	std::cout<<"  reading from  image "<<fnam<<std::endl;
-	if(fnam.size()>4)
-	{
-		if ( hasExt(fnam,4,".tif") || hasExt(fnam,7,".raw.gz") || hasExt(fnam,4,".raw") )
-		{
-			  vImg.reset(nnn,0);
-			  vImg.readBin(fnam);
+	int processHdr=1;	string fnam;	ins>>fnam>>processHdr;
+	cout<<"  reading from  image "<<fnam<<endl;
+	if(fnam.size()>4)  {
+		if ((nnn[2] && (hasExt(fnam,7,".raw.gz") || hasExt(fnam,4,".raw"))) || hasExt(fnam,4,".tif") )  {
+			vImg.reset(nnn,0);
+			vImg.readBin(fnam);
 		}
-		else vImg.readFromHeader(fnam,0);
+		else vImg.readFromHeader(fnam,processHdr);
 	}
-	return true;
+	return 0;
 }
-template<typename T> bool readAtZ( std::stringstream & ins, voxelImageT<T>& vImg)  {// used to stitch images
+
+template<typename T> bool readAtZ( stringstream& ins, voxelImageT<T>& vImg)  {// used to stitch images
+	KeyHint("ImageToReadAndReplacePreviousFromZ.mhd/.am iSlic");
 	int3 nnn = vImg.size3();
-	size_t iSlic=0;
-	std::string fnam;
-	ins>>fnam>>iSlic;
-	std::cout<<"  reading from  image "<<fnam<<", assigning to slices after "<<iSlic<<std::endl;
+	size_t iSlic=0;	string fnam;	ins>>fnam>>iSlic;
+	cout<<"  reading from  image "<<fnam<<", assigning to slices after "<<iSlic<<endl;
 	voxelImageT<T> img(fnam);
 	ensure(img.nx()==nnn.x);	ensure(img.ny()==nnn.y);
 	std::copy(img.begin(),img.end(),vImg.begin()+iSlic*nnn[0]*nnn[1]);
-	return true;
+	return 0;
 }
 
 
 
-template<typename T> bool medianFilter( std::stringstream & ins, voxelImageT<T> & vImg)  {
-	int nIterations(1);
-	ins >> nIterations;
-	(std::cout<<"  median Filter, nIterations: "<<nIterations).flush();
+template<typename T> bool medianFilter( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("nIterations");
+	int nIterations(1);  ins >> nIterations;
+	(cout<<"  median Filter, nIterations: "<<nIterations).flush();
 	vImg.growBox(2);
-	for (int i=0; i<nIterations; ++i)
-	{
-		vImg=median(vImg);
-	}
+	for (int i=0; i<nIterations; ++i)  vImg=median(vImg);
 	vImg.shrinkBox(2);
-	(std::cout<<".").flush();
-	return true;
+	(cout<<".").flush();
+	return 0;
 }
 
-template<typename T> bool modeFilter( std::stringstream & ins, voxelImageT<T> & vImg)  {
-	int nIterations(1), nMinNeis(2);
-	ins >> nIterations >> nMinNeis;
-	(std::cout<<"  mode Filter, nIterations: "<<nIterations<<"  nMinNeis"<<nMinNeis).flush();
+template<typename T> bool modeFilter( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("nIterations(1) nMinNeis(2)");
+	int nIterations(1), nMinNeis(2);   ins >> nIterations >> nMinNeis;
+	(cout<<"  mode Filter, nIterations: "<<nIterations<<"  nMinNeis"<<nMinNeis).flush();
 	vImg.growBox(2);
-	for (int i=0; i<nIterations; ++i)
-	{
-		modeNSames(vImg,nMinNeis,true);
-	}
+	for (int i=0; i<nIterations; ++i)  modeNSames(vImg,nMinNeis,true);
 	vImg.shrinkBox(2);
-	(std::cout<<".").flush();
-	return true;
+	(cout<<".").flush();
+	return 0;
 }
-template<typename T> bool medianX( std::stringstream & ins, voxelImageT<T> & vImg)  {
-	int nIterations(1);
-	ins >> nIterations;
-	(std::cout<<"  median Filter, nIterations: "<<nIterations).flush();
+template<typename T> bool medianX( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("nIterations// only applied in x direction to reduce compressed file size");
+	int nIterations(1);   ins >> nIterations;
+	(cout<<"  median Filter, nIterations: "<<nIterations).flush();
 	for (int i=0; i<nIterations; ++i)
-	{
 		vImg=medianx(vImg);
-	}
-	(std::cout<<".").flush();
-	return true;
+	(cout<<".").flush();
+	return 0;
 }
 
 
-template<typename T> bool FaceMedian06( std::stringstream & ins, voxelImageT<T> & vImg)  {
-	if(ins.peek()=='?') { ins.str("nAdj0(2), nAdj1(4),  nIterations(1)"); return true; }
-	int nAdj0(2), nAdj1(4),  nIterations(1);
-	ins >> nAdj0>> nAdj1>> nIterations;
-	(std::cout<<"  FaceMedian06: "<<nAdj0<<" "<<nAdj1<<" "<<nIterations<<"     ").flush();
+template<typename T> bool FaceMedian06( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("nAdj0(2), nAdj1(4),  nIterations(1)");
+	int nAdj0(2), nAdj1(4),  nIterations(1);     ins >>nAdj0 >>nAdj1 >>nIterations;
+	(cout<<"  FaceMedian06: "<<nAdj0<<" "<<nAdj1<<" "<<nIterations<<"     ").flush();
 	vImg.growBox(2);
-	for (int i=0; i<nIterations; ++i)
-	{
-		vImg.FaceMedian06(nAdj0,nAdj1);
-	}
+	for (int i=0; i<nIterations; ++i) vImg.FaceMedian06(nAdj0,nAdj1);
 	vImg.shrinkBox(2);
-	(std::cout<<".").flush();
-	return true;
+	(cout<<".").flush();
+	return 0;
 }
 
 
 
-template<typename T> bool PointMedian032( std::stringstream & ins, voxelImageT<T> & vImg)  {
+template<typename T> bool PointMedian032( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("nItrs(1),  nAdj(11), lbl0(0), lbl1(1)");
 	int nItrs(1),  nAdj(11), lbl0(0), lbl1(1);
 	ins >> nItrs>> nAdj>> lbl0>> lbl1;
-	(std::cout<<"  PointMedian032, "<<" nItrs:"<<nItrs<< "; nAdjThreshold "<<nAdj<<"  lbl0:"<<lbl0<<"  lbl1;"<<lbl1<<"s    ").flush();
+	(cout<<"  PointMedian032, "<<" nItrs:"<<nItrs<< "; nAdjThreshold "<<nAdj<<"  lbl0:"<<lbl0<<"  lbl1;"<<lbl1<<"s \n  PointMedian032 is only applied to the labels  lbl0 and  lbl1").flush();
 	//vImg.growBox(2);
 
 	for (int i=0; i<nItrs; ++i)  vImg.PointMedian032(nAdj,nAdj,lbl0,lbl1);
 
 	//vImg.shrinkBox(2);
-	(std::cout<<".").flush();
-	return true;
+	(cout<<".").flush();
+	return 0;
 }
 
 
-template<typename T> bool delense032( std::stringstream & ins, voxelImageT<T> & vImg)  {
-	int nItrs(2),  nAdj0(10),  nAdj1(6); 
-	Tint lbl0(0), lbl1(1);
-	ins >> nItrs>> lbl0>> lbl1>> nAdj0>>nAdj1;
-	(std::cout<<"{ "<<" nItrs:"<<nItrs<<"; lbls: "<<lbl0<<" "<<lbl1<< "; nAdjThresholds: "<<nAdj0<<" "<<nAdj1<<";  ").flush();
+template<typename T> bool faceMedNgrowToFrom( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("nItrs(2),  lblTo(0), lblFrm(1), ndif(-3)");
+	int nItrs(2),  ndif(-3); 
+	Tint lblTo(0), lblFrm(1);
+	ins >> nItrs>> lblTo>> lblFrm>> ndif;
+	(cout<<"{ "<<" nItrs:"<<nItrs<<"; "<<lblFrm<<" --> "<<lblTo<< "; ndif: "<<ndif<<";  ").flush();
 
-	vImg.growBox(2); std::cout<<endl;
+	vImg.growBox(2); cout<<endl;
+	for (int i=0; i<nItrs; ++i) FaceMedGrowToFrom(vImg,T(lblTo),T(lblFrm),ndif);
+	vImg.shrinkBox(2);
+
+	(cout<<"};\n").flush();
+	return 0;
+}
+
+template<typename T> bool delense032( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("nItrs(2) lbl0(0) lbl1(1) nAdj0(10) nAdj1(6)");
+	int nItrs(2),  nAdj0(10),  nAdj1(6);    Tint lbl0(0), lbl1(1);
+	ins >> nItrs>> lbl0>> lbl1>> nAdj0>>nAdj1;
+	(cout<<"{ "<<" nItrs:"<<nItrs<<"; lbls: "<<lbl0<<" "<<lbl1<< "; nAdjThresholds: "<<nAdj0<<" "<<nAdj1<<";  ").flush();
+
+	vImg.growBox(2); cout<<endl;
 	voxelImageT<T> vimgo=vImg;
 	for (int i=0; i<nItrs; ++i)   vImg.PointMedian032(25,nAdj1,lbl0,lbl1);
-	FaceMedGrowTo(vImg,T(lbl1),T(lbl0),1);
-	FaceMedGrowTo(vImg,T(lbl0),T(lbl1),-1);
-	for (int i=0; i<2*nItrs; ++i) { vImg.PointMedian032(nAdj0,25,lbl0,lbl1);	FaceMedGrowTo(vImg,T(lbl0),T(lbl1),-1); }
-	FaceMedGrowTo(vImg,T(lbl0),T(lbl1),-3);
-	FaceMedGrowTo(vImg,T(lbl0),T(lbl1),-1);
-	FaceMedGrowTo(vImg,T(lbl0),T(lbl1),-1);
+	FaceMedGrowToFrom(vImg,T(lbl1),T(lbl0),1);
+	FaceMedGrowToFrom(vImg,T(lbl0),T(lbl1),-1);
+	for (int i=0; i<2*nItrs; ++i) { vImg.PointMedian032(nAdj0,25,lbl0,lbl1);	FaceMedGrowToFrom(vImg,T(lbl0),T(lbl1),-1); }
+	FaceMedGrowToFrom(vImg,T(lbl0),T(lbl1),-3);
+	FaceMedGrowToFrom(vImg,T(lbl0),T(lbl1),-1);
+	FaceMedGrowToFrom(vImg,T(lbl0),T(lbl1),-1);
 	
-	FaceMedGrowTo(vimgo,T(lbl1),T(lbl0),2);//41 51 -> lbl1 
-	FaceMedGrowTo(vimgo,T(lbl1),T(lbl0),2);//41 51 -> lbl1 
+	FaceMedGrowToFrom(vimgo,T(lbl1),T(lbl0),2);//41 51 -> lbl1 
+	FaceMedGrowToFrom(vimgo,T(lbl1),T(lbl0),2);//41 51 -> lbl1 
 	forAlliii_(vimgo) if(vimgo(iii)==lbl1) vImg(iii)=lbl1;
 	vImg.shrinkBox(2);
 
-	(std::cout<<"};\n").flush();
-	return true;
+	(cout<<"};\n").flush();
+	return 0;
 }
 
 
-template<typename T> bool circleOut( std::stringstream & ins, voxelImageT<T> & vImg)  {
+template<typename T> bool circleOut( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("Axis(x/y/z) X0(=N/2) Y0(=N/2) R(=N/2) outVal(Max)");
 
-	char d='z';
-	ins >> d;
+	char d='z';  ins >> d;
 	int i = std::max<int>(d-'x',0);
 	int X0(vImg.size3()[(i+1)%3]/2), Y0(vImg.size3()[(i+2)%3]/2);
 	int R((X0+Y0)/2);
+	Tint outVal=maxT(T);
 
-	ins >> X0 >> Y0 >> R;
-	(std::cout<<"  circleOut: dir="<<d<<",  X0="<<X0 <<"  Y0="<<Y0  <<"  R="<<R ).flush();
+	ins >> X0 >> Y0 >> R >> outVal;
+	(cout<<"  circleOut: dir="<<d<<",  X0="<<X0 <<"  Y0="<<Y0  <<"  R="<<R<<"  out="<<outVal ).flush();
 
-	circleOut(vImg,X0,Y0,R,d);
+	circleOut(vImg,X0,Y0,R,d,T(outVal));
 
-	(std::cout<<".").flush();
-	return true;
+	(cout<<".").flush();
+	return 0;
 }
 
 
-template<typename T> bool maskWriteFraction( std::stringstream & ins, voxelImageT<T> & vImg)  {
+template<typename T> bool maskWriteFraction( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("not implemented");
 	int maskvv(2);
-	T minIelm(1), maxIelm=std::numeric_limits<T>::max();
-	std::string maskname, outName("maskWriteFraction.txt");
+	Tint minIelm(1), maxIelm=std::numeric_limits<T>::max();
+	string maskname, outName("maskWriteFraction.txt");
 	ins >> maskname >> outName >> maskvv >> minIelm >> maxIelm;
-	(std::cout<<"  maskWriteFraction:  mask:"<<maskname <<"  outName:"<<outName<<"  maskvv:"<<maskvv  <<"  minIelm:"<<minIelm<<"  maxIelm:"<<maxIelm ).flush();
+	(cout<<"  maskWriteFraction:  mask:"<<maskname <<"  outName:"<<outName<<"  maskvv:"<<maskvv  <<"  minIelm:"<<minIelm<<"  maxIelm:"<<maxIelm ).flush();
 
-	maskWriteFraction(vImg,maskname,outName,maskvv,minIelm,maxIelm);
+	//maskWriteFraction(vImg,maskname,outName,maskvv,minIelm,maxIelm);
 
-	(std::cout<<".").flush();
-	return true;
+	(cout<<"Error: not implemented.").flush();
+	return 0;
 }
 
 
-template<typename T> bool Offset( std::stringstream & ins, voxelImageT<T> & vImg)  {
-	dbl3 offset;
-	ins >> offset;
-	(std::cout<<"  Offset:"<<offset<<" " ).flush();
+template<typename T> bool Offset( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("offset(0.,0.,0.)");
+	dbl3 offset(0.);  ins >> offset;
+	(cout<<"  Offset:"<<offset<<" " ).flush();
 	vImg.X0Ch()=offset;
-	(std::cout<<".").flush();
-	return true;
+	(cout<<".").flush();
+	return 0;
 }
 
 
-template<typename T>  bool growLabel( std::stringstream & ins, voxelImageT<T>& vImg)  {
-	int  vv(255),nIters(0);
-	ins >> vv>>nIters;
-	(std::cout<<"  growLabel: "<<vv<<" x"<<nIters ).flush();
+template<typename T>  bool keepLargest0( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint(" // sets smaller isolated regions (of value 0) to 254, computationally expensive");	
+	keepLargest0(vImg); //! CtrlF:isolated=254
+	(cout<<".").flush();
+	return 0;
+}
 
+template<typename T>  bool growLabel( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("vvalue(255)  nIters(0) ");
+	int  vv(255), nIters(0);  ins >> vv >> nIters;
+	(cout<<"  growLabel: "<<vv<<" x"<<nIters ).flush();
 
-	for (int i=0; i<=nIters;++i)
-	 vImg.growLabel(vv);
+	for (int i=0; i<=nIters; ++i)  vImg.growLabel(vv);
 
-	(std::cout<<".").flush();
-	return true;
+	(cout<<".").flush();
+	return 0;
 }
 
 
-template<typename T>  bool reset( std::stringstream & ins, voxelImageT<T>& vImg)  {
-	std::string param;
+template<typename T>  bool reset( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("param Value // param can be N X0 dX V VN or NdXX0");
+	string param;
 	ins >>param;
-	while(param.size())
-	{
-		if(param=="N")
-		{ 	int3 N{0,0,0}; 	ins>>N; 	vImg.reset(N); cout<<"N:"<<N<<" "; 	}
-		else if(param=="X0")
-		{ 	dbl3 X0; 	ins>>X0; 	vImg.X0Ch()=X0; cout<<"X0:"<<X0<<" "; 	}
-		else if(param=="dx")
-		{ 	dbl3 dx(1.,-1e64,1.); 	ins>>dx; 
-			if(dx[1]<0) {  dx[1]=dx[0]; dx[2]=dx[1]; }
+	while(param.size())  {
+		if(param=="maxNz")  { 	ins>>maxNz;	 cout<<"maxNz:"<<maxNz<<" "; } // stop reading after maxNz layers
+		else if(param=="N")  { 	int3 N{0,0,0}; 	ins>>N; 	vImg.reset(N,T{0}); cout<<"N:"<<N<<" "; 	}
+		else if(param[0]=='X')  { 	dbl3 X0; 	ins>>X0; 	vImg.X0Ch()=X0; cout<<"X0:"<<X0<<" "; 	}
+		else if(param[0]=='d')  { 	dbl3 dx(1.,-2e9,1.); 	ins>>dx; 
+			if(dx[1]<-1e9) { dx[1]=dx[0]; dx[2]=dx[1]; }
 			vImg.dxCh()=dx; cout<<"dX:"<<dx<<" "; 	}
-		else if(param[0]=='V')
+		else if(param[0]=='V') // VN
 		{ 	int3 N=vImg.size3();
-			Tint vv(0.0); 	ins>>vv>>N;
+			Tint vv(0.); 	ins>>vv>>N;
 			vImg.reset(N,vv);
 		}
-		else if(param=="Nd0")
-		{ 	dbl3 dx(1.,1.,1.), X0(0.,0.,0.); int3 N=vImg.size3(); 	ins>>N>>dx>>X0;
+		else if(param[0]=='N' && param[1]=='d') // NdX or Nd0
+		{ 	dbl3 dx(1.,-2e9,1.), X0(0.,0.,0.); int3 N=vImg.size3(); 	ins>>N>>dx>>X0;
+			if(dx[1]<-1e9) { dx[1]=dx[0]; dx[2]=dx[0]; }
 			vImg.reset(N); cout<<"N:"<<N<<" ";  vImg.dxCh()=dx; cout<<"dX:"<<dx<<" "; 	vImg.X0Ch()=X0; cout<<"X0:"<<X0<<" "; 	}
 		else cout<<"reset does not support "<<param<<endl;
 		param="";
 		ins >>param;
 	}
-	(std::cout<<".").flush();
-	return true;
-}
-
-template<typename T > // enable_if_t wont work with the old C++11
-  bool operation( stringstream & ins, voxelImageT<T> & vxlImage)
-{
-	char operate=' ';
-	std::string image2name,catchImg;
-	ins>>operate>>image2name;
-	ins>>catchImg;
-	if(image2name.empty())
-	{
-	 cout<<"\n  image ="<<operate<<"image ";
-	 switch (operate) {
-		case '!':
-			forAllvp_(vxlImage) *vp=!(*vp);	break;
-		//case '~':
-			//forAllvp_(vxlImage) *vp=~(*vp);	break;
-		case '-':
-			forAllvp_(vxlImage) *vp=-(*vp);	break;
-		default:   cout<<"\n  Image  "<<operate<<"= !!!not supported!!! ";
-	 }
-	}else{
-	 if (isdigit(image2name[0])&&isdigit(image2name.back()))
-	 {
-		T   ii; ii=strTo<Tint>(image2name);
-		double dd; dd=strTo<double>(image2name);
-		cout<<"  image "<<operate<<"= "<< ii<<" ";
-		switch (operate) {
-			case '=':
-				forAllvp_(vxlImage) { (*vp)=ii; }	break;
-			case '+':
-				forAllvp_(vxlImage) { (*vp)+=ii; }	break;
-			case '-':
-				forAllvp_(vxlImage) { (*vp)-=ii; }	break;
-			//case '&':
-				//forAllvp_(vxlImage) (*vp)=(*vp)&ii;	break;
-			//case '|':
-				//forAllvp_(vxlImage) (*vp)=(*vp)|ii;	break;
-			//case '%':
-				//forAllvp_(vxlImage) (*vp)=(*vp)%ii;	break;
-			case '*':
-				forAllvp_(vxlImage) { (*vp)*=dd; }	break;
-			case '/':
-				forAllvp_(vxlImage) { (*vp)/=dd; }	break;
-			case 'b':
-				forAllvp_(vxlImage) { (*vp)=max(ii,(*vp)); }	break;
-			case 'e':
-				forAllvp_(vxlImage) { (*vp)=min(ii,(*vp)); }	break;
-			default:   cout<<"\n  Image  "<<operate<<"= !!!not supported!!! ";
-		}
-	 }else{
-		cout<<"\n  image  "<<operate<<"= "<<image2name<<" ";
-		voxelImageT<T> image2;
-		if (hasExt(image2name,4,".mhd"))
-		{
-			  image2.reset(vxlImage.size3(),0);
-			  image2.readBin(image2name);
-		}
-		else image2.readFromHeader(image2name);
-
-		switch (operate) {
-			case '+':
-				forAlliii_(vxlImage) { vxlImage(iii)=min(Tint(vxlImage(iii))+image2(iii),Tint(maxT(T))); }	break;
-			case '-':
-				//forAlliii_(vxlImage) vxlImage(iii)=min(max(int(vxlImage(iii))+128-image2(iii),0),maxT(T));	break;
-				forAlliii_(vxlImage) { vxlImage(iii)=min(max(Tint(vxlImage(iii))-image2(iii),Tint(0)),Tint(maxT(T))); }	break; //! Analyse needs this
-			//case '&':
-				//forAlliii_(vxlImage) vxlImage(iii)=vxlImage(iii)&image2(iii);	break;
-			//case '|':
-				//forAlliii_(vxlImage) vxlImage(iii)=vxlImage(iii)|image2(iii);	break;
-			//case '%':
-				//forAlliii_(vxlImage) vxlImage(iii)=vxlImage(iii)%image2(iii);	break;
-			case '*':
-				forAlliii_(vxlImage) { vxlImage(iii)=min(Tint(vxlImage(iii))*image2(iii),Tint(maxT(T))); }	break;
-			//case '/':
-				//forAlliii_(vxlImage) vxlImage(iii)/=image2(iii);	break;
-			default:   cout<<"\n  Image  "<<operate<<"= !!!not supported!!! ";
-		}
-	 }
-	}
-
-
-	return true;
+	(cout<<".").flush();
+	return 0;
 }
 
 
+template<typename T>  bool operat( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("operation(+-^...) [img2Nam/number]  [shift]");
+	string opr=" ", img2Nam;    ins>>opr>>img2Nam;
+	operat(vImg,opr[0],img2Nam,ins);
+	return 0;
+}
 
-
-
-template<typename T > 
-  bool mapFrom( std::stringstream & ins, voxelImageT<T> & vImg)  {
-	Tint minv(0),maxv(255);
-	std::string image2name,catchImg;
+template<typename T> 
+bool mapFrom( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("image2name  minv maxv");
+	Tint minv(0), maxv(maxT(T)); double scale=0, shift(0.5-T(0.5));
+	string image2name;
 	ins>>image2name>>minv>>maxv;
-
-	std::cout<<"\n{  mapping from image "<<image2name<<", assigning to values originally in range: ["<<minv<<" "<<maxv<<"]"<<std::endl;
+	ensure(maxv>=minv);
+	cout<<"\n{  mapping from image "<<image2name<<", assigning to values originally in range: ["<<minv<<" "<<maxv<<"], by "; if(scale>1e-16) { cout<<shift<<"+"<<scale<<"*"; } cout<<image2name<<endl;
 	voxelImageT<T> image2(image2name);
 
-	mapToFrom(vImg,image2,T(minv),T(maxv));
+	mapToFrom(vImg,image2,T(minv),T(maxv), scale, shift);
 
-	std::cout<<" } //mapFrom "<<std::endl;
-	return true;
+	cout<<" } //mapFrom "<<endl;
+	return 0;
 }
 
-template<typename T> std::unordered_map<std::string,bool(*)( std::stringstream&, voxelImageT<T>&)>
- namedProcesses()
-{
-	typedef bool(*ProcessP)( std::stringstream&  ins, voxelImageT<T>& vImg);
-	return std::unordered_map<std::string,ProcessP>{
+
+
+template<typename T,  enable_if_t<std::is_arithmetic<T>::value, int> = 0> 
+std::unordered_map<string,bool(*)( stringstream&, voxelImageT<T>&)>
+ namedProcesses()  {
+	typedef bool(*ProcessP)( stringstream&  ins, voxelImageT<T>& vImg);
+	return std::unordered_map<string,ProcessP>{
 		{  ""             , ProcessP(& ignore)},// ProcessP can be removed if using g++
-		{  ";"		      , ProcessP(& ignore )},
+		{  ";"	          , ProcessP(& ignore )},// TODO delete
+		{  "skip"	      , ProcessP(& ignore )},
 		{  "fillHoles"    , ProcessP(& fillHoles )},
-		{  "reset"	      , ProcessP(& reset )},
-		{  "info"	      , ProcessP(& info )},
+		{  "reset"        , ProcessP(& reset )},
+		{  "info"         , ProcessP(& info )},
 		{  "rescale"	  , ProcessP(& rescale )},
-		{  "pore"		  , ProcessP(& selectPore )},
+		{  "pore" 	      , ProcessP(& selectPore )},
 		{  "threshold"    , ProcessP(& selectPore )},
 		{  "threshold101" , ProcessP(& selectPore )},
 		{  "Offset"       , ProcessP(& Offset )},
+		{  "redirect"     , ProcessP(& redirect )},
 		{  "direction"    , ProcessP(& redirect )},
-		{  "crop"	      , ProcessP(& cropD )},
-		{  "cropD"	      , ProcessP(& cropD )},
+		{  "crop"         , ProcessP(& cropD )},
+		{  "cropD"        , ProcessP(& cropD )},
+		{  "cropf"        , ProcessP(& cropf )},
+		{  "resample"     , ProcessP(& resampleMean )},
 		{  "resampleMean" , ProcessP(& resampleMean )},
 		{  "resampleMax"  , ProcessP(& resampleMax )},
 		{  "resampleMode" , ProcessP(& resampleMode )},
 		{  "resliceZ"     , ProcessP(& resliceZ )},
+		{  "rangeTo"      , ProcessP(& replaceRange )},
 		{  "replaceRange" , ProcessP(& replaceRange )},
 		{  "write"        , ProcessP(& write )},
-		{  "writeUchar"   , ProcessP(& writeUchar )},
+		{  "write8bit"    , ProcessP(& write8bit )},
 		{  "read"         , ProcessP(& read )},
 		{  "readAtZ"      , ProcessP(& readAtZ )},
-		{  "modeFilter" , ProcessP(& modeFilter )},
+		{  "modeFilter"   , ProcessP(& modeFilter )},
 		{  "medianFilter" , ProcessP(& medianFilter )},
 		{  "medianX"      , ProcessP(& medianX )},
 		{  "FaceMedian06" , ProcessP(& FaceMedian06 )},
 		{  "PointMedian032" , ProcessP(& PointMedian032 )},
-		{  "delense032" , ProcessP(& delense032 )},
-		{  "circleOut"  , ProcessP(& circleOut )},
-		{  "growLabel"  , ProcessP(& growLabel )},
-		{  "maskWriteFraction"  ,ProcessP(& maskWriteFraction )},
-		{  "mapFrom"  ,ProcessP(& mapFrom )},
-		{  "shapeToVoxel"  ,ProcessP(& shapeToVoxel )},
-		{  "shapeToVoxelAdd"  ,ProcessP(& shapeToVoxelAdd )},
-		{  "operation"  ,ProcessP(& operation )},
+		{  "faceMedNgrowToFrom"   , ProcessP(& faceMedNgrowToFrom )},
+		{  "delense032"   , ProcessP(& delense032 )},
+		{  "circleOut"    , ProcessP(& circleOut )},
+		{  "growLabel"    , ProcessP(& growLabel )},
+		{  "keepLargest0"    , ProcessP(& keepLargest0 )},
+		{  "maskWriteFraction",ProcessP(& maskWriteFraction )},
+		{  "mapFrom"      , ProcessP(& mapFrom )},
+		{  "Paint"        , ProcessP(& Paint )},
+		{  "PaintAdd"     , ProcessP(& PaintAdd )},
+		{  "PaintBefore"    ,ProcessP(& PaintBefore )},
+		{  "PaintAfter"     ,ProcessP(& PaintAfter )},
+		{  "PaintAddBefore" ,ProcessP(& PaintAddBefore )},
+		{  "PaintAddAfter"  ,ProcessP(& PaintAddAfter )},
+		#ifdef LPNG
+		{  "sliceToPng"    , ProcessP(& sliceToPng )},
+		{  "sliceToPngBW"  , ProcessP(& sliceToPngBW )},
+		#endif
+		{  "operation"    , ProcessP(& operat )},
+		{  "operat"       , ProcessP(& operat )}
 	};
 }
 
 
-
+template<typename T,  enable_if_t<std::is_class<T>::value, int> = 0> 
+std::unordered_map<string,bool(*)( stringstream&, voxelImageT<T>&)> namedProcesses()  {
+	typedef bool(*ProcessP)( stringstream&  ins, voxelImageT<T>& vImg);
+	return std::unordered_map<string,ProcessP>{
+		{  ""      , ProcessP(& ignore)},// ProcessP can be removed if using g++
+		{  ";"		   , ProcessP(& ignore )}, // TODO delete
+		{  "skip"	   , ProcessP(& ignore )},
+		{  "Offset"    , ProcessP(& Offset )},
+		{  "redirect"  , ProcessP(& redirect )},
+		{  "direction" , ProcessP(& redirect )},
+		{  "write"     , ProcessP(& write )},
+		{  "read"      , ProcessP(& read )},
+		{  "circleOut" , ProcessP(& circleOut )}
+		};
 }
+
+
+
+								_end_of_(namespace MCTProcessing)
+
+
+
+
 
 
 template<typename T>
-void VxlKeysProcess
-(
-	std::istream& keyins,
-	voxelImageT<T>& vImg,
-	const std::string& hdrNam
-)
+class  voxelplugins
 {
-	typedef bool(*ProcessP)( std::stringstream&, voxelImageT<T>&);
-	std::unordered_map<std::string,ProcessP> key_funs = MCTProcessing::namedProcesses<T>();
+	public:
+	typedef bool(*ProcessP)( stringstream&  inputs, voxelImageT<T>& vImg);
+
+	std::unordered_map<string,ProcessP> key_funs;
+	const std::unordered_map<string,ProcessP>& operator()() const {return key_funs;};
+	voxelplugins() {
+		using namespace MCTProcessing;
+		key_funs = MCTProcessing::namedProcesses<T>();
+	};
 
 
-	while (true)
-	{
-		std::streampos begLine = keyins.tellg();
-		std::string tmpStr;
-		keyins>>tmpStr;
-		//bool validKey=false;
-		//cout<<tmpStr<<endl;///. keep me
-		if (keyins.fail())
-		{std::cout<<" Read "<<hdrNam<<":/  "<<keyins.tellg()<<std::endl;  break; }
-		else if (tmpStr[0]=='#' || tmpStr[0]=='\'' || tmpStr[0]=='/' || tmpStr[0]=='%')
-		{
-			keyins.ignore(10000,'\n');
-			//validKey=true;
-		}
-		else
-		{
-			auto paer = key_funs.find(tmpStr);
-			if (paer!=key_funs.end())	
-			{
-				(std::cout<<" "<<tmpStr<<": ").flush();
-				std::stringstream ss;
-				if(keyins.peek()!='\n') keyins.get (*(ss.rdbuf()));
-				(*(paer->second))(ss,vImg);
-				std::cout<<std::endl;
-				//validKey=true;
+
+
+	int process(const InputFile& inp, voxelImageT<T>& img, string nam="") const  { // nam is ignored here
+		if(inp.data().size()>2) std::cout<<std::endl;
+		for(const auto& ky:inp.data())  {
+			auto paer = key_funs.find(ky.first);
+			if (paer!=key_funs.end())  {
+				(cout<<" "<<ky.first<<": ").flush();
+				stringstream ss(ky.second);
+				(*(paer->second))(ss, img);
+				if(inp.data().size()>2) cout<<endl;
 			}
-			else
-			{	std::cout<<"  read "<<hdrNam<<" util entry \""<<tmpStr<<"\":/ \n"<<std::endl;
-				keyins.clear();
-				keyins.seekg(begLine);
+			else {
+				if(ky.first!="end") { cout<<"  stopped executing "+inp.fileName()+" before \""+ky.first+"\"  :/ "; 
+												return -1; }
 				break;
 			}
 		}
-	}
+		return 0;
+	};
+	int process(const string&  keystr, voxelImageT<T>& img, string nam)	{  return  process(InputFile(keystr,nam,false), img);   }
+	/*int process(      istream& keyins, voxelImageT<T>& img, string nam)	{  return  process(InputFile(keyins,nam,false), img);
+		//while (true)  {
+			//std::streampos begLine = keyins.tellg();
+			//string ky;  keyins>>ky;
+			//if (keyins.fail()) 	{cout<<"  @"<<keyins.tellg()<<"  "<<nam<<" done."<<endl;  break; }
+			//else if (ky[0]=='{' || ky[0]=='}') {keyins.seekg(int(keyins.tellg())-ky.size()-1); continue;}
+			//else if (ky[0]=='#' || ky[0]=='\'' || ky[0]=='/' || ky[0]=='%')  keyins.ignore(10000,'\n');  
+			//else  {
+				//auto paer = key_funs.find(ky);
+				//if (paer!=key_funs.end())  {
+					//(cout<<" "<<ky<<": ").flush();
+					//stringstream ss;  if(keyins.peek()!='\n') keyins.get (*(ss.rdbuf()));
+					//(*(paer->second))(ss,img);
+					//cout<<endl;
+				//}
+				//else  {	
+					//cout<<"  stopped processing "<<nam<<" before \""<<ky<<"\" :/ "<<endl; 
+					//keyins.clear(); keyins.seekg(begLine);
+					//return -1;
+				//}
+		//}	}
+		//return 0;
+	};*/
+
+};
+
+template<class InpT, typename T>  //! run voxel plugins
+ int vxlProcess(const InpT& ins, voxelImageT<T>& img, string nam) {  return voxelplugins<T>().process(ins,img,nam);  }
+
+template<class InpT, typename First=uint8_t, typename... Rest>
+ int vxlProcess(const InpT& ins, voxelImageTBase* imgPtr, string nam)  { //! detect type and run voxel plugins
+	if(auto img = dynamic_cast<voxelImageT<First>*>(imgPtr))  
+		return vxlProcess<InpT,First>(ins,*img,nam);
+	else if(sizeof...(Rest))
+		return vxlProcess<InpT,Rest...>(ins, imgPtr, nam);
+	cout<<"Unknown image type."<<endl;
+	return -1;
 }
+template int vxlProcess<InputFile, unsigned char,unsigned short,short,int,float>(const InputFile& inp, voxelImageTBase* imgPtr, string nam);
+template int vxlProcess<string, unsigned char,unsigned short,short,int,float>(string const& ins, voxelImageTBase* imgPtr, string nam);
 
-inline std::string VxlKeysHelp(std::string keyname="", std::string subkey="")
-{
-	typedef bool(*ProcessP)( std::stringstream&  ins, voxelImageT<unsigned char>& vImg);
-	std::unordered_map<std::string,ProcessP> key_funs = MCTProcessing::namedProcesses<unsigned char>();
 
-	std::stringstream keys;
-	if(keyname.size())
-	{
+string VxlKeysHelp(string keyname, string subkey)  {
+	//! Query and print MCTProcessing keyword usage messages
+	typedef bool(*ProcessP)( stringstream&  ins, voxelImageT<unsigned char>& vImg);
+
+	std::unordered_map<string,ProcessP> key_funs = voxelplugins<unsigned char>()();
+
+	voxelImage vImg;
+	stringstream keys;
+	if(keyname.size())  {
 		auto paer = key_funs.find(keyname);
-		if (paer!=key_funs.end())
-		{
-			voxelImageT<unsigned char> vImg;
-			std::stringstream ss;
-			ss.str(subkey.empty()?  "?" : "? "+subkey);
-			(*(paer->second))(ss, vImg);
+		if (paer!=key_funs.end())  {
+			stringstream ss(subkey.empty()?  "?" : "? "+subkey);
+			try {  (*(paer->second))(ss, vImg);  }
+			catch (std::exception &exc) {  std::cerr <<keyname<<" KeyHelp not implemented:" << exc.what() << endl; }
+			catch (...)                 {  std::cerr <<keyname<<" KeyHelp not implemented:" << endl; }
 			return ss.str();
 		}
 		else
-			std::cout<<" Error: no such keyword "<<keyname<<std::endl; 
+			cout<<" Error: no such keyword "<<keyname<<endl; 
 		keys<<"//!-*- C -*- keywords:\n";
 		for(const auto& proc:key_funs) 	keys<<proc.first<<"\n";
 		keys<<" Error: no such keyword "<<keyname<<"\n\n";
 	}
-	else
-		for(const auto& proc:key_funs) 	keys<<proc.first<<"\n";
-	//std::cout<<keys.str();
+	else  {
+		std::vector<std::pair<string,ProcessP>> keyfuns(key_funs.begin(), key_funs.end());
+		std::sort(keyfuns.begin(), keyfuns.end());
+		for(const auto& proc:keyfuns)  if(proc.first.size()>1)  {
+			stringstream ss("?");
+			try                         {  (*(proc.second))(ss, vImg); }
+			catch (std::exception &exc) {  std::cerr <<proc.first<<" KeyHelp not implemented:" << exc.what() << endl; }
+			catch (...)                 {  std::cerr <<proc.first<<" KeyHelp not implemented:" << endl; }
+			keys<<"\t"<<proc.first<<": \t"<<ss.str()<<"\n\n";
+		}
+	}
 	return keys.str();
 }
 
 
 template<typename T>
-void voxelImageT<T>::readFromHeader
-(
-	std::istream& headerFile,
-	const std::string& hdrNam,
-	int procesKeys,
-	std::string inputName
-)
-{
-	int3 n(0,0,0);
-	std::string BinaryData="XXX";
+void voxelImageT<T>::readFromHeader(istream& hdrFile,	const string& hdrNam, int procesKeys, string inputName )  {
+	//! read image from file header, format detected based on image extension
+	auto& vImg=*this;
+
+	int3 nnn(0,0,0);
+	string BinaryData="XXX", flipSigByt="False";
 	bool X0read=false, dxread=false, autoUnit=true; //auto unit only applies to .mhd format
-	double unit_=1.0;
+	double unit_=1.;
 	int nSkipBytes(0);
-	#ifdef TIFLIB
-	if (hasExt(hdrNam,4,".tif"))
-	{
-		(std::cout<<  " reading tif file "<<hdrNam<<" ").flush();
-		readTif(*this, hdrNam);
-		std::cout<<  " ."<<std::endl;
-		return;
-	}
-	else
-	#endif
-	if (hasExt(hdrNam,4,".mhd") || hasExt(hdrNam,3,".py"))
-	{
-		std::cout<<" mhd:"<<hdrNam<<": "<<std::endl;
-		while (true)
-		{
-			std::string tmpStr;
-			std::streampos begLine = headerFile.tellg();
-			headerFile>>tmpStr;
-
-
-			//ObjectType = Image
-			//NDims = 3
-			//Offset = 0 0 0
-			//ElementSize = 8 8 8
-			//DimSize = 200 225 153
-			//ElementType = MET_UCHAR
-			//ElementDataFile = Ketton100.raw
-			std::stringstream ss;
-			if(headerFile.peek()!='\n') headerFile.get (*(ss.rdbuf()));
-			if (headerFile.fail()) break;
-			std::string tmp;
-			if (tmpStr == "ObjectType")  {
-				ss >> tmp;  ss >> tmp;  if (tmp != "Image") std::cout<<" Warning: ObjectType != Image :="<<tmp<<std::endl;
-			}
-			else if (tmpStr == "NDims")  {
-				ss >> tmp;  ss >> tmp;  if (tmp != "3") std::cout<<" Warning: NDims != 3 :="<<tmp<<std::endl;
-			}
-			else if (tmpStr == "ElementType")  {
-				ss >> tmp;  ss >> tmp;  if ((tmp != "MET_UCHAR") && (sizeof(T)==1)) std::cout<<" Warning: ElementType != MET_UCHAR :="<<tmp<<std::endl;
-			}
-			else if (tmpStr == "Offset")  {
-				ss >> tmp;  ss>> X0_;   std::cout<<" X0: "<<  X0_<<",  ";  X0read=true;
-			}
-			else if (tmpStr == "ElementSize" || tmpStr == "ElementSpacing")  {
-				ss >> tmp;  ss>> dx_ ;  std::cout<<" dX: "<< dx_<<",  ";  dxread=true;
-			}
-			else if (tmpStr == "DimSize")  {
-				ss >> tmp;  ss>> n;     std::cout<<" Nxyz: "<<n<<",  ";
-			}
-			else if (tmpStr == "ElementDataFile")  {
-				ss >> tmp; if (inputName.empty()) ss >> inputName;
+	if (hasExt(hdrNam,4,".mhd") || hasExt(hdrNam,3,".py"))	{
+		cout<<" mhd:"<<hdrNam<<": "<<endl;
+		while (true)  {
+			std::streampos begLine = hdrFile.tellg();
+			string ky, tmp;   hdrFile>>ky>>tmp;
+			stringstream ss;  if(hdrFile.peek()!='\n') hdrFile.get (*(ss.rdbuf()));
+			if (hdrFile.fail()) break;
+			if (ky=="ObjectType")  {  ss>> tmp;  if (tmp != "Image") cout<<"  Warning: ObjectType != Image :="<<tmp<<endl;	}
+			else if (ky=="NDims")  {  ss>> tmp;  if (tmp != "3"    ) cout<<"  Warning: NDims != 3 :="<<tmp<<endl;	}
+			else if (ky=="ElementType")  { ss>> tmp;  if ((tmp != "MET_UCHAR") && (sizeof(T)==1)) cout<<"  Warning: ElementType != MET_UCHAR :="<<tmp<<endl; 	}
+			else if (ky=="Offset")       { ss>> vImg.X0_;   cout<<"  X0: "<<  vImg.X0_<<",  ";  X0read=true; }
+			else if (ky=="ElementSize" || ky=="ElementSpacing")  {  ss>> vImg.dx_;  cout<<"  dX: "<<vImg.dx_<<",  ";  dxread=true;	}
+			else if (ky=="DimSize")                              {  ss>> nnn;  nnn.z=std::min(nnn.z,maxNz);  cout<<"  Nxyz: "<<nnn<<",  ";	}
+			else if (ky=="ElementDataFile")  {  if (inputName.empty()) ss>> inputName;
 				size_t is=hdrNam.find_last_of("\\/");
 				if (is<hdrNam.size() && inputName[0]!='/' &&  inputName[1]!=':') inputName=hdrNam.substr(0,is+1)+inputName;
-				std::cout<<"\n ElementDataFile = "<<inputName<<"	";
+				cout<<"  Img: "<<inputName<<",	";
 			}
-			else if (tmpStr == "BinaryData")  {
-				ss >> tmp; ss >> BinaryData;  std::cout<<" BinaryData = "<<BinaryData<<"	"<<std::endl;
-			}
-			else if (tmpStr == "OutputFormat" || tmpStr == "DefaultImageFormat" )  {
-				std::string ext;  ss >> ext;  if(ext=="=") ss >> ext;  std::cout<<" OutputFormat = "<<ext<<", suffix:"<<imgExt(ext)<<"	"<<std::endl; ///. sets suffix+format
-			}
-			else if (tmpStr == "Unit")  {
-				ss >> tmp; ss >> unit_;      std::cout<<" Unit, OneMeter = "<<unit_<<std::endl;  autoUnit=false;
-			}
-			else if (tmpStr == "HeaderSize")  {
-				ss >> tmp; ss >> nSkipBytes;  std::cout<<"HeaderSize, nSkipBytes = "<<nSkipBytes<<std::endl;
-			}
-			else if (tmpStr!="BinaryDataByteOrderMSB" && tmpStr!="ElementByteOrderMSB" && tmpStr!="CompressedData" &&  tmpStr!="CompressedDataSize" &&  tmpStr!="TransformMatrix" &&
-					 tmpStr!="ElementNumberOfChannels" && tmpStr!="CenterOfRotation" && tmpStr!="AnatomicalOrientation" && tmpStr!="AnatomicalOrientation")  {
-				headerFile.clear();
-				headerFile.seekg(begLine);
-				(std::cout<<" ; ").flush();
+			else if (ky=="BinaryData")  {  ss>> BinaryData;     cout<<"  BinaryData: "<<BinaryData<<"	"<<endl; }
+			else if (ky=="Unit")        {  ss>> unit_;  autoUnit=false;   cout<<"  Unit, OneMeter: "<<unit_<<endl; 	}
+			else if (ky=="HeaderSize")  {  ss>> nSkipBytes;         cout<<"  Ski pHeaderSize: "<<nSkipBytes<<endl;	}
+			else if (ky=="OutputFormat" || ky=="DefaultImageFormat" )  {  if(tmp=="=") ss>> tmp;  cout<<"  OutputFormat: "<<tmp<<", suffix:"<<imgExt(tmp)<<"	"<<endl; }///. sets suffix+format
+			else if (ky=="BinaryDataByteOrderMSB" || ky=="ElementByteOrderMSB")  {  ss>> flipSigByt; }
+			else if (ky!="CompressedData" &&  ky!="CompressedDataSize" &&  ky!="TransformMatrix" &&
+					 ky!="ElementNumberOfChannels" && ky!="CenterOfRotation" && ky!="AnatomicalOrientation" && ky!="AnatomicalOrientation")  {
+				hdrFile.clear();  hdrFile.seekg(begLine);
+				(cout<<"; ").flush();
 				break;
 			}
-
 		}
-		std::cout<<std::endl;
+		cout<<endl;
 
 	}
-	else if (hasExt(hdrNam,3,".am"))
-	{
+	#ifdef TIFLIB
+	else if (hasExt(hdrNam,".tif"))  {  readTif(vImg, hdrNam);  return;  }
+	#endif
+	else if (hasExt(hdrNam,".am"))	{
 		inputName=hdrNam;
 		procesKeys=0;
 	}
-	else
-	{
-		std::cout<<" (depricated) _header:"<<hdrNam<<","<<std::endl;
+	else if (hasExt(hdrNam,7,".raw.gz") || hasExt(hdrNam,4,".raw") || hasExt(hdrNam,4,".dat"))  { // detect size and voxel size from image name.
+		string 
+		data=replaceFromTo(replaceFromTo(replaceFromTo(replaceFromTo(replaceFromTo(
+									hdrNam,".gz$",""), ".raw$",""), ".dat$",""),"__","\n"),"_"," ");
+		data=replaceFromTo(replaceFromTo(replaceFromTo(data,"voxel",""),"size",""),"um","\n");
+		data=regex_replace(data,regex("( [0-9][0-9]*)c"), " $1 $1 $1 ", regex_constants::format_first_only);
+		data=regex_replace(data,regex("( [0-9][0-9]*)[ x]*([0-9][0-9]*)[ x]*([0-9][0-9]* )"), 
+		                                        "\n   reset Nd0 $1 $2 $3 ", regex_constants::format_first_only);
+		data=regex_replace(data,regex("^[^\n]*\n"), "", regex_constants::format_first_only);
+		data=regex_replace(data,regex("\n|($)"),"\n   read "+hdrNam+"\n", regex_constants::format_first_only);
+		for(auto&da:data)  { if(da=='p') da='.'; else if(da=='\n') break; }
+		cout<<"  Keywords: {\n"<<data<<"  }"<<endl;
+		vxlProcess(data,vImg,hdrNam);
+		procesKeys=0;
+	}
+	else if (hasExt(hdrNam,7,"_header"))  {
+		cout<<" (depricated) _header:"<<hdrNam<<","<<endl;
 
 		char tmpc;
-		for (int i=0; i<8;++i)   headerFile>>tmpc, std::cout<<tmpc;  //ignore the first 8 characters (ascii 3uc)
+		for (int i=0; i<8; ++i)   hdrFile>>tmpc, cout<<tmpc;  //ignore the first 8 characters (ascii 3uc)
 
 		if (hasExt(hdrNam,7,"_header"))  inputName=hdrNam.substr(0,hdrNam.size()-7);
-		headerFile>>n[0]>>n[1]>>n[2];						// number of variables (dimension of
-		std::cout<<"\n Nxyz: "<<n[0]<<" "<<n[1]<<" "<<n[2]<<"   "; std::cout.flush();
-		headerFile>>	dx_[0]>>dx_[1]>>dx_[2] ;
-		std::cout<<" dX: "<< dx_[0]<<"  "<<dx_[1]<<"  "<<dx_[2]<<"   "; std::cout.flush();
-		headerFile>>	X0_[0]>>X0_[1]>>X0_[2] ;
-		std::cout<<" X0: "<<  X0_[0]<<"  "<<X0_[1]<<"   "<<X0_[2] <<" um"<< std::endl;
-		if (!headerFile)	 { std::cout<<"  Incomplete/bad header name, aborting"<<std::endl; exit(-1);}
-		//if (!headerFile)	 { std::cout<<"  Incomplete/bad hdrNam, continuing anyway"<<std::endl; }
-
+		hdrFile>>nnn >> vImg.dx_ >>	vImg.X0_ ;
+		cout<<"\n Nxyz: "<<nnn<<"    dX: "<< vImg.dx_<<"   X0: "<< vImg.X0_ <<" um"<< endl;
+		if (!hdrFile)	 { cout<<"   Incomplete/bad header name, aborting"<<endl; exit(-1);}
 	}
+	else  alert("Unknown (header) file type: "+hdrNam,-1); // exit
 
-
-	this->reset(n);
-	if( !inputName.empty() && inputName!="NO_READ" && procesKeys!=2 )
-	{
-	  if (hasExt(inputName,4,".tif"))
-	  {
-			dbl3 dx=dx_, X0=X0_;
-			bool readingImage = this->readBin(inputName);
+	if(nnn.z) vImg.reset(nnn);
+	if( !inputName.empty() && inputName!="NO_READ" && procesKeys!=2)  {
+	  if (hasExt(inputName,4,".tif"))  {
+			dbl3 dx=vImg.dx_, X0=vImg.X0_;
+			bool readingImage = vImg.readBin(inputName);
 			assert(readingImage);
-			if(X0read) X0_=X0;
-			if(dxread) dx_=dx;
+			if(X0read) vImg.X0_=X0;
+			if(dxread) vImg.dx_=dx;
 	  }
-	  else if ((hasExt(inputName,4,".raw") && BinaryData!="False") || BinaryData=="True")
-	  {
-			bool readingImage = this->readBin(inputName, nSkipBytes);
+	  else if ((hasExt(inputName,4,".raw") && BinaryData!="False") || BinaryData=="True")   {
+			bool readingImage = vImg.readBin(inputName, nSkipBytes);
 			assert(readingImage);
 	  }
-	  else if (hasExt(inputName,3,".am"))
-	  {
+	  else if (hasExt(inputName,3,".am"))    {
 			int RLECompressed;
-			dbl3 dx=dx_, X0=X0_;
-			getAmiraHeaderSize(inputName, n,dx_,X0_,nSkipBytes,RLECompressed);
-			bool readingImage = this->readBin(inputName, nSkipBytes);
+			dbl3 dx=vImg.dx_, X0=vImg.X0_;
+			getAmiraHeaderSize(inputName, nnn,vImg.dx_,vImg.X0_,nSkipBytes,RLECompressed);
+			bool readingImage = vImg.readBin(inputName, nSkipBytes);
 			assert(readingImage);
-			if(X0read) X0_=X0;
-			if(dxread) dx_=dx;
+			if(X0read) vImg.X0_=X0;
+			if(dxread) vImg.dx_=dx;
 	  }
-	  else if (hasExt(inputName,7,".raw.gz"))
-	  {
-			bool readingImage = this->readBin(inputName);
+	  else if (hasExt(inputName,7,".raw.gz"))   {
+			bool readingImage = vImg.readBin(inputName);
 			assert(readingImage);
 	  }
-	  else
-	  {
-		std::ifstream in(inputName.c_str());
-		assert(in);
+	  else   {
+		std::ifstream in(inputName);  assert(in);
 		if(nSkipBytes) in.ignore(nSkipBytes);
-		voxelField<T>::readAscii(in);
+		vImg.voxelField<T>::readAscii(in);
 	  }
 	}
 
-	if(autoUnit  && dx_[0]>0.01) //&& dxread
-	{
-		std::cout<<" Warning: too large dx (="<<dx_[0]<<"), assuming unit is um, ";
-		unit_ = 1.0e-6;
+	if(flipSigByt=="True") {
+		cout<<"  flipEndian "<<endl;
+		flipEndian(vImg);	}
+
+	if(autoUnit  && vImg.dx_[0]>0.02)	{ //&& dxread
+		cout<<"   dx="<<vImg.dx_[0]<<"(>0.02 -> assuming unit is um), ";
+		unit_ = 1e-6;
 	}
-	dx_*=unit_;
-	X0_*=unit_;
-	if(std::abs(unit_-1.0)>epsT(float)) std::cout<<"  unit= "<<unit_<<" => dx= "<<dx_<<", X0= "<<X0_<<std::endl;
+	vImg.dx_*=unit_;
+	vImg.X0_*=unit_;
+	if(abs(unit_-1.)>epsT(float)) cout<<"  unit= "<<unit_<<" => dx= "<<vImg.dx_<<", X0= "<<vImg.X0_<<endl;
 
 
-	if (procesKeys) VxlKeysProcess(headerFile,*this,hdrNam);
+	if (procesKeys) voxelplugins<T>().process(InputFile(hdrFile,hdrNam),vImg);
 
 }
 
 
 
 
+template void voxelImageT<unsigned char>::readFromHeader(istream&,	const string&, int, string );
+template void voxelImageT<unsigned short>::readFromHeader(istream&,	const string&, int, string );
+template void voxelImageT<int>::readFromHeader(istream&,	const string&, int, string );
+template void voxelImageT<float>::readFromHeader(istream&,	const string&, int, string );
+template void voxelImageT<double>::readFromHeader(istream&,	const string&, int, string );
+template void voxelImageT<float3>::readFromHeader(istream&,	const string&, int, string );
 
 
 
 
 
-// read or create image
-inline std::unique_ptr<voxelImageTBase> readImage
-(
-	std::string hdrNam, //!< headername or image type
-	int procesKeys = 1
-)
-{
 
-	(std::cout<<"voxelImage \""<<hdrNam<<"\": ").flush();
-	if (hasExt(hdrNam,3,".am"))
-	{
-		std::string vtype = getAmiraDataType(hdrNam);
-		if (vtype=="int," || vtype=="int")
-		{
-			std::cout<<"reading int .am file: "<<hdrNam<<std::endl;
-			return std::unique_ptr<voxelImageTBase>(new voxelImageT<int>(hdrNam,0));
-		}
-		if (vtype=="short," || vtype=="short")
-		{
-			std::cout<<"reading short .am file: "<<hdrNam<<std::endl;
-			return std::unique_ptr<voxelImageTBase>(new voxelImageT<short>(hdrNam,0));
-		}
-		else if (vtype=="ushort," || vtype=="ushort")
-		{
-			std::cout<<"reading ushort .am file: "<<hdrNam<<std::endl;
-			return std::unique_ptr<voxelImageTBase>(new voxelImageT<unsigned short>(hdrNam,0));
-		}
-		else if (vtype=="byte," || vtype=="byte")
-		{
-			std::cout<<"reading unsigned byte .am file: "<<hdrNam<<std::endl;
-			return std::unique_ptr<voxelImageTBase>(new voxelImageT<unsigned char>(hdrNam,0));
-		}
-		else 
-		{
-			std::cout<<"data type "<<vtype<<" not supported, when reading "<<hdrNam<<std::endl;
-			exit(-1);
-		}
+std::unique_ptr<voxelImageTBase> readImage(string hdrNam,	int procesKeys)  {
+	//! read or create image
+	using namespace std;
+	(cout<<"voxelImage \""<<hdrNam<<"\": ").flush();
+	if (hasExt(hdrNam,".am"))  {
+		string vtype = getAmiraDataType(hdrNam);
+		cout<<"reading '"<<vtype<<"'s from .am file"<<endl;
+
+		if (vtype=="int")       return make_unique<voxelImageT<int>>(hdrNam,0);
+		if (vtype=="short")     return make_unique<voxelImageT<short>>(hdrNam,0);
+		if (vtype=="ushort")    return make_unique<voxelImageT<unsigned short>>(hdrNam,0);
+		if (vtype=="byte")      return make_unique<voxelImageT<unsigned char>>(hdrNam,0);
+
+		cout<<"  Error: data type "<<vtype<<" not supported, when reading "<<hdrNam<<endl;
+		exit(-1);
 	}
 
 	#ifdef TIFLIB
-	if (hasExt(hdrNam,4,".tif"))  return readTif(hdrNam);
+	if (hasExt(hdrNam,".tif"))  return readTif(hdrNam);
 	#endif
 
-	std::string typ;
-	std::ifstream headerFile(hdrNam.c_str());
-	if(!headerFile)  
+	string typ;
+	std::ifstream hdrFile(hdrNam); // header file
+	if(!hdrFile)  
 	{
-		if (hdrNam.size()>4 && hdrNam[hdrNam.size()-4]=='.') std::cout<<"\n\n\nError: can not open hdrNam file, "<<hdrNam<<std::endl<<std::endl;
+		ensure(hdrNam.size()<4 || hdrNam[hdrNam.size()-4]!='.', "can not open header file '"+hdrNam+"', pwd: "+getpwd(), -1);
 		typ = hdrNam; hdrNam="NO_READ";
 	}
-	else if (hasExt(hdrNam,4,".mhd"))
-	{
-		while (true)
-		{
-			std::string tmpStr;  headerFile>>tmpStr;
-			std::stringstream ss;
-			if(headerFile.peek()!='\n') headerFile.get (*(ss.rdbuf()));
-			if (headerFile.fail()) {  std::cout<<"\n\n\nWarning: readImage, 'ElementType =' not set in "<<hdrNam<<std::endl; break; }
-			if (tmpStr == "ElementType")  {  ss >> typ >> typ;  break; }
+	else if (hasExt(hdrNam,4,".mhd"))  {
+		while (true)  {
+			string ky;  hdrFile>>ky;
+			stringstream ss;
+			if(hdrFile.peek()!='\n') hdrFile.get (*(ss.rdbuf()));
+			if (hdrFile.fail()) {  cout<<"\n\n\nWarning: readImage, 'ElementType =' not set in "<<hdrNam<<endl; break; }
+			if (ky == "ElementType")  {  ss >> typ >> typ;  break; }
 		}
 	}
-	headerFile.close();
+	hdrFile.close();
 
-	if (typ=="MET_UCHAR")
-	 { headerFile.close();	return std::unique_ptr<voxelImageTBase>(new voxelImageT<unsigned char>(hdrNam, procesKeys)); }
-	if (typ=="MET_CHAR")
-	 { headerFile.close();	return std::unique_ptr<voxelImageTBase>(new voxelImageT<char>(hdrNam, procesKeys)); }
-	if (typ=="MET_USHORT")
-	 { headerFile.close();	return std::unique_ptr<voxelImageTBase>(new voxelImageT<unsigned short>(hdrNam, procesKeys)); }
-	if (typ=="MET_SHORT")
-	 { headerFile.close();	return std::unique_ptr<voxelImageTBase>(new voxelImageT<short>(hdrNam, procesKeys)); }
-	if (typ=="MET_UINT")
-	 { headerFile.close();	return std::unique_ptr<voxelImageTBase>(new voxelImageT<unsigned int>(hdrNam, procesKeys)); }
-	if (typ=="MET_INT")
-	 { headerFile.close();	return std::unique_ptr<voxelImageTBase>(new voxelImageT<int>(hdrNam, procesKeys)); }
-	if (typ=="MET_FLOAT")
-	 { headerFile.close();	return std::unique_ptr<voxelImageTBase>(new voxelImageT<float>(hdrNam, procesKeys)); }
-	if (typ=="MET_DOUBLE")
-	 { headerFile.close();	return std::unique_ptr<voxelImageTBase>(new voxelImageT<double>(hdrNam, procesKeys)); }
+	if (typ=="MET_UCHAR")        return make_unique<voxelImageT<unsigned char>>(hdrNam, procesKeys);
+	if (typ=="MET_CHAR")         return make_unique<voxelImageT<char>>          (hdrNam, procesKeys);
+	if (typ=="MET_USHORT")       return make_unique<voxelImageT<unsigned short>>(hdrNam, procesKeys);
+	if (typ=="MET_SHORT")        return make_unique<voxelImageT<short>>         (hdrNam, procesKeys);
+	if (typ=="MET_UINT")         return make_unique<voxelImageT<unsigned int>>  (hdrNam, procesKeys);
+	if (typ=="MET_INT")          return make_unique<voxelImageT<int>>           (hdrNam, procesKeys);
+	if (typ=="MET_FLOAT")        return make_unique<voxelImageT<float>>         (hdrNam, procesKeys);
+	if (typ=="MET_DOUBLE")       return make_unique<voxelImageT<double>>        (hdrNam, procesKeys);
+	//if (typ=="MET_FLOAT_ARRAY")  return make_unique<voxelImageT<float3>>        (hdrNam, procesKeys);
+	//if (typ=="MET_DOUBLE_ARRAY") return make_unique<voxelImageT<dbl3>>          (hdrNam, procesKeys);
 
+	return                              make_unique<voxelImage>(hdrNam, procesKeys);
 
-	return std::unique_ptr<voxelImageTBase>(new voxelImage(hdrNam, procesKeys));
-
-}
-
-
-
-
-template<typename T>
-void readConvertFromHeader
-(	voxelImageT<T>& vImg,
-	std::string hdrNam,
-	int procesKeys = 1
-)
-{
-	std::unique_ptr<voxelImageTBase> vImgUptr = readImage(hdrNam,procesKeys);
-	voxelImageTBase* imgPtr = vImgUptr.get();
-	bool red = false; //read
-	if(!red) {auto img = dynamic_cast<voxelImageT<T>*>            (imgPtr);  if(img) { vImg = *img; red=true; } }
-	if(!red) {auto img = dynamic_cast<voxelImageT<char>*>         (imgPtr);  if(img) { vImg.resetFrom(*img); red=true; std::cout<<"read into "<<vImg.size3()<<" chars "; } }
-	if(!red) {auto img = dynamic_cast<voxelImageT<unsigned char>*>(imgPtr);  if(img) { vImg.resetFrom(*img); red=true; std::cout<<"read into "<<vImg.size3()<<" uchrs "; } }
-	if(!red) {auto img = dynamic_cast<voxelImageT<short>*>        (imgPtr);  if(img) { vImg.resetFrom(*img); red=true; std::cout<<"read into "<<vImg.size3()<<" shrts "; } }
-	if(!red) {auto img = dynamic_cast<voxelImageT<unsigned short>*>(imgPtr); if(img) { vImg.resetFrom(*img); red=true; std::cout<<"read into "<<vImg.size3()<<" usrts "; } }
-	if(!red) {auto img = dynamic_cast<voxelImageT<int>*>         (imgPtr);   if(img) { vImg.resetFrom(*img); red=true; std::cout<<"read into "<<vImg.size3()<<" intgs "; } }
-	if(!red) {auto img = dynamic_cast<voxelImageT<unsigned int>*>(imgPtr);   if(img) { vImg.resetFrom(*img); red=true; std::cout<<"read into "<<vImg.size3()<<" uints "; } }
-	if(!red) {auto img = dynamic_cast<voxelImageT<float>*>       (imgPtr);   if(img) { vImg.resetFrom(*img); red=true; std::cout<<"read into "<<vImg.size3()<<" flots "; } }
-	if(!red) {auto img = dynamic_cast<voxelImageT<double>*>      (imgPtr);   if(img) { vImg.resetFrom(*img); red=true; std::cout<<"read into "<<vImg.size3()<<" dobls "; } }
-	if(!red) std::cout<<"\n\ncan not convert image\n\n"<<std::endl;
-}
-
-template<class T, typename First=uint8_t, typename... Rest>
-int resetFromImageT(voxelImageT<T>& vImg, voxelImageTBase* vxlImgPtr)  {
-	auto img = dynamic_cast<voxelImageT<First>*>(vxlImgPtr); 
-	if(img) { vImg.resetFrom(*img); return 0; }
-	else if(sizeof...(Rest)) return resetFromImageT<T,Rest...>(vImg, vxlImgPtr);
-	std::cout<<"Error in resetFromImageT: Unknown image type."<<std::endl;
-	return -1;
 }
 

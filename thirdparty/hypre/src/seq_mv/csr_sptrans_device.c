@@ -6,6 +6,7 @@
  ******************************************************************************/
 
 #include "seq_mv.h"
+#include "_hypre_utilities.hpp"
 
 #if defined(HYPRE_USING_CUDA)
 
@@ -47,7 +48,7 @@ hypreDevice_CSRSpTrans(HYPRE_Int   m,        HYPRE_Int   n,        HYPRE_Int    
    /* expansion: A's row idx */
    //d_it = hypre_TAlloc(HYPRE_Int, nnzA, HYPRE_MEMORY_DEVICE);
    d_it = d_pm + nnzA;
-   hypreDevice_CsrRowPtrsToIndices_v2(m, d_ia, d_it);
+   hypreDevice_CsrRowPtrsToIndices_v2(m, nnzA, d_ia, d_it);
 
    /* a copy of col idx of A */
    //d_jt = hypre_TAlloc(HYPRE_Int, nnzA, HYPRE_MEMORY_DEVICE);
@@ -66,7 +67,7 @@ hypreDevice_CSRSpTrans(HYPRE_Int   m,        HYPRE_Int   n,        HYPRE_Int    
    /* convert into ic: row idx --> row ptrs */
    d_ic = hypreDevice_CsrRowIndicesToPtrs(n, nnzA, d_jt);
 
-#if DEBUG_MODE
+#ifdef HYPRE_DEBUG
    HYPRE_Int nnzC;
    hypre_TMemcpy(&nnzC, &d_ic[n], HYPRE_Int, 1, HYPRE_MEMORY_HOST, HYPRE_MEMORY_DEVICE);
    hypre_assert(nnzC == nnzA);

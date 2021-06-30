@@ -8,14 +8,13 @@
 
 class CornerApex;
 class LayerApex;
-//#include "apex.h"
 class PceImbCmp;
 class PceDrainCmp;
 
 class VoidElem : public ElemModel
 {
  public:
-	VoidElem(Element&, const CommonData&, double, double, int);
+	VoidElem(Elem&, const CommonData&, double, double, int);
 	virtual ~VoidElem(){};
 
 	virtual void setContactAngle(double equilCA, int wettClass, double modelTwoSepAng);
@@ -44,7 +43,7 @@ class Polygon : public VoidElem
 {
 public:
 
-	Polygon(Element&, const CommonData&, double, double, int, int);
+	Polygon(Elem&, const CommonData&, double, double, int, int);
 	virtual ~Polygon();
 
 	virtual double calcR(double pc);
@@ -69,8 +68,8 @@ public:
 	int numLayers() const {return numCorners_;}
 	double  cornerHalfAngles(int i) const { return  crnHafAngs_[i];}
 
-	void insertWatSnapEvent_IfSnapPcHgPc(SortedEvents< Apex*, PceImbCmp >& watEvents, double globalPc);
-	void insertOilSnapEvent_IfSnapPcLgPc(SortedEvents< Apex*, PceDrainCmp >& oilEvents,       double globalPc);
+	void insertWatSnapEvent_IfSnapPcHgPc(Events< Apex*, PceImbCmp >& watEvents, double globalPc);
+	void insertOilSnapEvent_IfSnapPcLgPc(Events< Apex*, PceDrainCmp >& oilEvents,       double globalPc);
 
 	void calcOilLayerPc_syncTrappings(double pc);
 	void calcOilLayerPc_markUntrappedFilms(double pc);
@@ -115,7 +114,7 @@ class Square : public Polygon
 {
 public:
 
-	Square(Element&, const CommonData&, double, int,int);
+	Square(Elem&, const CommonData&, double, int,int);
 
 	void setShapeFactor(double shapeFact) {};
 
@@ -134,7 +133,7 @@ class Triangle : public Polygon
 {
 public:
 
-	Triangle(Element&, const CommonData&, double, double, int,int);
+	Triangle(Elem&, const CommonData&, double, double, int,int);
 
 	void setShapeFactor(double shapeFact);
 
@@ -156,7 +155,7 @@ class Circle : public VoidElem
 {
   public:
 
-	Circle(Element&, const CommonData&, double, int, int);
+	Circle(Elem&, const CommonData&, double, int, int);
 
 	double calcR(double pc);
 	void finitOilInjection(double pc);

@@ -11,20 +11,22 @@ Developed by (2015-2019): Ali Q Raeini  email: a.q.raeini@imperial.ac.uk
 
 
 
+class GNMData;
 
-class CommonData;
+
+
 
 
 class results3D
 {
 
 public:
-	results3D(const InputFile& input,const CommonData* comn, ststr outputfolder, const std::vector<Element const *>*  elems, size_t nBP2=0, size_t n6pPors=0);
+	results3D(const InputFile& input,const GNMData* comn, ststr outputfolder, const std::vector<Elem const *>*  elems, size_t nBP2=0, size_t n6pPors=0);
 	void init(size_t nBP2, size_t n6pPors) {nBSs_=nBP2 ; nBpPors_=n6pPors;};
 
 	void write3D(double pc, double intfacTen, bool endCycle = false);
 
-			private: ///. depricated TODO: releqase Xdmf and remove vtu visualization data
+			private: ///. depricated
 
 				ststr  start(size_t nPoints, size_t nCells);
 				ststr  finish();
@@ -32,13 +34,13 @@ public:
 				void vtuWriteThroats(ststr suffix, double pc, double intfacTen);
 				void writeThroatLines(ststr fName, double pc, double tension, int icycl, double tstp, bool endCycle);
 
-
+	void writeThroatLinesXmf(ststr suffix, double pc, double tension, int icycl, double tstp, bool endCycle);
 
 
 private:
 
-	const CommonData*  comn_;
-	const std::vector<Element const*>&  elems_;
+	const GNMData*  comn_;
+	const std::vector<Elem const*>&  elems_;
 	int nBSs_;
 	int nBpPors_;
 
@@ -56,7 +58,6 @@ private:
 public :
 
 	bool        inform;
-
 
 };
 

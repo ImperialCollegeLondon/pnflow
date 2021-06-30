@@ -6,8 +6,8 @@
 
 #include <set>
 
-#include "FlowData.h"
-#include "apex.h"
+#include "typses.h"
+#include "fluid.h"
 
 #define OutI  1  //! outlet pore index
 
@@ -16,16 +16,20 @@
 ///////////////////////////////// Base Class //////////////////////////////////////
 
 
+class RockType;
 
 
-class Fluid;
 class ElemModel;
 class Pore;
 class Throat;
 class InOutBoundary;
 class Polygon;
+class CommonData;
 
-class commonData;
+
+enum TrappingCriteria {escapeToInlet = 0, escapeToOutlet, escapeToEither, escapeToBoth};
+enum FluidBlob {filmBlob = 0, bulkBlob};
+
 
 
 enum BounCond  : unsigned char
@@ -37,7 +41,7 @@ enum BounCond  : unsigned char
 };
 
 
-class SolverConnectivity
+class SlvrElm
 {///.  connected path search for solver
 public:
 	inline void clearFlag() const { _passed = false; }
@@ -50,21 +54,21 @@ public:
 	//bool isRightBC() const {return _SIDE==OUTLET;}
 	//bool isLeftBC() const {return  _SIDE==INLET;}
 	//void setBC(BounCond bc) {_SIDE=bc;}
-	//const std::vector<Element*>& neis() const;
+	//const std::vector<Elem*>& neis() const;
 
-	SolverConnectivity()
+	SlvrElm()
 	{
 		_SIDE = NOTSET;
 		_SIDE = INSIDE;
 		_passed = false;
 		_searched = false;
-		_condOrP=-10000.0;
+		_condOrP=-10000.;
 		//elem_=NULL;
 		//nAzadPaths_=0;
 	}
 
 
-	//Element*            elem_;
+	//Elem*            elem_;
 	BounCond            _SIDE;
 	mutable bool        _passed;
 	mutable bool        _searched;
@@ -75,10 +79,81 @@ public:
 
 
 
-class Element : public Apex
+class ElemModel;
+//////////////////////// BASE CLASS /////////////////////////////
+class Apex
+{
+public:
+
+	Apex() :  virgin(true),parentModel_(NULL), advancingPc_(1000.), receedingPc_(-1000.),
+	entryPc_(0.), gravityCorrection_(0.), exists_(false),inited_(false) ,trappedCL_(-1, 0.) {}
+	virtual ~Apex() {}
+
+	void setConnections(ElemModel* parent, int subIndex){parentModel_=(parent);subIndex_=(subIndex);}
+
+	inline double advancingPc() const { return advancingPc_; };
+	inline double receedingPc() const { return receedingPc_; };
+	const std::pair<int, double>& trappingCL() const {return trappedCL_;}
+	int                           iTrap() const {return trappedCL_.first;}
+
+	inline int subIndex() const {return subIndex_;};
+	ElemModel*  parentModel() const {return parentModel_;};
+	double gravCorrectedEntryPress() const {return entryPc_+gravityCorrection_;}
+	double gravityCorrection() const {return gravityCorrection_;}
+	double entryPc() const {return entryPc_;}
+
+	bool isInWatFloodVec() const  {return isInWatFloodVec_;}
+	void setInWatFloodVec(bool isIt) {isInWatFloodVec_ = isIt;}
+	bool isInOilFloodVec() const  {return isInOilFloodVec_;}
+	void setInOilFloodVec(bool isIt) {isInOilFloodVec_ = isIt;}
+
+	bool exists() const {return exists_;}
+	bool pinned() const {return inited_;}
+
+	mutable bool virgin;
+	double      					trapPcOld_;
+	double      					creationPc;
+
+	static int nErrors;
+
+
+protected:
+
+
+	static const double             PI;
+	static const double             INF_NEG_NUM;
+	static const double             LOWEST_LAYER_PC;
+	static const double             INF_POS_NUM;
+	static const double             EPSILON;
+	static const double             SMALL_NUM;
+	static const double             NEG_ALMOST_ZERO;
+	static const double             POS_ALMOST_ZERO;
+	static const double             MOLECULAR_LENGTH;
+	static const int                MAX_ITR;
+
+	ElemModel*                     parentModel_;
+	int                            subIndex_;
+
+	double                         advancingPc_;
+	double                         receedingPc_;
+	double                          entryPc_;
+	double                          gravityCorrection_;
+
+	bool                            isInWatFloodVec_;
+	bool                            isInOilFloodVec_;
+
+	bool                            exists_;
+	bool                            inited_;
+	std::pair<int, double>         trappedCL_;
+
+
+};
+
+
+class Elem : public Apex
 {
 
-	friend std::ostream& operator<< (std::ostream&, Element&) ;
+	friend std::ostream& operator<< (std::ostream&, Elem&) ;
 	friend class solverFlags ;
 
 public:
@@ -88,8 +163,8 @@ public:
 	using BondT = InOutBoundary;
 	using ShapT = Polygon;
 
-	Element(const CommonData&, int, dbl3, double, double, double, double, int, bool, int);
-	virtual ~Element();
+	Elem(const CommonData&, int, dbl3, double, double, double, double, int, bool, int);
+	virtual ~Elem();
 
 	virtual void modifyLength(double scaleFactor) = 0;
 	virtual bool crossesPlaneAt(double location) const = 0;
@@ -100,38 +175,38 @@ public:
 	virtual void writeNetworkData(std::ostream& outOne, std::ostream& outTwo) const = 0;
 	virtual void writeNetworkDataBinary(std::ostream& out) const = 0;
 	virtual void updateLatticeIndex(int newIdx) = 0;
-
 	virtual double snapOfLongitCurvature() const = 0 ;
 
 	virtual int index() const { return index_; };
 
 	inline void adjustVolume(double newNetVol, double newClayVol);
 
-	void finalizeCopyConstruct(std::vector<Element*>& throats) {connections_ = throats;}
+	void finalizeCopyConstruct(std::vector<Elem*>& throats) {cnctions_ = throats;}
 	void identifyConnectedPoreElems();
 	int removeFromNetwork();
-	void severConnection(Element* connection);
+	void severConnection(Elem* connection);
 	static void set_useGravInKr(bool soAreWe) {USE_GRAV_IN_KR = soAreWe;}
+	double rhogh(double rho, dbl3 dh) const;// {return comn_.rhogh(rho,dh);}
 
-	void findMarkTrappedOilGanglia(double prs, std::vector<Element*>& stor, double& elap, TrappingCriteria crit);
-	void findMarkTrappedWaterGanglia(double prs, FluidBlob startPt, std::vector< std::pair<Element*,FluidBlob> >& stor, double& elap, TrappingCriteria crit);
+	void findMarkTrappedOilGanglia(double prs, std::vector<Elem*>& stor, double& elap, TrappingCriteria crit);
+	void findMarkTrappedWaterGanglia(double prs, FluidBlob startPt, std::vector< std::pair<Elem*,FluidBlob> >& stor, double& elap, TrappingCriteria crit);
 
 
 
 
-	inline double rhogh(double density, dbl3 distance) const;
+	//inline double rhogh(double density, dbl3 distance) const;
 	double flowVolume() const {return flowVolume_;}
 	double clayVolume() const {return clayVolume_;}
 	double waterSaturation() const {return waterSaturation_;}
 	double flowVolumeX() const {return flowVolume_+clayVolume_;} 
 	double saturation() const  {return waterSaturation_;}
 
-	Element* connection(int conn) const {return connections_[conn];}
-	const std::vector<Element*>& connections() const {return connections_;}
+	Elem* neib(int conn) const {return cnctions_[conn];}
+	const std::vector<Elem*>& connections() const {return cnctions_;}
 	ElemModel* ChModel() {return model_;}
 	const ElemModel* model() const {return model_;}
 
-	int connectionNum() const {return connectionNum_;}
+	int nCncts() const {return nCncts_;}
 
 
 
@@ -159,6 +234,7 @@ public:
 	bool convertToMicroPorosityForSven(bool entry1Exit0);
 	bool iAmAPore() const {return iAmAPore_;}
 	int rockIndex() const {return rockIndex_;}
+	virtual const RockType* rockType() const { return nullptr; };
 
 
 
@@ -201,8 +277,8 @@ public:
 	const std::pair<int, double>& trappingWatFilm() const {return trapIndexWatFilm_;}
 
 
-	inline void setGravityCorrection(const dbl3& node);
-	inline void setGravityCorrection(const dbl3& nodeOne, const dbl3& nodeTwo);
+	void setGravityCorrection(const dbl3& node);
+	void setGravityCorrection(const dbl3& nodeOne, const dbl3& nodeTwo);
 
 	void calcCentreEntryPrsWatInj();
 	void calcCentreEntryPrsOilInj();
@@ -223,33 +299,33 @@ public:
 	void setPoreToPoreCond(fluidf ff, double cond) const {  WOISolver[ff-1]._condOrP=cond; }
 	double poreToPoreCond(fluidf ff) const {return WOISolver[ff-1]._condOrP; }
 
-	const SolverConnectivity& solverConect(fluidf ff) const {return WOISolver[ff-1];}
-	SolverConnectivity& solverConectCh(fluidf ff) {return WOISolver[ff-1];}
+	const SlvrElm& slvrCnct(fluidf ff) const {return WOISolver[ff-1];}
+	SlvrElm& solverConectCh(fluidf ff) {return WOISolver[ff-1];}
 
 protected:
 
-	mutable SolverConnectivity    WOISolver[5];///    0: Pw,   1: Po,   2 Volt, not used yet, sync cnflow&gnflow
+	mutable SlvrElm    WOISolver[5];///    0: Pw,   1: Po,   2 Volt, not used yet, sync cnflow&gnflow
 
 ///.  trapping search
-	bool foundEscapePathOil_trapOtherwise(double pc, std::vector<Element*>& stor, TrappingCriteria crit);
-		inline Element* nextUntrappedOil(TrappingCriteria criteria);
+	bool foundEscapePathOil_trapOtherwise(double pc, std::vector<Elem*>& stor, TrappingCriteria crit);
+		inline Elem* nextUntrappedOil(TrappingCriteria criteria);
 
-		inline Element* nextSuccessorWat(TrappingCriteria criteria, FluidBlob& blob);
-	bool foundEscapePathWat_trapOtherwise(double pc, FluidBlob startPt, std::vector< std::pair<Element*, FluidBlob> >& stor, TrappingCriteria criteria); 
+		inline Elem* nextSuccessorWat(TrappingCriteria criteria, FluidBlob& blob);
+	bool foundEscapePathWat_trapOtherwise(double pc, FluidBlob startPt, std::vector< std::pair<Elem*, FluidBlob> >& stor, TrappingCriteria criteria); 
 		   
 	inline void trapOil(double prs);
 	inline void trapWat(double prs, FluidBlob blob);    
 
 
 ///.  connected path search for solver 
-	bool markWaterElemForSolver(const Element*elem, fluidf ff) const;
-	inline const Element* nextSuccSolvrWat(bool& outletFound, fluidf ff) const; // water and electricity
-	inline const Element* nextSuccSolvrOil(bool& outletFound) const;    
+	bool markWaterElemForSolver(const Elem*elem, fluidf ff) const;
+	inline const Elem* nextSuccSolvrWat(bool& outletFound, fluidf ff) const; // water and electricity
+	inline const Elem* nextSuccSolvrOil(bool& outletFound) const;    
 
 
 	void checkConnections() const; ///.  used in calcVolume_CheckIntegr
 
-	typedef std::set<Element*>::iterator ItrSet;
+	typedef std::set<Elem*>::iterator ItrSet;
 
 	static bool                 USE_GRAV_IN_KR;
 	static double               COND_CUT_OFF;
@@ -260,9 +336,9 @@ protected:
 	const CommonData&           comn_;
 	double                      flowVolume_;
 	double                      clayVolume_;
-	int                         connectionNum_;
+	int                         nCncts_;
 
-	std::vector<Element*>       connections_;
+	std::vector<Elem*>       cnctions_;
 	ElemModel*                  model_;
 	double                      waterSaturation_;
 
@@ -294,11 +370,11 @@ protected:
 };
 
 ///////////////////////////////// Pore Class //////////////////////////////////////
-class Pore : public Element
+class Pore : public Elem
 {
 public:
 
-	Pore(const CommonData&, int, dbl3, double, double, double, double, bool, bool, double, std::vector<Element*>&, int);
+	Pore(const CommonData&, int, dbl3, double, double, double, double, bool, bool, double, std::vector<Elem*>&, int);
 	virtual ~Pore(){}
 
 	virtual void modifyLength(double scaleFactor) {}
@@ -314,30 +390,29 @@ public:
 	virtual double snapOfLongitCurvature() const;
 
 
-	Element* getConnectionPropSP(int conn, double& conductance, double& rhs_throat, const Fluid& fluid) const; // TODO: replace with Throat::calcR2SP
+	Elem* getConnectionPropSP(int conn, double& conductance, double& rhs_throat, const Fluid& fluid) const; // TODO: replace with Throat::calcR2SP
 
-	void setSolverResults(const Fluid& fluid, double res) const;
+	void setSolverPrs(const Fluid& fluid, double res) const;
 
 	Throat*       neiT(int i);
 	const Throat* neiT(int i) const;
-	//const Pore*	  neibP(int i) const;
 };
 
 
 
 
 //////////////////////////////////////// Throat //////////////////////////////////////////
-class Throat : public Element
+class Throat : public Elem
 {
 public:
 
 	Throat(const CommonData&, int indx, dbl3, double, double, double, double, double, double, double, int);
-	void addConnections(Element* first, Element* second, double inletBdr, double outletBdr, bool moveBoundary, bool setNod);
+	void addConnections(Elem* first, Elem* second, double inletBdr, double outletBdr, bool moveBoundary, bool setNod);
 
 	virtual void modifyLength(double scaleFactor);
 	virtual bool crossesPlaneAt(double location) const;
 	virtual int index() const {return index_;}
-	virtual int indexOren() const {return index_-comn_.numPores()-1;}
+	virtual int indexOren() const;// { return index_-comn_.numPores()-1; }
 	virtual bool prevSolvrRes(const Fluid& fluid, double loc, double& res, double& flowRate) const;
 	virtual void prepare2();
 	virtual void sortConnectingElems_DistToExit();
@@ -345,13 +420,13 @@ public:
 	virtual void writeNetworkDataBinary(std::ostream& out) const;
 	virtual void updateLatticeIndex(int newIdx) {index_ = newIdx;}
 
-	void  neiSet(int i, Pore* por)  { neiPores_[i] = por;} // connections_[i] = por; 
+	void  neiSet(int i, Pore* por)  { neiPores_[i] = por;} // cnctions_[i] = por; 
 	Pore*       neiPCh(int i)       { return neiPores_[i]; }
 	const Pore*	neiP(int i) const   { return neiPores_[i]; }
-	//int ihOf(const Element* neip) const  {return (neiPores_[1]==neip)? 1 : ((neiPores_[0]==neip)? 0: 2);}
+	//int ihOf(const Elem* neip) const  {return (neiPores_[1]==neip)? 1 : ((neiPores_[0]==neip)? 0: 2);}
 
 	void calcR2(const Fluid& fluid);
-	const Pore* neighbouringPore(const Element* callingPore) const;
+	const Pore* neighbouringPore(const Elem* callingPore) const;
 
 	double snapOfLongitCurvature() const;
 
@@ -375,10 +450,10 @@ class InOutBoundary : public Pore
 {
 public:
 
-	InOutBoundary(const CommonData&, int, const dbl3, std::vector<Element*>&);
+	InOutBoundary(const CommonData&, int, const dbl3, std::vector<Elem*>&);
 	~InOutBoundary();
 
-	void prepare(const std::vector<Element*>& connThroats, dbl2 calcBox);
+	void prepare(const std::vector<Elem*>& connThroats, dbl2 calcBox);
 
 	void fillElemCentreWithOilRemoveLayersIO(double pc);
 	void fillElemCentreWithWaterCreateLayersIO(double pc);
@@ -394,19 +469,18 @@ public:
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-inline Throat*       Pore::neiT(int i)       { return dynamic_cast<      Throat*>(connections_[i]); }
-inline const Throat*	Pore::neiT(int i) const { return dynamic_cast<const Throat*>(connections_[i]); }
-//inline const Pore*	Pore::neibP(int i) const { return dynamic_cast<const Pore*>( connections_[i]->connection(0)==this ? connections_[i]->connection(1) : connections_[i]->connection(0) ); }
-
+inline Throat*       Pore::neiT(int i)       { return dynamic_cast<      Throat*>(cnctions_[i]); }
+inline const Throat*	Pore::neiT(int i) const { return dynamic_cast<const Throat*>(cnctions_[i]); }
+//inline const Pore*	Pore::neiP(int i) const { return dynamic_cast<const Pore*>( cnctions_[i]->neib(0)==this ? cnctions_[i]->neib(1) : cnctions_[i]->neib(0) ); }
 
 /// adjust water, clay and pore volume ++
-inline void Element::adjustVolume(double newNetVol, double newClayVol)
+inline void Elem::adjustVolume(double newNetVol, double newClayVol)
 {
-	if(newNetVol>=0.0) flowVolume_ = newNetVol;
+	if(newNetVol>=0.) flowVolume_ = newNetVol;
 	clayVolume_ = newClayVol;
 }
 
-inline const std::pair<int, double>& Element::trappingWat(FluidBlob blob) const
+inline const std::pair<int, double>& Elem::trappingWat(FluidBlob blob) const
 {
 	if(blob == filmBlob)  return trapIndexWatFilm_;
 	else                  return trapIndexWatBulk_;
@@ -415,47 +489,22 @@ inline const std::pair<int, double>& Element::trappingWat(FluidBlob blob) const
 
 
 
-inline double Element::rhogh(double density, dbl3 dist) const
-{
-	return density*(comn_.gravConst()&dist);
-}
-
-inline void Element::setGravityCorrection(const dbl3& nod)
-{
-	gravityCorrection_ = (comn_.water().density()-comn_.oil().density())*(comn_.gravConst()&nod);
-
-		gravityCorrection_ = 0.0;///. ERROR
-
-}
-
-inline void Element::setGravityCorrection(const dbl3& nod1, const dbl3& nod2)
-{
-	gravityCorrection_ = (comn_.water().density()-comn_.oil().density())*(comn_.gravConst()&((nod1+nod2)*0.5));
-
-		gravityCorrection_ = 0.0;///. ERROR
-}
 
 
-
-
-
-
-
-
-inline int Element::trapIndexWat(FluidBlob blob) const
+inline int Elem::trapIndexWat(FluidBlob blob) const
 {
 	return (blob==filmBlob) ? trapIndexWatFilm_.first : trapIndexWatBulk_.first;
 }
 
 
-inline void Element::setWatFilmTrappingFromBulk()
+inline void Elem::setWatFilmTrappingFromBulk()
 {
 	ensure(trapIndexWatBulk_.first == -1);
 	trapIndexWatFilm_ = trapIndexWatBulk_;
 }
 
 
-inline void Element::unTrapWat(FluidBlob blob)
+inline void Elem::unTrapWat(FluidBlob blob)
 {
 	if(blob == bulkBlob)  trapIndexWatBulk_.first = -1;
 	else                  trapIndexWatFilm_.first = -1;

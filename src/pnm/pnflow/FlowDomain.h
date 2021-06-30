@@ -41,26 +41,21 @@ https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-mod
 
 
 
-
-
-#include "Element.h"
 #include "elem_Model.h"
 #include "polygon.h"
-#include "apex.h"
 #include "cornerApex.h"
 #include "layerApex.h"
 #include "compareFuncs.h"
 #include "sortedEvents.h"
+#include "inputData.h"
 #include "results3D.h"
-#include "FlowData.h"
 
 
 
-void  setElemProps(const InputFile& input, const stvec<Element*>& elemans, size_t n6pPors, mstream& out_, const CommonData& comn);
+
+void  setElemProps(const InputFile& input, const stvec<Elem*>& elemans, size_t n6pPors, mstream& out_, const GNMData& comn);
 
 class hypreSolver;
-class Fluid;
-class CommonData;
 class ElemModel;
 
 
@@ -78,21 +73,13 @@ class FlowDomain
 {
 public:
 
-	FlowDomain(InputFile& input, unsigned int randSeed);
+	FlowDomain(InputFile& input);
 	~FlowDomain();
 
 
-	//void initializeDrainage(SortedEvents<Apex*,PceDrainCmp>& evnts, bool wantRelPerm, bool wantResIdx, bool entreL, bool entreR, bool exitL, bool exitR);
 	int  dispCycle() const {return comn_.dispCycle();}
 	void Drainage(double requestedFinalSw, double requestedFinalPc, double deltaSw, bool calcKr, bool calcI, bool entreL, bool entreR, bool exitL, bool exitR);
-	//void finaliseDrainage();
-
-	//void initializeImbibition(SortedEvents<Apex*,PceImbCmp>& evnts, bool wantRelPerm, bool wantResIdx, bool entreL, bool entreR, bool exitL, bool exitR, InputData& input);
 	void Imbibition(double requestedFinalSw, double requestedFinalPc, double deltaSw, bool calcKr, bool calcI, bool entreL, bool entreR, bool exitL, bool exitR);
-	//void finaliseImbibition();
-
-
-
 
 	InputData&   input()  { return input_;}
 
@@ -119,44 +106,44 @@ private:
 	bool avrPrsOrVolt(const Fluid& fluid, int pPlane, double& res, double& stdDev, int& numVal) const;
 
 
-	template<class compType> double nextCentrInjPc(const SortedEvents<Apex*,compType>&    evnts) const /// slow function
+	template<class compType> double nextCentrInjPc(const Events<Apex*,compType>&    evnts) const /// slow function
 	{
 		if (!evnts.empty())	return evnts.peek()->gravCorrectedEntryPress();
-		else return  1.0e64*dd_;
+		else return  1e64*dd_;
 	}
 
 
 
-	void singleDrainStep(SortedEvents<Apex*,PceDrainCmp>& evnts, double SwTarget, double PcTarget, bool& residualSat);
-	void updateCentreInj_Oil(Element* elem, bool& insideBox);
-	void update_layerInjs_Oil(Element* elem);
+	void singleDrainStep(Events<Apex*,PceDrainCmp>& evnts, double SwTarget, double PcTarget, bool& residualSat);
+	void updateCentreInj_Oil(Elem* elem, bool& insideBox);
+	void update_layerInjs_Oil(Elem* elem);
 
-	void popUpdateOilInj(SortedEvents<Apex*,PceDrainCmp>& evnts, bool& insideBox, double & pc, double localPcTarget);
-	void popUpdateCentreInj_Oil(Element *currElemCh, SortedEvents<Apex*,PceDrainCmp>& evnts, double & pc);
-	void popUpdate_layerInjs_Oil(Apex* apex, SortedEvents<Apex*,PceDrainCmp>& evnts, double & pc);
-	void findMarkStoreTrappedWater_reCalcOlPc(SortedEvents<Apex*,PceDrainCmp>& evnts, Element* elem, FluidBlob startPt, double localPc);
-	void untrap_OilGanglia(SortedEvents<Apex*,PceDrainCmp>& evnts, Element* elem);
-	inline bool insertReCalcDrainEntryPrs(SortedEvents<Apex*,PceDrainCmp>& evnts, Element* elem, double cappPrs);
-	template<class compType> inline void reCalcOilLayerPc_markTrappedFilms(SortedEvents<Apex*,compType>& evnts, Element* elem, double cappPrs);
+	void popUpdateOilInj(Events<Apex*,PceDrainCmp>& evnts, bool& insideBox, double & pc, double localPcTarget);
+	void popUpdateCentreInj_Oil(Elem *currElemCh, Events<Apex*,PceDrainCmp>& evnts, double & pc);
+	void popUpdate_layerInjs_Oil(Apex* apex, Events<Apex*,PceDrainCmp>& evnts, double & pc);
+	void findMarkStoreTrappedWater_reCalcOlPc(Events<Apex*,PceDrainCmp>& evnts, Elem* elem, FluidBlob startPt, double localPc);
+	void untrap_OilGanglia(Events<Apex*,PceDrainCmp>& evnts, Elem* elem);
+	inline bool insertReCalcDrainEntryPrs(Events<Apex*,PceDrainCmp>& evnts, Elem* elem, double cappPrs);
+	template<class compType> inline void reCalcOilLayerPc_markTrappedFilms(Events<Apex*,compType>& evnts, Elem* elem, double cappPrs);
 
-	void checkUntrapWaterIfUnstableConfigsDrain(SortedEvents<Apex*,PceDrainCmp>& evnts);///. rarely does anything
-	void addElemTo_layerDrainEvents(SortedEvents<Apex*,PceDrainCmp>& evnts, Element* elem);
-	inline void clearTrappedWatFromEvents(SortedEvents<Apex*,PceDrainCmp>& evnts);
+	void checkUntrapWaterIfUnstableConfigsDrain(Events<Apex*,PceDrainCmp>& evnts);///. rarely does anything
+	void addElemTo_layerDrainEvents(Events<Apex*,PceDrainCmp>& evnts, Elem* elem);
+	inline void clearTrappedWatFromEvents(Events<Apex*,PceDrainCmp>& evnts);
 
-	void untrap_WaterGanglia(SortedEvents<Apex*,PceDrainCmp>& evnts, Element* elem, FluidBlob blob);////. Imb+Drain
+	void untrap_WaterGanglia(Events<Apex*,PceDrainCmp>& evnts, Elem* elem, FluidBlob blob);////. Imb+Drain
 
 
-	void singleImbibeStep(SortedEvents<Apex*,PceImbCmp>& evnts, double SwTarget, double& PcTarget, bool& residualSat);
-	void updateCentreInj_Water(Element* elem, bool& insideBox);
-	void popUpdateWaterInj(SortedEvents<Apex*,PceImbCmp>& evnts, bool& insideBox, double & pc, double localPcTarget);
-	void popUpdateCentreInj_Water(Element *currElemCh, SortedEvents<Apex*,PceImbCmp>& evnts, double & pc);
-	void popUpdate_layerInj_Water(Apex* apex, SortedEvents<Apex*,PceImbCmp>& evnts, double & pc);
-	void findMarkStoreTrappedOil(SortedEvents<Apex*,PceImbCmp>& evnts, Element* elem, double localPc);
-	void untrap_WaterGanglia(SortedEvents<Apex*,PceImbCmp>& evnts, Element* elem, FluidBlob blob);////. Imb+Drain
-	inline void insertReCalcImbibeEntryPrs(SortedEvents<Apex*,PceImbCmp>& evnts, Element* elem, double cappPrs);
-	void checkUntrapOilIfUnstableConfigsImb(SortedEvents<Apex*,PceImbCmp>& evnts);///. rarely does anything
-	void addElemTo_layerImbibeEvents(SortedEvents<Apex*,PceImbCmp>& evnts, Element* elem);
-	inline void clearTrappedOilFromEvents(SortedEvents<Apex*,PceImbCmp>&    evnts);
+	void singleImbibeStep(Events<Apex*,PceImbCmp>& evnts, double SwTarget, double& PcTarget, bool& residualSat);
+	void updateCentreInj_Water(Elem* elem, bool& insideBox);
+	void popUpdateWaterInj(Events<Apex*,PceImbCmp>& evnts, bool& insideBox, double & pc, double localPcTarget);
+	void popUpdateCentreInj_Water(Elem *currElemCh, Events<Apex*,PceImbCmp>& evnts, double & pc);
+	void popUpdate_layerInj_Water(Apex* apex, Events<Apex*,PceImbCmp>& evnts, double & pc);
+	void findMarkStoreTrappedOil(Events<Apex*,PceImbCmp>& evnts, Elem* elem, double localPc);
+	void untrap_WaterGanglia(Events<Apex*,PceImbCmp>& evnts, Elem* elem, FluidBlob blob);////. Imb+Drain
+	inline void insertReCalcImbibeEntryPrs(Events<Apex*,PceImbCmp>& evnts, Elem* elem, double cappPrs);
+	void checkUntrapOilIfUnstableConfigsImb(Events<Apex*,PceImbCmp>& evnts);///. rarely does anything
+	void addElemTo_layerImbibeEvents(Events<Apex*,PceImbCmp>& evnts, Elem* elem);
+	inline void clearTrappedOilFromEvents(Events<Apex*,PceImbCmp>&    evnts);
 
 
 	InputData                              input_;
@@ -171,13 +158,13 @@ private:
 
 	int                                    dd_; ///. ? oil inj or wat inj ?
 
-	stvec<Element*>                        elemans_;
-	stvec<Element*>                        krInletBoundary_;
-	stvec<Element*>                        krOutletBoundary_;
+	stvec<Elem*>                        elemans_;
+	stvec<Elem*>                        krInletBoundary_;
+	stvec<Elem*>                        krOutletBoundary_;
 	int                                    sourceNode_;
 
 	stvec< double >                        pressurePlanesLoc_;
-	stvec< stvec<Element*> >               pressurePlanes_;
+	stvec< stvec<Elem*> >               pressurePlanes_;
 
 
 	int                                     nPors_;
@@ -252,7 +239,6 @@ private:
 	mstream                                 out_;
 	std::ofstream                           drainListOut_;
 	std::ofstream                           imbListOut_;
-	//dbgstream                               dbgFile;
 
 
 	bool                                    reportMaterialBal_;
@@ -264,8 +250,7 @@ private:
 	bool                                    writeOilVelocity_;
 	bool                                    writeResVelocity_;
 	bool                                    writeSlvMatrixAsMatlab_;
-	bool                                    writeDrainList_;
-	bool                                    writeImbList_;
+
 
 
 
@@ -308,8 +293,8 @@ inline double FlowDomain::cpuTimeElapsed(clock_t start)
 inline void FlowDomain::recordUSBMData(bool isDrainage)
 {
 	std::pair<double, double> entry(Pc_, Sw_);
-	if(isDrainage && Pc_ > 0.0)        usbmDataDrainage_.push_back(entry);
-	else if(!isDrainage && Pc_ < 0.0)  usbmDataImbibition_.push_back(entry);
+	if(isDrainage && Pc_ > 0.)        usbmDataDrainage_.push_back(entry);
+	else if(!isDrainage && Pc_ < 0.)  usbmDataImbibition_.push_back(entry);
 }
 
 

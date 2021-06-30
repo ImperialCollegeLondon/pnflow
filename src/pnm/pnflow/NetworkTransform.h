@@ -11,7 +11,7 @@ class MemberGetter <R (T::*)() const, mf> { public:
 template<typename T, T> class UnitScalar;
 template <class T, typename R, R (T::*mf)() const>
 class UnitScalar <R (T::*)() const, mf> { public:
-  int operator()(const T* elm) const  {return 1.0;}
+  int operator()(const T* elm) const  {return 1.;}
 };
 
 template<typename T, T> class ComparerInc;
@@ -93,37 +93,37 @@ template<class ET, typename T, T> class Correlate;
 	{
 		trot->ChModel()->setRadius(Rtppsf[0]*trot->RRR());
 
-		//trot->sagittalKc_ = ((trot->Rtpp_[0]-trot->Rtpp_[1])/trot->LhTroppt_[0]+  (trot->Rtpp_[0]-trot->Rtpp_[2])/trot->LhTroppt_[1])*PI/(2.0*trot->LhTroppt_[2]);
+		//trot->sagittalKc_ = ((trot->Rtpp_[0]-trot->Rtpp_[1])/trot->Lhppt_[0]+  (trot->Rtpp_[0]-trot->Rtpp_[2])/trot->Lhppt_[1])*PI/(2.*trot->Lhppt_[2]);
 
 	}
 
-	void  transform(Throat* tshap, double Rsf, double Gsf=1.0)
+	void  transform(Throat* tshap, double Rsf, double Gsf=1.)
 	{
-		double	Rtppsf[3]={1.0,1.0,1.0};		Rtppsf[0]=Rsf;
-		double	Gtppsf[3]={1.0,1.0,1.0};		Gtppsf[0]=Gsf;
+		double	Rtppsf[3]={1.,1.,1.};		Rtppsf[0]=Rsf;
+		double	Gtppsf[3]={1.,1.,1.};		Gtppsf[0]=Gsf;
 		scale(tshap, Rtppsf, Gtppsf);
 	}
 
 	void  fixRadius(Throat* tshap)
 	{ 
-		double	Rtppsf[3]={1.0,1.0,1.0};
-		double	Gtppsf[3]={1.0,1.0,1.0};
+		double	Rtppsf[3]={1.,1.,1.};
+		double	Gtppsf[3]={1.,1.,1.};
 
-		Rtppsf[0]=min(min(1.0, 0.999*tshap->connection(0)->RRR()/tshap->RRR() ) , 0.999*tshap->connection(1)->RRR()/tshap->RRR() );
+		Rtppsf[0]=min(min(1., 0.999*tshap->neib(0)->RRR()/tshap->RRR() ) , 0.999*tshap->neib(1)->RRR()/tshap->RRR() );
 		scale(tshap, Rtppsf, Gtppsf);
 	}
 
-	void  transform(Pore* por, double Rsf, double Gsf=1.0)
+	void  transform(Pore* por, double Rsf, double Gsf=1.)
 	{
 		por->ChModel()->setRadius(Rsf*por->RRR());
-		for(int i=0; i<por->connectionNum();++i)
+		for(int i=0; i<por->nCncts();++i)
 		{
-			Throat* tshap = dynamic_cast<Throat*>(por->connection(i));
+			Throat* tshap = dynamic_cast<Throat*>(por->neib(i));
 			if(tshap)
 			{
-				int neiI = (tshap->connection(0) == por) ? 0 : 1;
-				double	Rtppsf[3]={1.0,1.0,1.0};		Rtppsf[neiI+1]=0.5*Rsf+0.5;
-				double	Gtppsf[3]={1.0,1.0,1.0};		Gtppsf[neiI+1]=0.5*Gsf+0.5;
+				int neiI = (tshap->neib(0) == por) ? 0 : 1;
+				double	Rtppsf[3]={1.,1.,1.};		Rtppsf[neiI+1]=0.5*Rsf+0.5;
+				double	Gtppsf[3]={1.,1.,1.};		Gtppsf[neiI+1]=0.5*Gsf+0.5;
 				scale(tshap, Rtppsf, Gtppsf);
 			}
 		}
@@ -131,20 +131,20 @@ template<class ET, typename T, T> class Correlate;
 
  public:
 	NetworkTransform(unsigned int randSeed, mstream& out)
-	: randomGenerator_(randSeed), uniformRand01_(0.0,1.0), out_(out) {}
+	: randomGenerator_(randSeed), uniformRand01_(0.,1.), out_(out) {}
 
 
-	void getModif(	vector<Pore*>& pores2BAltered, vector<Throat*>& throats2BAltered, const InputFile & input, istringstream& ins, const vector<Element*> & elemans, size_t nBpPors);
+	void getModif(	vector<Pore*>& pores2BAltered, vector<Throat*>& throats2BAltered, const InputFile & input, istringstream& ins, const vector<Elem*> & elemans, size_t nBpPors);
 
 
-	void modify(const InputFile & input, vector<Element*> & elemans, size_t nBpPors, double boxVolume);
+	void modify(const InputFile & input, vector<Elem*> & elemans, size_t nBpPors, double boxVolume);
  private:
 
 	std::default_random_engine&  randomGenerator() const  { return randomGenerator_; }
 	double  rand01() const   { return uniformRand01_(randomGenerator_); }
 	double weibull(double minv, double maxv, double deltaExp, double etaExp) const // deltaExp = pow(beta,etaExp)
-	{	if(deltaExp < 0.0 || etaExp < 0.0)    return minv + (maxv-minv)*rand01(); // Uniform Distribution
-		else  return (maxv-minv) * pow(-deltaExp*log(1.0-rand01()*(1.0-exp(-1.0/deltaExp))), 1.0/etaExp) + minv; // Weibull truncated up to 1.0, scaled between min and max  	// return (maxv-minv) * pow(-deltaExp*log(    rand01()*(1.0-exp(-1.0/deltaExp))+exp(-1.0/deltaExp)), 1.0/etaExp) + minv;   
+	{	if(deltaExp < 0. || etaExp < 0.)    return minv + (maxv-minv)*rand01(); // Uniform Distribution
+		else  return (maxv-minv) * pow(-deltaExp*log(1.-rand01()*(1.-exp(-1./deltaExp))), 1./etaExp) + minv; // Weibull truncated up to 1., scaled between min and max  	// return (maxv-minv) * pow(-deltaExp*log(    rand01()*(1.-exp(-1./deltaExp))+exp(-1./deltaExp)), 1./etaExp) + minv;   
 	}
 	mutable std::default_random_engine				 randomGenerator_;
 	mutable std::uniform_real_distribution<double>  uniformRand01_;
@@ -153,18 +153,18 @@ template<class ET, typename T, T> class Correlate;
 
 
 
-void setShapeFactFromFile(vector<Element*>& elems, const string& fileName, double lowCO, double hiCO);
+void setShapeFactFromFile(vector<Elem*>& elems, const string& fileName, double lowCO, double hiCO);
 
-void modifyInscribedRadii(int model, const string& options, vector<Element*>& elems, const string& fileName, bool writeToFile, int numPts, bool forPores = false);
-void modifyShapeFactor(int model, const string& options, vector<Element*>& elems, const string& fileName, bool writeToFile, int numPts);
-void setRadiiFromFile(vector<Element*>& elems, const string& fileName, double lowCO, double hiCO, bool forPores);
+void modifyInscribedRadii(int model, const string& options, vector<Elem*>& elems, const string& fileName, bool writeToFile, int numPts, bool forPores = false);
+void modifyShapeFactor(int model, const string& options, vector<Elem*>& elems, const string& fileName, bool writeToFile, int numPts);
+void setRadiiFromFile(vector<Elem*>& elems, const string& fileName, double lowCO, double hiCO, bool forPores);
 
 
 inline double weibull(double minv, double maxv, double delta, double eta) 
 {
-	double randm = double(rand())*(1.0/double(RAND_MAX));
-	if(delta < 0.0 && eta < 0.0) return minv + (maxv-minv)*randm;                   // Uniform Distribution
-	else    return (maxv-minv) * pow(-delta*log(randm*(1.0-exp(-1.0/delta))+exp(-1.0/delta)), 1.0/eta) + minv;
+	double randm = double(rand())*(1./double(RAND_MAX));
+	if(delta < 0. && eta < 0.) return minv + (maxv-minv)*randm;                   // Uniform Distribution
+	else    return (maxv-minv) * pow(-delta*log(randm*(1.-exp(-1./delta))+exp(-1./delta)), 1./eta) + minv;
 }
 
 

@@ -13,10 +13,6 @@
 #if defined(HYPRE_USING_CUDA)
 #if !defined(HYPRE_USING_RAJA) && !defined(HYPRE_USING_KOKKOS)
 
-#ifdef __cplusplus
-extern "C++" {
-#endif
-
 template<typename T> void OneBlockReduce(T *d_arr, HYPRE_Int N, T *h_out);
 
 struct HYPRE_double4
@@ -139,8 +135,10 @@ __inline__ __host__ __device__
 T blockReduceSum(T val)
 {
 #ifdef __CUDA_ARCH__
-   //static __shared__ T shared[32]; // Shared mem for 32 partial sums
-   __shared__ T shared[32];        // Shared mem for 32 partial sums
+   //static __shared__ T shared[HYPRE_WARP_SIZE]; // Shared mem for HYPRE_WARP_SIZE partial sums
+
+   __shared__ T shared[HYPRE_WARP_SIZE];        // Shared mem for HYPRE_WARP_SIZE partial sums
+
    //HYPRE_Int lane = threadIdx.x % warpSize;
    //HYPRE_Int wid  = threadIdx.x / warpSize;
    HYPRE_Int lane = threadIdx.x & (warpSize - 1);
@@ -211,14 +209,13 @@ struct ReduceSum
       __thread_sum = 0.0;
       nblocks = -1;
 
-      if (hypre_handle->cuda_reduce_buffer == NULL)
+      if (hypre_HandleCudaReduceBuffer(hypre_handle()) == NULL)
       {
          /* allocate for the max size for reducing double6 type */
-         hypre_handle->cuda_reduce_buffer =
-            hypre_TAlloc(HYPRE_double6, 1024, HYPRE_MEMORY_DEVICE);
+         hypre_HandleCudaReduceBuffer(hypre_handle()) = hypre_TAlloc(HYPRE_double6, 1024, HYPRE_MEMORY_DEVICE);
       }
 
-      d_buf = (T*) hypre_handle->cuda_reduce_buffer;
+      d_buf = (T*) hypre_HandleCudaReduceBuffer(hypre_handle());
    }
 
    /* copy constructor */
@@ -253,8 +250,9 @@ struct ReduceSum
    {
       T val;
       /* 2nd reduction with only *one* block */
-      assert(nblocks >= 0 && nblocks <= 1024);
-      OneBlockReduceKernel<<<1, 1024>>>(d_buf, nblocks);
+      hypre_assert(nblocks >= 0 && nblocks <= 1024);
+      const dim3 gDim(1), bDim(1024);
+      HYPRE_CUDA_LAUNCH( OneBlockReduceKernel, gDim, bDim, d_buf, nblocks );
       hypre_TMemcpy(&val, d_buf, T, 1, HYPRE_MEMORY_HOST, HYPRE_MEMORY_DEVICE);
       val += init;
 
@@ -267,10 +265,6 @@ struct ReduceSum
    {
    }
 };
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* #if !defined(HYPRE_USING_RAJA) && !defined(HYPRE_USING_KOKKOS) */
 #endif /* #if defined(HYPRE_USING_CUDA) */

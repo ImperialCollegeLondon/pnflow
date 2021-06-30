@@ -6,7 +6,7 @@
 // The class takes care of all the sorted events
 */
 template<typename Type>
-class SortedEventsBase
+class EventsBase
 {
 public:
 
@@ -60,7 +60,7 @@ protected:
 // The class takes care of all the sorted events
 */
 template<typename Type, typename CFunc>
-class SortedEvents  : public SortedEventsBase<Type>
+class Events  : public EventsBase<Type>
 {
 public:
 
@@ -71,21 +71,21 @@ public:
 			//// ((Type*)(&elem))[1000000000]=0;
 			//remove(elem);
 		 //}
-		SortedEventsBase<Type>::sortedContainer_.insert(
-			lower_bound(SortedEventsBase<Type>::sortedContainer_.begin(),
-			SortedEventsBase<Type>::sortedContainer_.end(),
+		EventsBase<Type>::sortedContainer_.insert(
+			lower_bound(EventsBase<Type>::sortedContainer_.begin(),
+			EventsBase<Type>::sortedContainer_.end(),
 			elem, CFunc()), elem);
 	};
 	bool remove(Type elem)
 	{
-		EventItr delCand = lower_bound(SortedEventsBase<Type>::sortedContainer_.begin(), SortedEventsBase<Type>::sortedContainer_.end(), elem, CFunc());
-		while(delCand != SortedEventsBase<Type>::sortedContainer_.end() && *delCand != elem) ++delCand;
-		if (delCand != SortedEventsBase<Type>::sortedContainer_.end())
+		EventItr delCand = lower_bound(EventsBase<Type>::sortedContainer_.begin(), EventsBase<Type>::sortedContainer_.end(), elem, CFunc());
+		while(delCand != EventsBase<Type>::sortedContainer_.end() && *delCand != elem) ++delCand;
+		if (delCand != EventsBase<Type>::sortedContainer_.end())
 		{
-			SortedEventsBase<Type>::sortedContainer_.erase(delCand);
-			return true;//SortedEventsBase<Type>::sortedContainer_.empty();
+			EventsBase<Type>::sortedContainer_.erase(delCand);
+			return true;//EventsBase<Type>::sortedContainer_.empty();
 		}
-		//else if (delCand != SortedEventsBase<Type>::sortedContainer_.end() && *delCand != elem) 
+		//else if (delCand != EventsBase<Type>::sortedContainer_.end() && *delCand != elem) 
 		//{
 			//std::cout<<"  Error:*delCand==elem,"<<checkIfThere(elem)<<"  ";std::cout.flush();
 			//return false;
@@ -94,7 +94,7 @@ public:
 		return false;
 	};
 	void sortEvents(){
-	sort(SortedEventsBase<Type>::sortedContainer_.begin(), SortedEventsBase<Type>::sortedContainer_.end(), CFunc());
+	sort(EventsBase<Type>::sortedContainer_.begin(), EventsBase<Type>::sortedContainer_.end(), CFunc());
 };
 
 

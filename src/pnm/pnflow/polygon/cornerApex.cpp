@@ -17,12 +17,11 @@
 #include "Element.h"
 #include "elem_Model.h"
 #include "polygon.h"
-#include "apex.h"
 #include "cornerApex.h"
 using namespace std;
 
 
-const double    Apex::PI = acos(-1.0);
+const double    Apex::PI = acos(-1.);
 const double    Apex::EPSILON = 1.0E-10;
 const double    Apex::INF_NEG_NUM = -1.0E21;
 const double    Apex::LOWEST_LAYER_PC = -1.0E20;//TOCHANGE lowest possible oil in corner PC
@@ -37,18 +36,15 @@ int Apex::nErrors = 0;
 
 
 
-/**
- * sets m _pinnedApexDist m _advancingPc m _receedingPc based on pc....
- */
-void CornerApex::createFilm(double pc, double conAngRec, double conAngAdv, double halfAng, double intfacTen, bool isOilInj)
-{
+//! sets m _pinnedApexDist m _advancingPc m _receedingPc based on pc....
+void CornerApex::createFilm(double pc, double conAngRec, double conAngAdv, double halfAng, double intfacTen, bool isOilInj)  {
 	ensure(!exists_);
 	ensure(!inited_);
 
 	if(exists_) return;
 
 	double conAng = isOilInj ? conAngRec: conAngAdv;
-	exists_ = conAng < PI/2.0 - halfAng;
+	exists_ = conAng < PI/2. - halfAng;
 
 
 	if(!exists_) return;
@@ -56,7 +52,7 @@ void CornerApex::createFilm(double pc, double conAngRec, double conAngAdv, doubl
 
 
 	initedApexDist_ = (intfacTen/pc)*cos(conAng+halfAng)/sin(halfAng); // TODO: valgrind error uninitialized halfAng 
-	ensure(initedApexDist_ > 0.0);
+	ensure(initedApexDist_ > 0.);
 	if (initedApexDist_ > parentShape_->RRR()/tan(halfAng)*2) 	{ cout<<" xkg ";	}
 	creationPc=pc;
 
@@ -66,8 +62,7 @@ void CornerApex::createFilm(double pc, double conAngRec, double conAngAdv, doubl
 	inited_ = true;
 
 
-	if(pc > initOrMaxPcHist_)
-	{
+	if(pc > initOrMaxPcHist_)  {
 		initOrMinApexDistHist_ = initedApexDist_;
 		initOrMaxPcHist_ = pc;
 	}
@@ -75,29 +70,24 @@ void CornerApex::createFilm(double pc, double conAngRec, double conAngAdv, doubl
 }
  
 
-/**
- * sets m _pinnedApexDist m _advancingPc m _receedingPc based on pc....
- */
-void CornerApex::finitCornerApex(double pc, double conAngRec, double conAngAdv, double halfAng, double intfacTen, bool oilInj, bool overwriteTrapping)
-{
+//! sets m _pinnedApexDist m _advancingPc m _receedingPc based on pc....
+void CornerApex::finitCornerApex(double pc, double conAngRec, double conAngAdv, double halfAng, double intfacTen, bool oilInj, bool overwriteTrapping)  {
 	if(!exists_) return;
 
 	int nTraps=parentShape_->eleman()->isTrappedWat(filmBlob) + (parentShape_->eleman()->isTrappedOil() || outerLayerApex_->trappingCL().first>-1);
-	if( inited_/*(overwriteTrapping && nTraps < 2)*/ || nTraps < 1)
-	{
+	if( inited_/*(overwriteTrapping && nTraps < 2)*/ || nTraps < 1)  {
 		//double apxDistOld=initedApexDist_;
 		double apxDist;
 		double conAng(oilInj ? conAngRec : conAngAdv); 
 		getCApexDistConAng(apxDist, conAng, pc, halfAng, intfacTen, true); ///. warnign don't send initedApexDist_ directly
-		if (apxDist <=0.0 || apxDist > parentShape_->RRR()/tan(halfAng)*2) 	{ cout<<" xkf ";	}
+		if (apxDist <=0. || apxDist > parentShape_->RRR()/tan(halfAng)*2) 	{ cout<<" xkf ";	}
 
 		initedApexDist_ = apxDist;
 
 		advancingPc_ = intfacTen*cos( min(PI, conAngAdv)+halfAng )/(initedApexDist_*sin(halfAng));
 		receedingPc_ = intfacTen*cos( min(PI, conAngRec)+halfAng )/(initedApexDist_*sin(halfAng));
 
-		if(pc > initOrMaxPcHist_)
-		{
+		if(pc > initOrMaxPcHist_)  {
 			initOrMinApexDistHist_ = initedApexDist_;
 			initOrMaxPcHist_ = pc;
 		}
@@ -107,11 +97,9 @@ void CornerApex::finitCornerApex(double pc, double conAngRec, double conAngAdv, 
 
 
 }
-/**
- * sets m _pinnedApexDist m _advancingPc m _receedingPc based on pc....
- */
-void CornerApex::initCornerApex(double pc, double conAngRec, double conAngAdv, double halfAng, double intfacTen, bool oilInj)
-{
+
+//! sets m _pinnedApexDist m _advancingPc m _receedingPc based on pc....
+void CornerApex::initCornerApex(double pc, double conAngRec, double conAngAdv, double halfAng, double intfacTen, bool oilInj)  {
 	if(!exists_ || trappedCL_.first > -1 || parentShape_->eleman()->isTrappedOil() || outerLayerApex_->trappingCL().first>-1) return;
 	inited_ = true;
 
@@ -130,50 +118,46 @@ void CornerApex::initCornerApex(double pc, double conAngRec, double conAngAdv, d
 
 void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double pc, double halfAng, double intfacTen, bool overidetrapping, bool accurat, bool debug) const
 {
-	double delta = accurat ? 0.0: SMALL_NUM;
+	double delta = accurat ? 0.: SMALL_NUM;
 		///bool Warning_ensure_deactivated;
 		//ensure(inited_ || trappedCL_.first>-1 || parentShape_->eleman()->isTrappedOil() || outerLayerApex_->trappingCL().first>-1);
 		//ensure(exists_);
 
 	if(!exists_)	{ apexDist = MOLECULAR_LENGTH;  return; }
 
-	if(!overidetrapping)
-	{
+	if(!overidetrapping)  {
 
 		apexDist=initedApexDist_;
-		if( trappedCL_.first>-1)
-		{
+		if( trappedCL_.first>-1)  {
 			pc=trappedCL_.second;
 			double part(pc*initedApexDist_*sin(halfAng)/intfacTen);
 			part = std::min(part, 0.999999);
 			part = std::max(part, -0.999999);
 			double hingAng(acos(part)-halfAng);
 			ensure(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
-			conAng = (std::min(std::max(hingAng, 0.0), PI));
+			conAng = (std::min(std::max(hingAng, 0.), PI));
 			if (debug) cout<< "d8sAA";
 			return;
 		}
-		else if (parentShape_->eleman()->trappingOil().first>-1)
-		{
+		else if (parentShape_->eleman()->trappingOil().first>-1)  {
 			pc=parentShape_->eleman()->trappingOil().second;
 			double part(pc*initedApexDist_*sin(halfAng)/intfacTen);
 			part = std::min(part, 0.999999);
 			part = std::max(part, -0.999999);
 			double hingAng(acos(part)-halfAng);
 			ensure(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
-			conAng = (std::min(std::max(hingAng, 0.0), PI));
+			conAng = (std::min(std::max(hingAng, 0.), PI));
 			if (debug) cout<< "d8sBB";
 			return;
 		}
-		else if (outerLayerApex_->trappingCL().first>-1)
-		{
+		else if (outerLayerApex_->trappingCL().first>-1)  {
 			pc=outerLayerApex_->trappingCL().second;
 			double part(pc*initedApexDist_*sin(halfAng)/intfacTen);
 			part = std::min(part, 0.999999);
 			part = std::max(part, -0.999999);
 			double hingAng(acos(part)-halfAng);
 			ensure(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
-			conAng = (std::min(std::max(hingAng, 0.0), PI));
+			conAng = (std::min(std::max(hingAng, 0.), PI));
 			if (debug) cout<< "d8sCC";
 
 			return;
@@ -181,32 +165,29 @@ void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double p
 	}
 
 
-	if(advancingPc_-delta <= pc && pc <= receedingPc_+delta)
-	{
+	if(advancingPc_-delta <= pc && pc <= receedingPc_+delta)  {
 		double part(pc*initedApexDist_*sin(halfAng)/intfacTen);
 		part = std::min(part, 0.999999);
 		part = std::max(part, -0.999999);
 		double hingAng(acos(part)-halfAng);
 		ensure(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
-		conAng = (std::min(std::max(hingAng, 0.0), PI));
+		conAng = (std::min(std::max(hingAng, 0.), PI));
 		apexDist=initedApexDist_;
 	}
-	else if(pc < advancingPc_)
-	{
+	else if(pc < advancingPc_)  {
 
 		conAng = parentShape_->conAngleAdv();
 			if (debug) 	cout<<"   efs1 ";
 
 		apexDist = (intfacTen/pc)*cos(conAng+halfAng)/sin(halfAng);
-		if (apexDist < initedApexDist_)
-		{
+		if (apexDist < initedApexDist_)  {
 
 			double part(pc*initedApexDist_*sin(halfAng)/intfacTen);
 			part = std::min(part, 0.999999);
 			part = std::max(part, -0.999999);
 			double hingAng(acos(part)-halfAng);
 			ensure(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
-			conAng = (std::min(std::max(hingAng, 0.0), PI));
+			conAng = (std::min(std::max(hingAng, 0.), PI));
 			apexDist = initedApexDist_;
 			if (debug) 	cout<<"   efs2 ";
 
@@ -214,21 +195,18 @@ void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double p
 		else if (apexDist<0) cout<<"ErrApL<0";
 
 	}
-	else if(pc > initOrMaxPcHist_)
-	{   ///. recover pinning receeding contact angle
+	else if(pc > initOrMaxPcHist_)  {   ///. recover pinning receeding contact angle
 
 		conAng=parentShape_->minInitRecCntAng();
 		apexDist = (intfacTen/pc)*cos(conAng+halfAng)/sin(halfAng);
 			if (debug) 	cout<<"   efs3 ";
 
 	}
-	else  if(pc > receedingPc_)
-	{
+	else  if(pc > receedingPc_)  {
 		conAng = parentShape_->conAngleRec();
 
 		apexDist = (intfacTen/pc)*cos(conAng+halfAng)/sin(halfAng);
-		if (apexDist > initedApexDist_)
-		{
+		if (apexDist > initedApexDist_)  {
 
 
 			double part(pc*initedApexDist_*sin(halfAng)/intfacTen);
@@ -236,7 +214,7 @@ void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double p
 			part = std::max(part, -0.999999);
 			double hingAng(acos(part)-halfAng);
 			ensure(hingAng >= -SMALL_NUM && hingAng <=  PI+SMALL_NUM);
-			conAng = (std::min(std::max(hingAng, 0.0), PI));
+			conAng = (std::min(std::max(hingAng, 0.), PI));
 
 			if (debug) 	cout<<"   pcrecPcusds "<<pc<<" "<<receedingPc_<<" "<<apexDist<<" <= "<<initedApexDist_<<" "<<conAng<<"         ";
 
@@ -245,14 +223,13 @@ void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double p
 			if (debug) 	cout<<"   efs4 ";
 
 		}
-		else if(apexDist<initOrMinApexDistHist_)
-		{
+		else if(apexDist<initOrMinApexDistHist_)  {
 			double part(pc*initOrMinApexDistHist_*sin(halfAng)/intfacTen);
 			part = std::min(part, 0.999999);
 			part = std::max(part, -0.999999);
 			double hingAng(acos(part)-halfAng);
 			ensure(hingAng+SMALL_NUM >= parentShape_->minInitRecCntAng() && hingAng <=  PI+SMALL_NUM);
-			conAng = (std::min(std::max(hingAng, 0.0), PI));
+			conAng = (std::min(std::max(hingAng, 0.), PI));
 			if (debug) cout<<"  pcrecPcuadsdsds "<<pc<<" "<<receedingPc_<<"   ";
 			apexDist=initOrMinApexDistHist_;
 			if (debug) 	cout<<"   efs5 ";
@@ -265,7 +242,7 @@ void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double p
 		apexDist = (intfacTen/pc)*cos(conAng+halfAng)/sin(halfAng);
 			if (debug) 	cout<<"   efs6 ";
 
-		ensure(conAng >= 0.0 && conAng <=  PI);
+		ensure(conAng >= 0. && conAng <=  PI);
 	}
 
 	if (debug) if (apexDist > parentShape_->RRR()/tan(halfAng)*2) 

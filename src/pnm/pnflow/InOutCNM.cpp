@@ -3,28 +3,25 @@
 
 
 /// Creates all the pores and throats
-void FlowDomain::initNetworkOld(InputData& input)
-{
+void FlowDomain::initNetworkOld(InputData& input)  {
 	/// The network is created and initialized by reading in the connection files that also contains
 	/// all other relevant information about the pores/throats. Pointers to all elements are contained
-	/// in a vector. Element 0 and 1 are inlet and outlet. Throats follows after the pores.
+	/// in a vector. Elem 0 and 1 are inlet and outlet. Throats follows after the pores.
 	/// Since all rock elements contain pointers to connecting elements rather than vector indicies,
 	/// initialization has to be in correct order: throats, pores, in/outlet and finally finishing the
 	/// throats. 
 
 
 		const int     DUMMY_IDX = -99;
-		double keepFraction = input.lookupOr("A_CLOSE_SHAVE",1.0);
+		double keepFraction = input.getOr("A_CLOSE_SHAVE",1.);
 		input.network(nPors_, nTrots_, box_.x, box_.y, box_.z); //elemData=convertNetworkFromOldFormat(input, nPors_, numThroats, box_);
 
-		vector< pair< int, double > > insidePoreHashs(nPors_);
+		vector< pair<int,double> > insidePoreHashs(nPors_);
 		int neoNPors(0);// WARNING SOURCE OF ERRORR
-		for(int index = 1; index <= nPors_; ++index)
-		{
-			pair< int, double > entry(DUMMY_IDX, 0.0);
+		for(int index = 1; index <= nPors_; ++index)  {
+			pair<int,double> entry(DUMMY_IDX, 0.);
 			input.poreLocation(index, entry.second);
-			if(entry.second >= box_.x*(1.0-keepFraction)*0.5 && entry.second <= box_.x-box_.x*(1.0-keepFraction)*0.5)
-			{
+			if(entry.second >= box_.x*(1.-keepFraction)*0.5 && entry.second <= box_.x-box_.x*(1.-keepFraction)*0.5)  {
 				entry.first = ++neoNPors;
 			}
 			insidePoreHashs[index-1] = entry;
@@ -32,13 +29,13 @@ void FlowDomain::initNetworkOld(InputData& input)
 		elemans_.resize(neoNPors + 2);
 
 		vector< int > insideThroatHashs(nTrots_, DUMMY_IDX);
-		vector< pair<int, int> > neoTrotNeis(nTrots_);
-		vector<Element*> throatsToInlet;								 // All throats connected to the in/outlet are
-		vector<Element*> throatsToOutlet;								// recorded while crating the throats
+		vector< pair<int,int> > neoTrotNeis(nTrots_);
+		vector<Elem*> throatsToInlet;								 // All throats connected to the in/outlet are
+		vector<Elem*> throatsToOutlet;								// recorded while crating the throats
 
 		int neoNTrots = 0;
 		   //readAndCreateThroats(input, neoTrotNeis, throatsToInlet, throatsToOutlet, insidePoreHashs, insideThroatHashs, neoNPors);
-		const double clayPorosityToAdd = input.getOr(0.0,"CLAY_EDIT");
+		const double clayPorosityToAdd = input.getOr("CLAY_EDIT", 0.);
 
 
 	/// The data for the throats are read from the link files. Since the pores are not yet created their
@@ -52,15 +49,14 @@ void FlowDomain::initNetworkOld(InputData& input)
 	/// *_link2.dat:
 	/// index, pore 1 index, pore 2 index, length pore 1, length pore 2, length throat, volume, clay volume
 
-	//int FlowDomain::readAndCreateThroats(InputData& input, vector< pair<int, int> >& neoTrotNeis,
-									  //vector<Element*>& throatsToInlet, vector<Element*>& throatsToOutlet,
-									  //const vector< pair< int, double> >& insidePoreHashs, vector< int >& insideThroatHashs, int neoNPors)
+	//int FlowDomain::readAndCreateThroats(InputData& input, vector< pair<int,int> >& neoTrotNeis,
+									  //vector<Elem*>& throatsToInlet, vector<Elem*>& throatsToOutlet,
+									  //const vector< pair< int, double> >& insidePoreHashs, vector< int >& insideThroatHashs, int neoNPors)  
 	{
 		cout<<"Reading throats"<<endl;
 
 		int numLengthErrors(0);
-		for(int iT = 0; iT < nTrots_; ++iT)
-		{
+		for(int iT = 0; iT < nTrots_; ++iT)  {
 
 			int pore1Idx, pore2Idx;
 			double radius, shapeFactor, lenTot, lenPore1, lenPore2, lenThroat, vol, clayVolume;
@@ -70,9 +66,9 @@ void FlowDomain::initNetworkOld(InputData& input)
 
 
 			///. allow initializing pores/throats with zero-length/vol
-			radius = max(radius,1.0e-32); vol = max(vol,1.0e-96); shapeFactor = max(shapeFactor,1.0e-32);
-			lenThroat = max(lenThroat,1.0e-32); lenPore1 = max(lenPore1,1.0e-32); lenPore2 = max(lenPore2,1.0e-32);
-			lenTot = max(lenTot,3.0e-32);
+			radius = max(radius,1e-32); vol = max(vol,1e-96); shapeFactor = max(shapeFactor,1e-32);
+			lenThroat = max(lenThroat,1e-32); lenPore1 = max(lenPore1,1e-32); lenPore2 = max(lenPore2,1e-32);
+			lenTot = max(lenTot,3.e-32);
 
 
 			if(pore1Idx > 0)  neoTrotNeis[iT].first = insidePoreHashs[pore1Idx-1].first;
@@ -81,8 +77,7 @@ void FlowDomain::initNetworkOld(InputData& input)
 			if(pore2Idx > 0)  neoTrotNeis[iT].second = insidePoreHashs[pore2Idx-1].first;
 			else				neoTrotNeis[iT].second = pore2Idx;
 
-			if(neoTrotNeis[iT].first > 0 || neoTrotNeis[iT].second > 0)
-			{
+			if(neoTrotNeis[iT].first > 0 || neoTrotNeis[iT].second > 0)  {
 				++neoNTrots;
 				insideThroatHashs[iT] = neoNTrots;
 
@@ -94,19 +89,17 @@ void FlowDomain::initNetworkOld(InputData& input)
 
 
 
-				Element *throat = new Throat(comn_, neoNPors+1+neoNTrots, dbl3(0.0,0.0,0.0), radius, vol, clayVolume, shapeFactor, lenThroat, lenPore1, lenPore2,0);
+				Elem *throat = new Throat(comn_, neoNPors+1+neoNTrots, dbl3(0.,0.,0.), radius, vol, clayVolume, shapeFactor, lenThroat, lenPore1, lenPore2,0);
 
 
 				elemans_.push_back(throat);
 
-				if(neoTrotNeis[iT].first == DUMMY_IDX)
-				{
+				if(neoTrotNeis[iT].first == DUMMY_IDX)  {
 					if(insidePoreHashs[pore1Idx-1].second < box_.x*0.5)
 						  neoTrotNeis[iT].first = -1;
 					else  neoTrotNeis[iT].first = 0;
 				}
-				else if(neoTrotNeis[iT].second == DUMMY_IDX)
-				{
+				else if(neoTrotNeis[iT].second == DUMMY_IDX)  {
 					if(insidePoreHashs[pore2Idx-1].second < box_.x*0.5)
 						  neoTrotNeis[iT].second = -1;
 					else  neoTrotNeis[iT].second = 0;
@@ -135,7 +128,7 @@ void FlowDomain::initNetworkOld(InputData& input)
 			/// index, x_pos, y_pos, z_pos, connection num, connecting nodes..., at inlet?, at outlet?, connecting links...
 			/// *_node2.dat:
 			/// index, volume, radius, shape factor, clay volume
-			double  shaveOff(box_.x*(1.0-keepFraction)*0.5);
+			double  shaveOff(box_.x*(1.-keepFraction)*0.5);
 
 
 			int neoIndex(1);
@@ -144,12 +137,11 @@ void FlowDomain::initNetworkOld(InputData& input)
 				int connNumber;
 				double xPos, yPos, zPos, vol, radius, shapeFactor, clayVolume;
 				vector< int > connThroats, connPores;
-				vector<Element*> adjTrots;
+				vector<Elem*> adjTrots;
 
 				input.poreData(iP, xPos, yPos, zPos, connNumber, connThroats, connPores, vol, clayVolume, radius, shapeFactor);
 
-				if(xPos >= shaveOff && xPos <= box_.x-shaveOff)
-				{
+				if(xPos >= shaveOff && xPos <= box_.x-shaveOff)  {
 					++neoIndex;
 
 					//double adjustingVol(input.clayEdit()*(vol+clayVolume));
@@ -194,11 +186,10 @@ void FlowDomain::initNetworkOld(InputData& input)
 			int poreIndex1 =  neoTrotNeis[i].first+1;// oren indices start from -1	  // the pores. The network should now be
 			int poreIndex2 =  neoTrotNeis[i].second+1;	 // properly initialized.
 
-			if(poreIndex1 >= 0 && poreIndex2 >= 0)
-			{
+			if(poreIndex1 >= 0 && poreIndex2 >= 0)  {
 				ensure(poreIndex1 < nBpPors_ && poreIndex2 < nBpPors_);
-				Element* pore1 = elemans_[poreIndex1];
-				Element* pore2 = elemans_[poreIndex2];
+				Elem* pore1 = elemans_[poreIndex1];
+				Elem* pore2 = elemans_[poreIndex2];
 				ensure(pore1 != NULL && pore2 != NULL);
 				elemans_[nBpPors_+ runIdx]->node()=0.5*(pore1->node()+pore2->node());
 
@@ -234,8 +225,7 @@ void Throat::writeNetworkData(ostream& outOne, ostream& outTwo) const
 	double lenPoreOne(poreLength_[0]), lenPoreTwo(poreLength_[1]), lenThroat(length_);
 	double lenTotal(poreLength_[0]+poreLength_[1]+length_);
 
-	if(connections_.size() != 2)
-	{
+	if(cnctions_.size() != 2)  {
 		cerr << endl
 			<< "============================================" << endl
 			<< "For optimized network to be written to file " << endl
@@ -244,20 +234,20 @@ void Throat::writeNetworkData(ostream& outOne, ostream& outTwo) const
 	}
 
 	outOne << setw(7)   << indexOren()
-		<< setw(7)      << connections_[0]->indexOren()
-		<< setw(7)      << connections_[1]->indexOren()
+		<< setw(7)      << cnctions_[0]->indexOren()
+		<< setw(7)      << cnctions_[1]->indexOren()
 		<< setw(15)     << model_->RRR()
 		<< setw(15)     << model_->shapeFactor()
 		<< setw(15)     << lenTotal
 		<< endl;
 
 	outTwo << setw(7)   << indexOren()
-		<< setw(7)      << connections_[0]->indexOren()
-		<< setw(7)      << connections_[1]->indexOren()
+		<< setw(7)      << cnctions_[0]->indexOren()
+		<< setw(7)      << cnctions_[1]->indexOren()
 		<< setw(15)     << lenPoreOne
 		<< setw(15)     << lenPoreTwo
 		<< setw(15)     << lenThroat
-		<< setw(15)     << flowVolume_* (rockIndex_>0 ? 1.0/model_->porosity() : 1.0)
+		<< setw(15)     << flowVolume_* (rockIndex_>0 ? 1./model_->porosity() : 1.)
 		<< setw(15)     << clayVolume_
 		<< endl;
 }
@@ -267,20 +257,20 @@ void Throat::writeNetworkDataBinary(ostream& out) const
 	double lenPoreOne(poreLength_[0]), lenPoreTwo(poreLength_[1]), lenThroat(length_);
 	double lenTotal(poreLength_[0]+poreLength_[1]+length_);
 
-	ThroatStruct Prop;
-	Prop.index = indexOren();
-	Prop.poreOne = connections_[0]->indexOren();
-	Prop.poreTwo = connections_[1]->indexOren();
+	ThroatStruct pr;
+	pr.index = indexOren();
+	pr.poreOne = cnctions_[0]->indexOren();
+	pr.poreTwo = cnctions_[1]->indexOren();
 
-	Prop.radius = model_->RRR();
-	Prop.shapeFact = model_->shapeFactor();
-	Prop.lenPoreOne = lenPoreOne;
-	Prop.lenPoreTwo = lenPoreTwo;
-	Prop.lenThroat = lenThroat;
-	Prop.lenTot = lenTotal;
-	Prop.volume = flowVolume_* (rockIndex_>0 ? 1.0/model_->porosity() : 1.0);
-	Prop.clayVol = clayVolume_;
-	out.write((char *)(&Prop), sizeof(Prop));
+	pr.radius = model_->RRR();
+	pr.shapeFact = model_->shapeFactor();
+	pr.lenPoreOne = lenPoreOne;
+	pr.lenPoreTwo = lenPoreTwo;
+	pr.lenThroat = lenThroat;
+	pr.lenTot = lenTotal;
+	pr.volume = flowVolume_* (rockIndex_>0 ? 1./model_->porosity() : 1.);
+	pr.clayVol = clayVolume_;
+	out.write((char *)(&pr), sizeof(pr));
 
 } 
  
@@ -307,13 +297,12 @@ void Pore::writeNetworkData(ostream& outOne, ostream& outTwo) const
 
 	outOne << setw(7)  << indexOren()
 		<< node_
-		<< setw(5) << connectionNum_;
+		<< setw(5) << nCncts_;
 
-	for(i = 0; i < connections_.size(); ++i)
-	{
-		const Throat* throat = dynamic_cast< Throat* >(connections_[i]);
+	for(i = 0; i < cnctions_.size(); ++i)  {
+		const Throat* throat = dynamic_cast< Throat* >(cnctions_[i]);
 		assert(throat);
-		const Element* prj = throat->neighbouringPore(this);
+		const Elem* prj = throat->neighbouringPore(this);
 		if(prj->isEntryRes()) connToIn = true;
 		if(prj->isExitRes()) connToOut = true;
 
@@ -322,13 +311,13 @@ void Pore::writeNetworkData(ostream& outOne, ostream& outTwo) const
 
 	outOne << setw(7) << connToIn << setw(7) << connToOut;                          // In and outlet?
 
-	for(i = 0; i < connections_.size(); ++i)
-		outOne << setw(7) << connections_[i]->indexOren();                     // Connecting throats
+	for(i = 0; i < cnctions_.size(); ++i)
+		outOne << setw(7) << cnctions_[i]->indexOren();                     // Connecting throats
 
 	outOne << endl;
 
 	outTwo << setw(7) << indexOren()
-		<< setw(15) << flowVolume_* (rockIndex_>0 ? 1.0/model_->porosity() : 1.0)
+		<< setw(15) << flowVolume_* (rockIndex_>0 ? 1./model_->porosity() : 1.)
 		<< setw(15) << model_->RRR()
 		<< setw(15) << model_->shapeFactor()
 		<< setw(15) << clayVolume_
@@ -337,28 +326,26 @@ void Pore::writeNetworkData(ostream& outOne, ostream& outTwo) const
 
 void Pore::writeNetworkDataBinary(ostream& out) const
 {
-	PoreStruct Prop;
-	Prop.index = indexOren();
-	Prop.x = node_.x;
-	Prop.y = node_.y;
-	Prop.z = node_.z;
-	Prop.connNum = connectionNum_;
+	PoreStruct pr;
+	pr.index = indexOren();
+	pr.x = node_.x;
+	pr.y = node_.y;
+	pr.z = node_.z;
+	pr.connNum = nCncts_;
 
-	Prop.radius = model_->RRR();
-	Prop.shapeFact = model_->shapeFactor();
-	Prop.volume = flowVolume_* (rockIndex_>0 ? 1.0/model_->porosity() : 1.0);
-	Prop.clayVol = clayVolume_;
-	out.write((char *)(&Prop), sizeof(Prop));
-	for(size_t i = 0; i < connections_.size(); ++i)
-	{
-		const Throat* throat = dynamic_cast< Throat* >(connections_[i]);
+	pr.radius = model_->RRR();
+	pr.shapeFact = model_->shapeFactor();
+	pr.volume = flowVolume_* (rockIndex_>0 ? 1./model_->porosity() : 1.);
+	pr.clayVol = clayVolume_;
+	out.write((char *)(&pr), sizeof(pr));
+	for(size_t i = 0; i < cnctions_.size(); ++i)  {
+		const Throat* throat = dynamic_cast< Throat* >(cnctions_[i]);
 		assert(throat);
 		int idx = throat->neighbouringPore(this)->indexOren();
 		out.write((char *)(&idx), sizeof(int));
 	}
-	for(size_t j = 0; j < connections_.size(); ++j)
-	{
-		int idx = connections_[j]->indexOren();
+	for(size_t j = 0; j < cnctions_.size(); ++j)  {
+		int idx = cnctions_[j]->indexOren();
 		out.write((char *)(&idx), sizeof(int));
 	}
 
@@ -371,8 +358,7 @@ void InputData::writeNetwork(bool& writeNet, bool& writeBin, string& netName) co
 	string keyword("WRITE_NET");
 	char inBinary;
 
-	if(getData(data, keyword))
-	{
+	if(giv(keyword, data))  {
 		//if (verbose) cout<< "Reading " << keyword << endl;
 		data >> inBinary >> netName;
 		writeBin = (inBinary == 'T' || inBinary == 't');
@@ -415,10 +401,9 @@ void FlowDomain::writeNetworkToFile(const InputData& input) const
 	//exit(-1);
 	//}
 
-	if(writeInBinary)
-	{
+	if(writeInBinary)  {
 		string poreFileName(fileNameBase + "_node.bin"), throatFileName(fileNameBase + "_link.bin");
-		ofstream pOut(poreFileName.c_str(), ios::binary), tOut(throatFileName.c_str(), ios::binary);
+		ofstream pOut(poreFileName, ios::binary), tOut(throatFileName, ios::binary);
 		ensure(pOut && tOut, "Warning: Could not open " + poreFileName + "for writing. Network is not written to file." );
 
 		pOut.write((char *)(&nPors_), sizeof(int));
@@ -441,12 +426,11 @@ void FlowDomain::writeNetworkToFile(const InputData& input) const
 		string pOut1FileName(fileNameBase + "_node1.dat"), pOut2FileName(fileNameBase + "_node2.dat");
 
 		ofstream pOut1, pOut2;
-		pOut1.open(pOut1FileName.c_str());
-		pOut2.open(pOut2FileName.c_str());
+		pOut1.open(pOut1FileName);
+		pOut2.open(pOut2FileName);
 		pOut1.flags(ios::showpoint);
 		pOut1.flags(ios::scientific);
-		if(!pOut1 || !pOut2)
-		{
+		if(!pOut1 || !pOut2)  {
 			cout<< endl
 				<< "=====================================================" << endl
 				<< "Warning: Could not open " << pOut1FileName << endl
@@ -465,8 +449,8 @@ void FlowDomain::writeNetworkToFile(const InputData& input) const
 
 		string tOut1FileName(fileNameBase + "_link1.dat"), tOut2FileName(fileNameBase + "_link2.dat");
 		ofstream tOut1, tOut2;
-		tOut1.open(tOut1FileName.c_str());
-		tOut2.open(tOut2FileName.c_str());
+		tOut1.open(tOut1FileName);
+		tOut2.open(tOut2FileName);
 
 		tOut1 << nTrots_ << "   " << '\n';
 
@@ -491,8 +475,7 @@ void FlowDomain::createMatlabLocationData() const
 
 	outp << endl << "% The location of individual pores (m). The array is 1-based" << endl;
 	outp << "poreLoc = [";
-	for(int i = nBSs_; i < nBpPors_; ++i)
-	{
+	for(int i = nBSs_; i < nBpPors_; ++i)  {
 		outp << elemans_[i]->node().x << ", "
 			<< elemans_[i]->node().y << ", "
 			<< elemans_[i]->node().z << "; ..."
@@ -506,13 +489,12 @@ void FlowDomain::createMatlabLocationData() const
 		<< "% 1-based, which is the same as that used by the Oren format" << endl;
 
 	outt << "throatConn = [";
-	for(size_t j = nBpPors_; j < elemans_.size(); ++j)
-	{
-		outt << elemans_[j]->connection(0)->indexOren() << ", ";
-		if(elemans_[j]->connectionNum() == 2)
-			outt << elemans_[j]->connection(1)->indexOren() << "; " << endl;
+	for(size_t j = nBpPors_; j < elemans_.size(); ++j)  {
+		outt << elemans_[j]->neib(0)->indexOren() << ", ";
+		if(elemans_[j]->nCncts() == 2)
+			outt << elemans_[j]->neib(1)->indexOren() << "; " << endl;
 		else
-			outt << elemans_[j]->connection(0)->indexOren() << "; " << endl;
+			outt << elemans_[j]->neib(0)->indexOren() << "; " << endl;
 	}
 	outt << "];" << endl;
 	outt.close();

@@ -13,7 +13,7 @@
 
 class ElemRadCmpInc
 { public:
-	bool operator() (const Element* elem1, const Element* elem2) const
+	bool operator() (const Elem* elem1, const Elem* elem2) const
 	{   return (elem1->RRR() < elem2->RRR());    }
 
 	bool operator() (const VoidElem* elem1, const VoidElem* elem2) const
@@ -23,7 +23,7 @@ class ElemRadCmpInc
 class ElemRadCmpRed
 {
 public:
-	bool operator() (const Element* elem1, const Element* elem2) const
+	bool operator() (const Elem* elem1, const Elem* elem2) const
 	{  return (elem1->RRR() > elem2->RRR());  }
 	
 	bool operator() (const VoidElem* elem1, const VoidElem* elem2) const
@@ -32,7 +32,7 @@ public:
 
 class ElemGCmpInc
 { public:
-	bool operator() (const Element* elem1, const Element* elem2) const
+	bool operator() (const Elem* elem1, const Elem* elem2) const
 	{   return (pow(elem1->RRR(),3)/elem1->flowVolumeX() < pow(elem2->RRR(),3)/elem2->flowVolumeX());    }
 };
 
@@ -40,7 +40,7 @@ class ElemGCmpInc
 class ElemVolCmpRed
 {
 public:
-	bool operator() (const Element* elem1, const Element* elem2) const
+	bool operator() (const Elem* elem1, const Elem* elem2) const
 	{
 		return (elem1->flowVolume() > elem2->flowVolume());
 	}
@@ -49,7 +49,7 @@ public:
 class ElemGCmpRed
 {
 public:
-	bool operator() (const Element* elem1, const Element* elem2) const
+	bool operator() (const Elem* elem1, const Elem* elem2) const
 	{
 		return (elem1->model()->shapeFactor() > elem2->model()->shapeFactor());
 	}
@@ -91,7 +91,7 @@ public:
 class FracWettInc
 {
 public:
-	bool operator() (std::pair<double, Element*> prop1, std::pair<double, Element*> prop2) const
+	bool operator() (std::pair<double, Elem*> prop1, std::pair<double, Elem*> prop2) const
 	{
 		return (prop1.first < prop2.first);
 	}
@@ -100,7 +100,7 @@ public:
 class FracWettDec
 {
 public:
-	bool operator() (std::pair<double, Element*> prop1, std::pair<double, Element*> prop2) const
+	bool operator() (std::pair<double, Elem*> prop1, std::pair<double, Elem*> prop2) const
 	{
 		return (prop1.first > prop2.first);
 	}
@@ -109,7 +109,7 @@ public:
 class TrappingWatStorageCmp
 {
 public:
-	bool operator() (std::pair<Element*, FluidBlob> elm1, std::pair<Element*, FluidBlob> elm2) const
+	bool operator() (std::pair<Elem*, FluidBlob> elm1, std::pair<Elem*, FluidBlob> elm2) const
 	{
 		return (elm1.first->index() > elm2.first->index());
 	}
@@ -126,12 +126,12 @@ public:
 class DistToExitCompareThroats
 {
 public:
-	bool operator() (const Element* elem1, const Element* elem2) const
+	bool operator() (const Elem* elem1, const Elem* elem2) const
 	{
-		const Element* pOneOne = elem1->connection(0);
-		const Element* pOneTwo = elem1->connection(1);
-		const Element* pTwoOne = elem2->connection(0);
-		const Element* pTwoTwo = elem2->connection(1);
+		const Elem* pOneOne = elem1->neib(0);
+		const Elem* pOneTwo = elem1->neib(1);
+		const Elem* pTwoOne = elem2->neib(0);
+		const Elem* pTwoTwo = elem2->neib(1);
 
 		if(pOneOne == pTwoOne)
 			return pOneTwo->node().x > pTwoTwo->node().x;
@@ -150,7 +150,7 @@ public:
 class DistToExitComparePores
 {
 public:
-	bool operator() (const Element* elem1, const Element* elem2) const
+	bool operator() (const Elem* elem1, const Elem* elem2) const
 	{
 		return elem1->node().x > elem2->node().x;
 	}
@@ -164,7 +164,7 @@ public:
 class poreIndexCompare
 {
 public:
-	bool operator() (std::pair< int, double > colOne, std::pair< int, double > colTwo) const
+	bool operator() (std::pair<int,double> colOne, std::pair<int,double> colTwo) const
 	{
 		return (colOne.first < colTwo.first);
 	}
@@ -177,7 +177,7 @@ public:
 class poreDiagonalFirst
 {
 public:
-	bool operator() (std::pair< int, double > colOne, std::pair< int, double > colTwo) const
+	bool operator() (std::pair<int,double> colOne, std::pair<int,double> colTwo) const
 	{
 		return (colOne.second > colTwo.second);
 	}
@@ -186,7 +186,7 @@ public:
 class throatIndexCompare
 {
 public:
-	bool operator() (std::pair<const Element*, double> thOne, std::pair<const Element*, double> thTwo) const
+	bool operator() (std::pair<const Elem*, double> thOne, std::pair<const Elem*, double> thTwo) const
 	{
 		return (thOne.first->indexOren() < thTwo.first->indexOren());
 	}

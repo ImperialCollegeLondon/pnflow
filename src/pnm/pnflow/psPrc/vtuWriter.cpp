@@ -21,14 +21,7 @@
 #include "FlowDomain.h"
 
 
-#if defined _MSC_VER
-#include <direct.h>
-#elif defined __GNUC__
-#include <sys/types.h>
-#include <sys/stat.h>
-#endif
 
-#define _pi   3.14159265359
 #define _nl_  ((i&31)==31 ? '\n' : ' ')
 #define pbak push_back
 
@@ -43,15 +36,15 @@
 using namespace std;
 
 
-results3D::results3D(const InputFile& input, const CommonData * comn, string outputFolder, const std::vector<Element const *>*  elems_, size_t nBP2, size_t n6pPors)
+results3D::results3D(const InputFile& input, const GNMData * comn, string outputFolder, const std::vector<Elem const *>*  elems_, size_t nBP2, size_t n6pPors)
   : comn_(comn), elems_(*elems_), nBSs_(nBP2), nBpPors_(n6pPors), format_(XMF_FORMAT), rkw_(1), vLinAC21I_(0), v3D_AC21I_(0),
-	iWrite_(0), prefix_(outputFolder), rScaleFactor_(1.0)
+	iWrite_(0), prefix_(outputFolder), rScaleFactor_(1.)
 {
 
 	inform=input.informative;
 
 	istringstream ss;                  //!### Keyword **visualize** writes 3D visualization files
-	if(input.getData(ss, "visualize")) //!##### Keyword **visualize:**  	rScaleFactor 	thetaResulution	WriteInit	WriteOInj	WriteWInj	WriteAllSteps	WriteCorners;
+	if(input.giv("visualize", ss)) //!##### Keyword **visualize:**  	rScaleFactor 	thetaResulution	WriteInit	WriteOInj	WriteWInj	WriteAllSteps	WriteCorners;
 	{ 
 		if(inform) cout<<"Initialising full-3D vtu visualization";
 
@@ -75,7 +68,7 @@ results3D::results3D(const InputFile& input, const CommonData * comn, string out
 			cout<< "\n\n  Info: pore and throat radii will be multiplied by "<<rScaleFactor_<<" in visualization files \n"<<endl;
 	}
 
-	if(input.getData(ss, "visuaLight")) //!##### Keyword **visuaLight** is outdated
+	if(input.giv("visuaLight", ss)) //!##### Keyword **visuaLight** is outdated
 	{
 		if(inform) cout<<"visuaLight: initialising vtu & xmdf quasi-3D visualization";
 		format_ = BOTH_FORMATS;
@@ -149,8 +142,8 @@ void results3D::write3D(double pc, double tension, bool endCycle)
 
 
 
-float ffloatof(const Element* slm){  float ff=slm->ffaz();
-	if(ff>3.0) {ff=(4.0*float(int(ff)%4)+1.5)/5;}
+float ffloatof(const Elem* slm){  float ff=slm->ffaz();
+	if(ff>3.) {ff=(4.*float(int(ff)%4)+1.5)/5; }
 	return max(0.6f,min(ff,2.4f)); }
 
 
@@ -187,11 +180,11 @@ dbl3 rotateAroundVec( dbl3 y, double gamma, dbl3 n)
 
 void insertHalfCorneroints(vector<dbl3>&  points, vector<int>& cellPoints, dbl3 c1, dbl3 c2, dbl3 nE1, dbl3 nE2, 
                           double lp_inrR, double lp_outR, ///<- layer location of corner premiter
-							double teta1, double tetaW, double rOuter, double hafAng, double CARelax = 1.0)
+							double teta1, double tetaW, double rOuter, double hafAng, double CARelax = 1.)
 {
-	//const double convertToRad = _pi/180.0;
+	//const double convertToRad = PI/180.;
 	dbl3 dd = c2-c1;
-	dbl3 normal = dd/(mag(dd)+1.0e-32);
+	dbl3 normal = dd/(mag(dd)+1e-32);
 
 	vector<dbl3> hcPs(8); // corner points
 
@@ -251,8 +244,8 @@ void insertHalfCorneroints(vector<dbl3>&  points, vector<int>& cellPoints, dbl3 
 
 void getSolverPoreResults
 (
-	const CommonData *  netsim,
-	const vector<Element const *>&  elems_,
+	const GNMData *  netsim,
+	const vector<Elem const *>&  elems_,
 	const vector<int> & elmInds,
 	vector<float> & radius,
 	vector<float> & Sw,
@@ -269,37 +262,37 @@ void getSolverPoreResults
 	const Fluid& c__water = netsim->water();
 	const Fluid& c__oil = netsim->oil();
 	const Fluid& c__elec = netsim->elec();
-	vector<float> radiusTmp(elems_.size(),0.0);
-	vector<float> SwTmp(elems_.size(),-1.0);
-	vector<float> pcPistonTmp(elems_.size(),-1.0);
-	vector<float> pTmp(elems_.size(),-1.0);
-	vector<float> p_oTmp(elems_.size(),-1.0);
-	vector<float> p_wTmp(elems_.size(),-1.0);
-	vector<float> voltTmp(elems_.size(),-1.0);
-	vector<float> elem_typeTmp(elems_.size(),-1.0);
+	vector<float> radiusTmp(elems_.size(),0.);
+	vector<float> SwTmp(elems_.size(),-1.);
+	vector<float> pcPistonTmp(elems_.size(),-1.);
+	vector<float> pTmp(elems_.size(),-1.);
+	vector<float> p_oTmp(elems_.size(),-1.);
+	vector<float> p_wTmp(elems_.size(),-1.);
+	vector<float> voltTmp(elems_.size(),-1.);
+	vector<float> elem_typeTmp(elems_.size(),-1.);
 	for(size_t i = 2; i<nBpPors_; ++i)//i < elems_.size()
 	{
-		const Element* pore = elems_[i];
+		const Elem* pore = elems_[i];
 
 
-		double pressure(-10.0);
-		double volttt(-10.0);
-		double flowRate(-10.0);
+		double pressure(-10.);
+		double volttt(-10.);
+		double flowRate(-10.);
 		// if(   (pore->isInsideSolverBox())
 		  // )
 		{
-			if (pore->prevSolvrRes(c__water, 0.0, pressure, flowRate))
+			if (pore->prevSolvrRes(c__water, 0., pressure, flowRate))
 			{///. copied from amg_solver::writeVelocityEntry
 				p_wTmp[i] = pressure;
 			}
-			if (pore->prevSolvrRes(c__elec, 0.0, volttt, flowRate))
+			if (pore->prevSolvrRes(c__elec, 0., volttt, flowRate))
 			{///. copied from amg_solver::writeVelocityEntry
 				///cout<< volttt<<endl;
 				voltTmp[i] = volttt;
 			}
 			elem_typeTmp[i] = pore->rockIndex();
 
-			if(pore->prevSolvrRes(c__oil, 0.0, pressure, flowRate))
+			if(pore->prevSolvrRes(c__oil, 0., pressure, flowRate))
 			{
 				p_oTmp[i] = pressure;
 			}
@@ -307,10 +300,10 @@ void getSolverPoreResults
 		pcPistonTmp[i] = pore->model()->Pc_pistonTypeAdv();
 		pTmp[i] = pore->gravCorrectedEntryPress();
 
-		double sat_p(1.0-pore->waterSaturation());
+		double sat_p(1.-pore->waterSaturation());
 		if(pore->isEntryOrExitRes())
 		{										// Reservoirs and throats connected to reservoirs are always assumed single phase (?)
-			sat_p = 1.0;
+			sat_p = 1.;
 		}
 		SwTmp[i] = sat_p;
 		radiusTmp[i] = pore->model()->RRR();
@@ -334,8 +327,8 @@ void getSolverPoreResults
 
 void getThroatSolverResults
 (
-	const CommonData *  netsim,
-	const vector<Element const *>&  elems_,
+	const GNMData *  netsim,
+	const vector<Elem const *>&  elems_,
 	const vector<size_t> & elmInds,
 	vector<float> & radius,
 	vector<float> & Sw,
@@ -355,26 +348,26 @@ void getThroatSolverResults
 	const Fluid& c__water = netsim->water();
 	const Fluid& c__oil = netsim->oil();
 	const Fluid& c__elec = netsim->elec();
-	vector<float> radiusTmp(elems_.size(),0.0);
-	vector<float> SwTmp(elems_.size(),-1.0);
-	vector<float> v_oTmp(elems_.size(),-1.0);
-	vector<float> v_wTmp(elems_.size(),-1.0);
-	vector<float> ITmp(elems_.size(),-1.0);
-	vector<float> pcPistonTmp(elems_.size(),-1.0);
-	vector<float> pTmp(elems_.size(),-1.0);
-	vector<float> p_oTmp(elems_.size(),-1.0);
-	vector<float> p_wTmp(elems_.size(),-1.0);
+	vector<float> radiusTmp(elems_.size(),0.);
+	vector<float> SwTmp(elems_.size(),-1.);
+	vector<float> v_oTmp(elems_.size(),-1.);
+	vector<float> v_wTmp(elems_.size(),-1.);
+	vector<float> ITmp(elems_.size(),-1.);
+	vector<float> pcPistonTmp(elems_.size(),-1.);
+	vector<float> pTmp(elems_.size(),-1.);
+	vector<float> p_oTmp(elems_.size(),-1.);
+	vector<float> p_wTmp(elems_.size(),-1.);
 	vector<float> VoltTmp(elems_.size(),-0.5);
-	vector<float> elem_typeTmp(elems_.size(),-1.0);
+	vector<float> elem_typeTmp(elems_.size(),-1.);
 
 	for(size_t i = nBpPors_; i < elems_.size(); ++i)
 	{
-		const Element* throat = elems_[i];
-		const Element* pore1 = throat->connection(0);
-		const Element* pore2 = throat->connection(1);
+		const Elem* throat = elems_[i];
+		const Elem* pore1 = throat->neib(0);
+		const Elem* pore2 = throat->neib(1);
 
-		double pressure(-10.0);
-		double flowRate(-10.0);
+		double pressure(-10.);
+		double flowRate(-10.);
 		//if(   (pore1->isInsideSolverBox())
 			//||(pore2->isInsideSolverBox())
 		  //)
@@ -397,12 +390,12 @@ void getThroatSolverResults
 		}
 		pcPistonTmp[i] = throat->model()->Pc_pistonTypeAdv();
 		pTmp[i] = throat->gravCorrectedEntryPress();
-		double  sat_t(1.0-throat->waterSaturation());
+		double  sat_t(1.-throat->waterSaturation());
 		if(pore1->isEntryOrExitRes())
 		{										// Reservoirs and throats connected to phase
-			sat_t = 1.0;
+			sat_t = 1.;
 		} else if(pore2->isEntryOrExitRes()) {
-			sat_t = 1.0;
+			sat_t = 1.;
 		}
 
 		SwTmp[i] = sat_t;
@@ -432,7 +425,7 @@ void getThroatSolverResults
  string results3D::start(size_t nPoints, size_t nCells)
 	{
 		stringstream  str;
-		str<<"<?xml version = \"1.0\"?>\n"
+		str<<"<?xml version = \"1.\"?>\n"
 		   <<"<VTKFile type = \"UnstructuredGrid\" version = \"0.1\" byte_order = \"LittleEndian\">\n"
 		   <<"  <UnstructuredGrid>"
 		   <<"	<Piece NumberOfPoints = \""<<nPoints<<"\" NumberOfCells = \""<<nCells<<"\" >\n";
@@ -465,7 +458,7 @@ void writeCellData(ofstream& outp, string name, const vector<Type> & vals, strin
 
 void addSpherePoreMesh
 (
-	 const vector<Element const *>&  elems_,
+	 const vector<Elem const *>&  elems_,
 	 size_t poreIndx,
 	 vector<dbl3>& points,
 	 vector<int>& tags,
@@ -477,23 +470,23 @@ void addSpherePoreMesh
 	 unsigned int thetaResulution
 )
 {
-	const Element * elem = elems_[poreIndx];
+	const Elem * elem = elems_[poreIndx];
 
 	dbl3 c1(elem->node());
 	dbl3 c2(elem->node());
-	c2[1] += 1.0e-12;
+	c2[1] += 1e-12;
 	double r = elem->model()->RRR()*sqrt(scaleFactor);
 	if (elem->isEntryOrExitRes())
 		return ; ///. no visualization of inlet/outlet res
 
 
 	dbl3 c1c2 = c2-c1;
-	dbl3 ncc = c1c2/(mag(c1c2)+1.0e-32);
-	dbl3 nCE(0.0,0.0,0.0);	///. pick a corner point for the first subElem
-	for(size_t i = 0;i<3;i++){ if (ncc[i]<0.6){nCE[i] = 1.0;break;} }
+	dbl3 ncc = c1c2/(mag(c1c2)+1e-32);
+	dbl3 nCE(0.,0.,0.);	///. pick a corner point for the first subElem
+	for(size_t i = 0;i<3;i++){ if (ncc[i]<0.6){nCE[i] = 1.;break; } }
 
 	nCE = ncc^nCE;
-	nCE = nCE/(mag(nCE)+1.0e-32);
+	nCE = nCE/(mag(nCE)+1e-32);
 
 
 	{
@@ -501,20 +494,20 @@ void addSpherePoreMesh
 
 		for(int i = 0; i < thetaResulutionp2; ++i)
 		{
-			double hafAng = _pi/thetaResulutionp2;
-			double hafAngleAzim = 0.5*_pi/thetaResulutionp2;
+			double hafAng = PI/thetaResulutionp2;
+			double hafAngleAzim = 0.5*PI/thetaResulutionp2;
 			nCE = rotateAroundVec(nCE,2*hafAng,ncc);
 			dbl3 lAzimuth1 = ncc^nCE; ///. normal to ncc and nE1
 			dbl3 nCE2 = rotateAroundVec(nCE,thetaResulutionp2*hafAngleAzim,lAzimuth1);///. edge-centre ncc vector
 			for(int j = 0; j < thetaResulutionp2; ++j)
 			{
 				dbl3 nCE1 = nCE2;///. edge-centre ncc vector
-				nCE2 = rotateAroundVec(nCE2,hafAngleAzim*2.0,lAzimuth1);///. edge-centre ncc vector
+				nCE2 = rotateAroundVec(nCE2,hafAngleAzim*2.,lAzimuth1);///. edge-centre ncc vector
 
-				insertHalfCorneroints( points,cellPoints,c1,c2,  -nCE1,  -nCE2,  1.0e-18,  r, 0.0,0.0,   0,  hafAng,0.0); ///. Warning: CA is not implemented for spheres
+				insertHalfCorneroints( points,cellPoints,c1,c2,  -nCE1,  -nCE2,  1e-18,  r, 0.,0.,   0,  hafAng,0.); ///. Warning: CA is not implemented for spheres
 					tags.pbak(0);   elmInds.pbak(poreIndx);   ffaz.pbak(elem->model()->containCOil());
 
-				insertHalfCorneroints( points,cellPoints,c1,c2,  -nCE1,  -nCE2,  1.0e-18,  r,  0.0,0.0,   0,  -hafAng,0.0);///. Warning: CA is not implemented for spheres
+				insertHalfCorneroints( points,cellPoints,c1,c2,  -nCE1,  -nCE2,  1e-18,  r,  0.,0.,   0,  -hafAng,0.);///. Warning: CA is not implemented for spheres
 				tags.pbak(0);   elmInds.pbak(poreIndx);   ffaz.pbak(elem->model()->containCOil());
 			}
 		}
@@ -524,7 +517,7 @@ void addSpherePoreMesh
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void results3D::vtuWritePores(string fname, double Pc, double tension)
+void results3D::vtuWritePores(string fnam, double Pc, double tension)
 {
 
 	vector<dbl3> points;
@@ -549,7 +542,7 @@ void results3D::vtuWritePores(string fname, double Pc, double tension)
 	}
 
 
-	ofstream outp(fname);
+	ofstream outp(fnam);
 
 	outp<<results3D::start(points.size(),tags.size());
 
@@ -591,14 +584,14 @@ void results3D::vtuWritePores(string fname, double Pc, double tension)
 
 	outp<<"      <CellData Scalars = \"ffaz\">\n"; //////////////////////////////////////
 
-	vector<float> Sw(elmInds.size(),0.0);
-	vector<float> radius(elmInds.size(),0.0);
-	vector<float> pcPiston(elmInds.size(),0.0);
-	vector<float> p(elmInds.size(),0.0);
-	vector<float> p_o(elmInds.size(),0.0);
-	vector<float> p_w(elmInds.size(), 0.0);
-	vector<float> volt(elmInds.size(), 0.0);
-	vector<float> elem_type(elmInds.size(), 0.0);
+	vector<float> Sw(elmInds.size(),0.);
+	vector<float> radius(elmInds.size(),0.);
+	vector<float> pcPiston(elmInds.size(),0.);
+	vector<float> p(elmInds.size(),0.);
+	vector<float> p_o(elmInds.size(),0.);
+	vector<float> p_w(elmInds.size(), 0.);
+	vector<float> volt(elmInds.size(), 0.);
+	vector<float> elem_type(elmInds.size(), 0.);
 	getSolverPoreResults(comn_, elems_, elmInds, radius, Sw, pcPiston, p, p_o, p_w, volt, elem_type, nBpPors_);
 	writeCellData( outp, "radius",  radius);
 	writeCellData( outp, "subType",  tags);
@@ -629,7 +622,7 @@ void results3D::vtuWritePores(string fname, double Pc, double tension)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void addThroatMesh(
-	 const vector<Element const *>&  elems_,
+	 const vector<Elem const *>&  elems_,
 	 size_t trIndx,
 	 vector<dbl3>& points,
 	 vector<int>& tags,
@@ -642,27 +635,27 @@ void addThroatMesh(
 	 , double pc, double tension
 	 )
 {
-	const Element * elem = elems_[trIndx];
+	const Elem * elem = elems_[trIndx];
 
-	const dbl3&  node1 = elem->connection(0)->node();
+	const dbl3&  node1 = elem->neib(0)->node();
 	dbl3 c1(node1.x,node1.y,node1.z);
-	const dbl3&  node2 = elem->connection(1)->node();
+	const dbl3&  node2 = elem->neib(1)->node();
 	dbl3 c2(node2.x,node2.y,node2.z);
 	double r = elem->model()->RRR()*scaleFactor;
 
 
-	if (elem->connection(0)->isEntryOrExitRes())
+	if (elem->neib(0)->isEntryOrExitRes())
 	{
-		double throatIncLength=max(((Throat*)elem)->throatLength(),1.1*elem->connection(1)->model()->RRR()+2e-9);
+		double throatIncLength=max(((Throat*)elem)->throatLength(),1.1*elem->neib(1)->model()->RRR()+2e-9);
 		c1[1] = c2[1];//y is wrong
 		c1[2] = c2[2];
 		c2[1] += 1e-9;	c2[2] += 1e-9;
 		if (c1[0]<c2[0])			c1[0] = c2[0] - throatIncLength;
 		else		c1[0] = c2[0] + throatIncLength;
 	}
-	if (elem->connection(1)->isEntryOrExitRes())
+	if (elem->neib(1)->isEntryOrExitRes())
 	{
-		double throatIncLength=max(((Throat*)elem)->throatLength(),1.1*elem->connection(0)->model()->RRR()+2e-9);
+		double throatIncLength=max(((Throat*)elem)->throatLength(),1.1*elem->neib(0)->model()->RRR()+2e-9);
 
 		c2[1] = c1[1];//y is wrong
 		c2[2] = c1[2];
@@ -674,13 +667,13 @@ void addThroatMesh(
 	}
 
 	dbl3 c1c2 = c2-c1;
-	dbl3 ncc = c1c2/(mag(c1c2)+1.0e-33);
-	dbl3 nCE(0.0,0.0,0.0);	///. pick a corner point for the first subElem
-	for(size_t i = 0;i<3;i++){ if (abs(ncc[i])<0.6){nCE[i] = 1.0;break;} ;}
+	dbl3 ncc = c1c2/(mag(c1c2)+1e-33);
+	dbl3 nCE(0.,0.,0.);	///. pick a corner point for the first subElem
+	for(size_t i = 0;i<3;i++){ if (abs(ncc[i])<0.6){nCE[i] = 1.;break; } ; }
 
 	nCE = ncc^nCE;
-	nCE=rotateAroundVec(nCE, _pi/4.0, ncc);
-	nCE = nCE/(mag(nCE)+1.0e-33);
+	nCE=rotateAroundVec(nCE, PI/4., ncc);
+	nCE = nCE/(mag(nCE)+1e-33);
 
 	const Polygon* shyp = dynamic_cast< const Polygon* >(elem->model());
 	if(shyp && visualizeCorners)
@@ -692,50 +685,50 @@ void addThroatMesh(
 			double hafAng = shyp->cornerHalfAngles(i);
 			double rCornerOut = r/sin(hafAng);///. only an approximate
 			double maxApexDist = r/tan(hafAng);///. only an approximate
-			double lp_inrR = 0.0;
-			double lp_outR = 0.0;			///. cornerAppex
-			double hAng1 = _pi/2.0-hafAng;			///. cornerAppex
-			double hAng2 = _pi/2.0-hafAng;			///. cornerAppex
+			double lp_inrR = 0.;
+			double lp_outR = 0.;			///. cornerAppex
+			double hAng1 = PI/2.-hafAng;			///. cornerAppex
+			double hAng2 = PI/2.-hafAng;			///. cornerAppex
 			if (shyp->waterInCorner()[i].cornerExists())
 			{
 				shyp->waterInCorner()[i].getCApexDistConAng(lp_outR, hAng2, pc, hafAng, tension);		lp_outR *= scaleFactor;
-				if (lp_outR>maxApexDist*scaleFactor) {lp_outR = maxApexDist*scaleFactor; if (lp_outR>maxApexDist*scaleFactor*1.5) cout<<"e";}
+				if (lp_outR>maxApexDist*scaleFactor) {lp_outR = maxApexDist*scaleFactor; if (lp_outR>maxApexDist*scaleFactor*1.5) cout<<"e"; }
 				insertHalfCorneroints( points,cellPoints,c1,c2,  nCE, nCE,  lp_inrR,  lp_outR, hAng1,hAng2, rCornerOut,  hafAng);
 					tags.pbak(3);
 				elmInds.pbak(trIndx);
-				ffaz.pbak(0.0);
+				ffaz.pbak(0.);
 
 				insertHalfCorneroints( points,cellPoints,c1,c2,  nCE, nCE,  lp_inrR,  lp_outR, hAng1,hAng2,  rCornerOut,  -hafAng);
 					tags.pbak(3);
 				elmInds.pbak(trIndx);
-				ffaz.pbak(0.0);
+				ffaz.pbak(0.);
 			}
 
 			if (shyp->oilLayerConst()[i].exists(/*st ab le*/))
 			{
 				shyp->waterInCorner()[i].getCApexDistConAng(lp_inrR, hAng1, pc, hafAng, tension); 		lp_inrR *= scaleFactor;
 				//lp_outR = shyp->oilLayerConst()[i].getApexDistance(pc, hAng2, hafAng, tension)*scaleFactor;
-				//hAng2 = _pi-shyp->oilLayerConst()[i].hingingConAng(pc, hAng2, hafAng, tension);
+				//hAng2 = PI-shyp->oilLayerConst()[i].hingingConAng(pc, hAng2, hafAng, tension);
 				shyp->oilLayerConst()[i].getCAApexDist(lp_outR, hAng2, hafAng, pc, tension);lp_outR*=scaleFactor;
 
 				insertHalfCorneroints( points,cellPoints,c1,c2,  nCE, nCE,  lp_inrR,  lp_outR, hAng1,hAng2,  rCornerOut,  hafAng);
 				tags.pbak(10);
 				elmInds.pbak(trIndx);
-				ffaz.pbak(1.0);
+				ffaz.pbak(1.);
 
 				insertHalfCorneroints( points,cellPoints,c1,c2,  nCE, nCE,  lp_inrR,  lp_outR, hAng1,hAng2,  rCornerOut,  -hafAng);
 					tags.pbak(10);
 				elmInds.pbak(trIndx);
-				ffaz.pbak(1.0);
+				ffaz.pbak(1.);
 			}
 
-			if (lp_outR<maxApexDist-1.0e-16)///. corner has distance from inscribed circle
+			if (lp_outR<maxApexDist-1e-16)///. corner has distance from inscribed circle
 			{
 
 				double lp_inrR = lp_outR;
 				double lp_outR = maxApexDist; ///. ERROR, bad aproximation
 				hAng1 = hAng2;
-				hAng2 = 0.0;
+				hAng2 = 0.;
 				insertHalfCorneroints( points,cellPoints,c1,c2,  nCE, nCE,  lp_inrR,  lp_outR, hAng1,hAng2,  rCornerOut,  hafAng);
 					tags.pbak(1);
 				elmInds.pbak(trIndx);
@@ -747,17 +740,17 @@ void addThroatMesh(
 				ffaz.pbak(shyp->containCOil());
 			}
 
-			insertHalfCorneroints( points,cellPoints,c1,c2,  -nCE, -nCE,  0,  r, _pi/2.0-hAng2,_pi/2.0-hAng2,  0,  _pi/2.0-hafAng);
+			insertHalfCorneroints( points,cellPoints,c1,c2,  -nCE, -nCE,  0,  r, PI/2.-hAng2,PI/2.-hAng2,  0,  PI/2.-hafAng);
 			tags.pbak(2);
 			elmInds.pbak(trIndx);
 			ffaz.pbak(shyp->containCOil());
 
-			insertHalfCorneroints( points,cellPoints,c1,c2,  -nCE, -nCE,  0,  r, _pi/2.0-hAng2,_pi/2.0-hAng2,  0,  -_pi/2.0+hafAng);
+			insertHalfCorneroints( points,cellPoints,c1,c2,  -nCE, -nCE,  0,  r, PI/2.-hAng2,PI/2.-hAng2,  0,  -PI/2.+hafAng);
 			tags.pbak(2);
 			elmInds.pbak(trIndx);
 			ffaz.pbak(shyp->containCOil());
 
-			nCE = rotateAroundVec(nCE,_pi-shyp->cornerHalfAngles(i)-shyp->cornerHalfAngles((i+1)%(shyp->numCorners())),ncc);
+			nCE = rotateAroundVec(nCE,PI-shyp->cornerHalfAngles(i)-shyp->cornerHalfAngles((i+1)%(shyp->numCorners())),ncc);
 
 		}
 
@@ -768,14 +761,14 @@ void addThroatMesh(
 
 		for(int i = 0; i < 2*thetaResulutionp2; ++i)
 		{
-			double hafAng = 0.5*_pi/thetaResulutionp2;
+			double hafAng = 0.5*PI/thetaResulutionp2;
 			nCE = rotateAroundVec(nCE,2*hafAng,ncc);
-			insertHalfCorneroints( points,cellPoints,c1,c2,  -nCE, -nCE,  0,  r,  0.0, 0.6*(_pi-hafAng),   0,  hafAng);
+			insertHalfCorneroints( points,cellPoints,c1,c2,  -nCE, -nCE,  0,  r,  0., 0.6*(PI-hafAng),   0,  hafAng);
 			tags.pbak(5);
 			elmInds.pbak(trIndx);
 			ffaz.pbak(elem->model()->containCOil());
 
-			insertHalfCorneroints( points,cellPoints,c1,c2,  -nCE, -nCE,  0,  r,  0.0, 0.6*(_pi-hafAng),  0,  -hafAng);
+			insertHalfCorneroints( points,cellPoints,c1,c2,  -nCE, -nCE,  0,  r,  0., 0.6*(PI-hafAng),  0,  -hafAng);
 			tags.pbak(5);
 			elmInds.pbak(trIndx);
 			ffaz.pbak(elem->model()->containCOil());
@@ -794,7 +787,7 @@ void addThroatMesh(
 
 
 
-void results3D::vtuWriteThroats(string fname, double pc, double tension)
+void results3D::vtuWriteThroats(string fnam, double pc, double tension)
 {
 
 	vector<dbl3> points;
@@ -817,7 +810,7 @@ void results3D::vtuWriteThroats(string fname, double pc, double tension)
 	}
 
 
-	ofstream outp(fname);
+	ofstream outp(fnam);
 
 
 	outp<<results3D::start(points.size(),tags.size());
@@ -908,7 +901,7 @@ void results3D::vtuWriteThroats(string fname, double pc, double tension)
 void results3D::writeThroatLines(string fName, double pc, double tension, int icycl, double istp, bool endCycle)
 {
 
-	#define bcncs_ elems_[ib]->connections()
+	#define bcncs elems_[ib]->connections()
 
 	ofstream outp(fName);
 	int i, ib;
@@ -923,10 +916,10 @@ void results3D::writeThroatLines(string fName, double pc, double tension, int ic
 		//double Dx[2] = {0.05*(elems_[0]->node().x - elems_[1]->node().x), 0.05*(elems_[1]->node().x - elems_[0]->node().x)};
 		for(i=0; i<nElms; ++i)
 		{	dbl3 p(elems_[i]->node().x,elems_[i]->node().y,elems_[i]->node().z); outp<<p<< " ";		if (!((i+1)%20))	 outp<<'\n';	
-			btrotcpis[i][0]=-1;btrotcpis[i][1]=-1;}
+			btrotcpis[i][0]=-1;btrotcpis[i][1]=-1; }
 		for(ib=0; ib<2; ++ib)
-		 for(i=0; i<int(bcncs_.size()); ++i)
-		 {	dbl3 p(bcncs_[i]->node().x,bcncs_[i]->node().y,bcncs_[i]->node().z); p.x=elems_[ib]->node().x; outp<<p<< " ";		if (!((i+1)%20)) outp<<'\n';	btrotcpis[bcncs_[i]->index()][ib]=i;}
+		 for(i=0; i<int(bcncs.size()); ++i)
+		 {	dbl3 p(bcncs[i]->node().x,bcncs[i]->node().y,bcncs[i]->node().z); p.x=elems_[ib]->node().x; outp<<p<< " ";		if (!((i+1)%20)) outp<<'\n';	btrotcpis[bcncs[i]->index()][ib]=i; }
 		outp<<"\n		</DataArray>\n";
 	}outp<<"	  </Points>\n";
 
@@ -936,8 +929,8 @@ void results3D::writeThroatLines(string fName, double pc, double tension, int ic
 		for (i=nBpPors_; i<nElms; ++i)
 		{
 			int itrt=elems_[i]->index();
-			int ip0=elems_[i]->connection(0)->index();
-			int ip1=elems_[i]->connection(1)->index();
+			int ip0=elems_[i]->neib(0)->index();
+			int ip1=elems_[i]->neib(1)->index();
 
 			if (ip1==1) ip1 = btrotcpis[itrt][1]+nElms+elems_[0]->connections().size();
 			if (ip1==0) ip1 = btrotcpis[itrt][0]+nElms;
@@ -987,35 +980,35 @@ void results3D::writeThroatLines(string fName, double pc, double tension, int ic
 
 		outp<<"		<DataArray type = \"Float32\" Name = \"condW\" format = \"ascii\">\n";
 		for(i=nBpPors_; i<nElms; ++i)
-			{  outp<<elems_[i]->poreToPoreCond(WTR)*1.0e18<<_nl_; }
+			{  outp<<elems_[i]->poreToPoreCond(WTR)*1e18<<_nl_; }
 		outp<<"\n		</DataArray>"<<endl;
 
 		outp<<"		<DataArray type = \"Float32\" Name = \"condO\" format = \"ascii\">\n";
 		for(i=nBpPors_; i<nElms; ++i)
-			{  outp<<elems_[i]->poreToPoreCond(OIL)*1.0e18<<_nl_; }
+			{  outp<<elems_[i]->poreToPoreCond(OIL)*1e18<<_nl_; }
 		outp<<"\n		</DataArray>"<<endl;
 
 		outp<<"		<DataArray type = \"Float32\" Name = \"condE\" format = \"ascii\">\n";
 		for(i=nBpPors_; i<nElms; ++i)
-			{  outp<<elems_[i]->poreToPoreCond(ELEC)*1.0e18<<_nl_; }
+			{  outp<<elems_[i]->poreToPoreCond(ELEC)*1e18<<_nl_; }
 		outp<<"\n		</DataArray>"<<endl;
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"qo\" format = \"ascii\">\n";
-		//for(i=nBpPors_; i<nElms; ++i) { outp<<dynamic_cast<const Throat*>(elems_[i])->flowRate(OIL)*1.0e18<<_nl_; }
+		//for(i=nBpPors_; i<nElms; ++i) { outp<<dynamic_cast<const Throat*>(elems_[i])->flowRate(OIL)*1e18<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"qw\" format = \"ascii\">\n";
-		//for(i=nBpPors_; i<nElms; ++i) { outp<<dynamic_cast<const Throat*>(elems_[i])->flowRate(WTR)*1.0e18<<_nl_; }
+		//for(i=nBpPors_; i<nElms; ++i) { outp<<dynamic_cast<const Throat*>(elems_[i])->flowRate(WTR)*1e18<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"solverflagW\" format = \"ascii\">\n";
 		//for(i=nBpPors_; i<nElms; ++i)
-			//{  const auto& ec=elems_[i]->solverConect(WTR); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
+			//{  const auto& ec=elems_[i]->slvrCnct(WTR); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"solverflagO\" format = \"ascii\">\n";
 		//for(i=nBpPors_; i<nElms; ++i)
-			//{  auto ec=elems_[i]->solverConect(OIL); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
+			//{  auto ec=elems_[i]->slvrCnct(OIL); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"insideSatBox\" format = \"ascii\">\n";
@@ -1038,127 +1031,119 @@ void results3D::writeThroatLines(string fName, double pc, double tension, int ic
 		outp<<"		<DataArray type = \"Float32\" Name = \"radius\" format = \"ascii\">\n";
 		for(i=0; i<nElms; ++i) { outp<<elems_[i]->RRR()<<_nl_; }
 		for(ib=0; ib<2; ++ib)
-		 for(i=0; i<int(bcncs_.size()); ++i){ outp<<bcncs_[i]->RRR()<<_nl_; }
+		 for(i=0; i<int(bcncs.size()); ++i){ outp<<bcncs[i]->RRR()<<_nl_; }
 		outp<<"\n		</DataArray>"<<endl;
 
 //		outp<<"		<DataArray type = \"Float32\" NumberOfComponents = \"3\"  Name = \"L1\" format = \"ascii\">\n";
-//		for(i=0; i<nBpPors_; ++i) { outp<<elems_[i]->node()*0.0<<_nl_; }
-//		for(i=nBpPors_; i<nElms; ++i) { outp<<elems_[i]->connection(0)->node()-elems_[i]->node()<<"  "; _nl_; }
+//		for(i=0; i<nBpPors_; ++i) { outp<<elems_[i]->node()*0.<<_nl_; }
+//		for(i=nBpPors_; i<nElms; ++i) { outp<<elems_[i]->neib(0)->node()-elems_[i]->node()<<"  "; _nl_; }
 //		outp<<"\n		</DataArray>\n";
 //
 //		outp<<"		<DataArray type = \"Float32\" NumberOfComponents = \"3\"  Name = \"L2\" format = \"ascii\">\n";
-//		for(i=0; i<nBpPors_; ++i) { outp<<elems_[i]->node()*0.0<<_nl_; }
-//		for(i=nBpPors_; i<nElms; ++i) { outp<<elems_[i]->connection(1)->node()-elems_[i]->node()<<"  "; _nl_; }
+//		for(i=0; i<nBpPors_; ++i) { outp<<elems_[i]->node()*0.<<_nl_; }
+//		for(i=nBpPors_; i<nElms; ++i) { outp<<elems_[i]->neib(1)->node()-elems_[i]->node()<<"  "; _nl_; }
 //		outp<<"\n		</DataArray>\n";
 
 		outp<<"		<DataArray type = \"Float32\" Name = \"ffaz\" format = \"ascii\">\n";
 		for(i=0; i<nElms; ++i) { outp<<ffloatof(elems_[i])<<_nl_; }
 		for(ib=0; ib<2; ++ib)
-		 for(i=0; i<int(bcncs_.size()); ++i){ outp<<ffloatof(elems_[ib])<<_nl_; }
+		 for(i=0; i<int(bcncs.size()); ++i){ outp<<ffloatof(elems_[ib])<<_nl_; }
 		outp<<"\n		</DataArray>"<<endl;
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"iFPEntry\" format = \"ascii\">\n";
 		//for(i=0; i<nElms; ++i) { outp<<elems_[i]->inFrontOf(invf)*elems_[i]->iFPEntry()*tension<<_nl_; }
 		//for(ib=0; ib<2; ++ib)
-		 //for(i=0; i<int(bcncs_.size()); ++i){ outp<<elems_[ib]->inFrontOf(invf)*elems_[ib]->iFPEntry()*tension<<_nl_; }
+		 //for(i=0; i<int(bcncs.size()); ++i){ outp<<elems_[ib]->inFrontOf(invf)*elems_[ib]->iFPEntry()*tension<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"PcEntry\" format = \"ascii\">\n";
 		//for(i=0; i<nElms; ++i) { outp<<elems_[i]->inFrontOf(invf)*elems_[i]->PcEntry()*tension<<_nl_; }
 		//for(ib=0; ib<2; ++ib)
-		 //for(i=0; i<int(bcncs_.size()); ++i){ outp<<elems_[ib]->inFrontOf(invf)*elems_[ib]->PcEntry()*tension<<_nl_; }
+		 //for(i=0; i<int(bcncs.size()); ++i){ outp<<elems_[ib]->inFrontOf(invf)*elems_[ib]->PcEntry()*tension<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 		outp<<"		<DataArray type = \"Float32\" Name = \"index\" format = \"ascii\">\n";
 		for(i=0; i<nElms; ++i) { outp<<elems_[i]->index()<<_nl_; }
 		for(ib=0; ib<2; ++ib)
-		 for(i=0; i<int(bcncs_.size()); ++i){ outp<<elems_[ib]->index()<<_nl_; }
+		 for(i=0; i<int(bcncs.size()); ++i){ outp<<elems_[ib]->index()<<_nl_; }
 		outp<<"\n		</DataArray>"<<endl;
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"type\" format = \"ascii\">\n";
 		//for(i=0; i<nElms; ++i) { outp<<elems_[i]->rockIndex()+0.1*double(size_t(elems_[i]->index())>=nBpPors_)+0.1*(double(elems_[i]->index()<2))<<_nl_; }
 		//for(ib=0; ib<2; ++ib)
-		 //for(i=0; i<int(bcncs_.size()); ++i){ outp<<0.1<<_nl_; }
+		 //for(i=0; i<int(bcncs.size()); ++i){ outp<<0.1<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"p_o\" format = \"ascii\">\n";
 		//for(i=0; i<nBpPors_; ++i)       { outp<<dynamic_cast<const Pore*>(elems_[i ])->solverPrs(OIL)*tension<<_nl_; }
 		//for(i=nBpPors_; i<nElms; ++i) { outp<<dynamic_cast<const Throat*>(elems_[i])->avgPressure(OIL)*tension<<_nl_; }
 		//for(ib=0; ib<2; ++ib)
-		 //for(i=0; i<int(bcncs_.size()); ++i) { outp<<dynamic_cast<const Pore*>(elems_[ib])->solverPrs(OIL)*tension<<_nl_; }
+		 //for(i=0; i<int(bcncs.size()); ++i) { outp<<dynamic_cast<const Pore*>(elems_[ib])->solverPrs(OIL)*tension<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"p_w\" format = \"ascii\">\n";
 		//for(i=0; i<nBpPors_; ++i)      { outp<<dynamic_cast<const Pore*>(elems_[i])->solverPrs(WTR)*tension<<_nl_; }
 		//for(i=nBpPors_; i<nElms; ++i) { outp<<dynamic_cast<const Throat*>(elems_[i])->avgPressure(WTR)*tension<<_nl_; }
 		//for(ib=0; ib<2; ++ib)
-		 //for(i=0; i<int(bcncs_.size()); ++i){ outp<<dynamic_cast<const Pore*>(elems_[ib])->solverPrs(WTR)*tension<<_nl_; }
+		 //for(i=0; i<int(bcncs.size()); ++i){ outp<<dynamic_cast<const Pore*>(elems_[ib])->solverPrs(WTR)*tension<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"Err_o\" format = \"ascii\">\n";
-		//for(i=0; i<nBpPors_; ++i)       { outp<<dynamic_cast<const Pore*>(elems_[i ])->solverResidual(OIL)*tension<<_nl_; }
+		//for(i=0; i<nBpPors_; ++i)       { outp<<dynamic_cast<const Pore*>(elems_[i ])->solverErr(OIL)*tension<<_nl_; }
 		//for(i=nBpPors_; i<nElms; ++i) { outp<<dynamic_cast<const Throat*>(elems_[i])->avgPressure(OIL)*0<<_nl_; }
 		//for(ib=0; ib<2; ++ib)
-		 //for(i=0; i<int(bcncs_.size()); ++i) { outp<<dynamic_cast<const Pore*>(elems_[ib])->solverResidual(OIL)*tension<<_nl_; }
+		 //for(i=0; i<int(bcncs.size()); ++i) { outp<<dynamic_cast<const Pore*>(elems_[ib])->solverErr(OIL)*tension<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"Err_w\" format = \"ascii\">\n";
-		//for(i=0; i<nBpPors_; ++i)      { outp<<dynamic_cast<const Pore*>(elems_[i])->solverResidual(WTR)*tension<<_nl_; }
+		//for(i=0; i<nBpPors_; ++i)      { outp<<dynamic_cast<const Pore*>(elems_[i])->solverErr(WTR)*tension<<_nl_; }
 		//for(i=nBpPors_; i<nElms; ++i) { outp<<dynamic_cast<const Throat*>(elems_[i])->avgPressure(WTR)*0<<_nl_; }
 		//for(ib=0; ib<2; ++ib)
-		 //for(i=0; i<int(bcncs_.size()); ++i){ outp<<dynamic_cast<const Pore*>(elems_[ib])->solverResidual(WTR)*tension<<_nl_; }
+		 //for(i=0; i<int(bcncs.size()); ++i){ outp<<dynamic_cast<const Pore*>(elems_[ib])->solverErr(WTR)*tension<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"oilWetability\" format = \"ascii\">\n";
 		//for(i=0; i<nElms; ++i)  { outp<<float(elems_[i]->AmotIndxOil())<<_nl_; }
 		//for(ib=0; ib<2; ++ib)
-		 //for(i=0; i<int(bcncs_.size()); ++i) { outp<<float(elems_[ib]->AmotIndxOil())<<_nl_; }
+		 //for(i=0; i<int(bcncs.size()); ++i) { outp<<float(elems_[ib]->AmotIndxOil())<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"solverflagW\" format = \"ascii\">\n";
-		//for(i=0; i<nElms; ++i)	{auto& ec=elems_[i]->solverConect(WTR); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
+		//for(i=0; i<nElms; ++i)	{auto& ec=elems_[i]->slvrCnct(WTR); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
 		//for(ib=0; ib<2; ++ib)
-		 //for(i=0; i<int(bcncs_.size()); ++i){auto& ec=elems_[ib]->solverConect(WTR); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
+		 //for(i=0; i<int(bcncs.size()); ++i){auto& ec=elems_[ib]->slvrCnct(WTR); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"solverflagO\" format = \"ascii\">\n";
-		//for(i=0; i<nElms; ++i)	{ auto& ec=elems_[i]->solverConect(OIL); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
+		//for(i=0; i<nElms; ++i)	{ auto& ec=elems_[i]->slvrCnct(OIL); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
 		//for(ib=0; ib<2; ++ib)
-		 //for(i=0; i<int(bcncs_.size()); ++i){ auto& ec=elems_[ib]->solverConect(OIL); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
+		 //for(i=0; i<int(bcncs.size()); ++i){ auto& ec=elems_[ib]->slvrCnct(OIL); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 		//outp<<"		<DataArray type = \"Float32\" Name = \"solverflagE\" format = \"ascii\">\n";
-		//for(i=0; i<nElms; ++i)	{ auto& ec=elems_[i]->solverConect(ELEC); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
+		//for(i=0; i<nElms; ++i)	{ auto& ec=elems_[i]->slvrCnct(ELEC); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
 		//for(ib=0; ib<2; ++ib)
-		 //for(i=0; i<int(bcncs_.size()); ++i){ auto& ec=elems_[ib]->solverConect(ELEC); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
+		 //for(i=0; i<int(bcncs.size()); ++i){ auto& ec=elems_[ib]->slvrCnct(ELEC); outp<<ec.isPassed()*4+ec.isSearched()*2+ec.isInSlvrBox()*1<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 		outp<<"		<DataArray type = \"Float32\" Name = \"trpIndx\" format = \"ascii\">\n";
 		for(i=0; i<nElms; ++i) { outp<<elems_[i]->trappingCL().first<<_nl_; }
 		for(ib=0; ib<2; ++ib)
-		 for(i=0; i<int(bcncs_.size()); ++i){ outp<<elems_[ib]->trappingCL().first<<_nl_; }
+		 for(i=0; i<int(bcncs.size()); ++i){ outp<<elems_[ib]->trappingCL().first<<_nl_; }
 		outp<<"\n		</DataArray>"<<endl;
 
 		outp<<"		<DataArray type = \"Float32\" Name = \"Sw\" format = \"ascii\">\n";
 		for(i=0; i<nElms; ++i) { outp<<elems_[i]->waterSaturation()<<_nl_; }
 		for(ib=0; ib<2; ++ib)
-		 for(i=0; i<int(bcncs_.size()); ++i){ outp<<elems_[ib]->waterSaturation()<<_nl_; }
+		 for(i=0; i<int(bcncs.size()); ++i){ outp<<elems_[ib]->waterSaturation()<<_nl_; }
 		outp<<"\n		</DataArray>"<<endl;
 
-		
-		#ifdef EXTRA_FOR_TESTING_AREAS
-		outp<<"		<DataArray type = \"Float32\" Name = \"shapeFact\" format = \"ascii\">\n";
-		for(i=0; i<nElms; ++i) { outp<<elems_[i]->model()->shapeFactor()<<_nl_; }
-		for(ib=0; ib<2; ++ib)
-		 for(i=0; i<int(bcncs_.size()); ++i){ outp<<elems_[ib]->model()->shapeFactor()<<_nl_; }
-		outp<<"\n		</DataArray>"<<endl;
-		#endif
 		//outp<<"		<DataArray type = \"Float32\" Name = \"cachInd\" format = \"ascii\">\n";
 		//for(i=0; i<nElms; ++i) { outp<<elems_[i]->cachInd<<_nl_; }
 		//for(ib=0; ib<2; ++ib)
-		 //for(i=0; i<int(bcncs_.size()); ++i){ outp<<elems_[ib]->cachInd<<_nl_; }
+		 //for(i=0; i<int(bcncs.size()); ++i){ outp<<elems_[ib]->cachInd<<_nl_; }
 		//outp<<"\n		</DataArray>"<<endl;
 
 	}outp<<"	  </PointData>\n"; /////////////////////////////////////////////////////////
@@ -1176,6 +1161,7 @@ void results3D::writeThroatLines(string fName, double pc, double tension, int ic
 
 
 
+#undef bcncs
 
 
 

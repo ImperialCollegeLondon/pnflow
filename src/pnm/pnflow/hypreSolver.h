@@ -14,9 +14,9 @@
 
 
 using namespace std;
-class Element;
+class Elem;
 
-/// A little storage class for four eleemnts
+/// A little storage class for four elemnts
 template<typename TOne, typename TTwo, typename TThree, typename TFour>
 class FourSome
 {
@@ -48,11 +48,11 @@ class hypreSolver
 
 public:
  
-	hypreSolver(const vector<Element*>& network, const vector<Element*>& inlet, const vector<Element*>& outlet,
+	hypreSolver(const vector<Elem*>& network, const vector<Elem*>& inlet, const vector<Elem*>& outlet,
 	  int, int, int debugMode, string matFileName, bool matlabFormat);
 
 
-	double flowrate(double inPrs, double outPrs, const Fluid& fluid, double& flowErr, double& elap, double a=1.0, bool b=false, bool c=false);
+	double flowrate(double inPrs, double outPrs, const Fluid& fluid, double& flowErr, double& elap, double a=1., bool b=false, bool c=false);
 	//static void inithypreSolve(double eps, int scaleFact, int slvrOutput, bool verboseSlvr, bool useGrav);
 
 
@@ -73,18 +73,18 @@ private:
 
 	const int                                          debugMode_;
 
-	const vector<Element*>&                            elemans_;
+	const vector<Elem*>&                            elemans_;
 	vector< FourSome<int, double, double, double> >    networkOutlets_;
 	vector< FourSome<int, double, double, double> >    networkInlets_;
-	const vector<Element*>&                            inPors_;
-	const vector<Element*>&                            outPores_;
+	const vector<Elem*>&                            inPors_;
+	const vector<Elem*>&                            outPores_;
 	const int                                          nBSs_;
 	const int                                          nBpPors_;
 
 
 
 
-	vector< pair<const Element*, double> >          throatConductances_;
+	vector< pair<const Elem*, double> >          throatConductances_;
 	vector< int>                                    rowedPores_;
 	vector< int>                                    poreiRows_;
 

@@ -14,12 +14,16 @@ A recent validation of the pnflow and [pnextract] codes is published by [Bultrey
 
 ### Release notes:
 
-- In 2020, the code has been through further restructuring and clean up as part of a sponsorship from [Wintershall Dea].
-The common components of PNM codes are kept in sync with privately developed codes and the closed-source generalized network model to reduce development effort and to allow future collaborations. However, this code is still well behind my local branch. If you like to work on this code development, please drop me an email for updates. The physical assumptions used in the model are not affected, so if you are a user of the code, you can continue using its older versions.  The previous version of the code can be downloaded from [pnm2019 branch](https://github.com/aliraeini/pnflow/tree/pnm2019).
+- In 2020-2021, the code has been through further restructuring and clean up as part of a sponsorship from [Wintershall Dea].
+The common components of PNM codes are kept in sync with privately developed codes and the closed-source generalized network model to reduce development effort and to allow future collaborations. 
+However, this code is still well behind my local branch. If you like to work on this code development, please drop me an email for updates. 
+The physical assumptions used in the model are not affected, so if you are a user of the code, you can continue using its older versions.  The previous version of the code can be downloaded from [pnm2019 branch](https://github.com/aliraeini/pnflow/tree/pnm2019).
 
 - pnflow input keywords are changed significantly (for compatibility with the generalized network model) see the new [input_pnflow.dat](https://github.com/aliraeini/pnflow/blob/master/doc/input_pnflow.dat) file in doc folder for more information.
 
 * The file [pnflow/ChangeLog](https://github.com/aliraeini/pnflow/blob/master/src/pnm/pnflow/ChangeLog) is used to document the main changes or extensions of the pnflow code.
+
+----------------------------------------
 
 ### Instructions for Windows:
 
@@ -33,38 +37,29 @@ keyword and other flow parameters. Finally run, in a Windows Command Prompt:
   
     PATH\TO\bin\pnflow.exe  input_pnflow.dat
 
-* You may need to modify the command above and, instead of `` PATH\TO\bin\ ``, provide the full path to the pnflow.exe, if it exists in a different directory than your command prompt working directory.
+* Replace `PATH\TO\bin\`` with the full path to the pnflow.exe, if it exists in a different directory than your command prompt working directory.
 
 * To open a command-prompt in Windows, hold the *Shift* key and *right-click*
-  into the folder where the input_pnflow.dat is copied and click on the *Open Command Window Here* menu.
+  into the folder where the input_pnflow.dat is copied and click the *Open Command Window Here* menu.
 
-###  Compiling:
-The code is already compiled to bin/pnextract.exe and bin/pnflow.exe, Win64 
-executables (extract the bin.7z to see these files) using MinGW compilers.
 
-In Linux, the compilation can be done by running in the top-level directory:    
-
-    make -j
-
-"-j" flag is to compile in parallel and can be omitted. 
-
-Running ``make mgw`` instead cross-compiles the code for Windows machines, if MinGW compilers are ailable in your system and set in [src/AllMakeMinGW](src/AllMakeMinGW) script.
-Run ``make clean`` before switching between Windows and Linux compilations, to avoid mixing the intermidiate Linux and Windows object files.
-
-### Installation
-
-In Windows, you just need to know how to run standalone exe files from Command Prompt, as explained above.
-
-In Linux, you can source the src/script/bashrc file to set the paths to the compiled binaries:     
+The instructions are similar in Linux. Additionally, you can source the src/script/bashrc file to set the paths to the compiled binaries:     
 
      source PATH/TO/src/script/bashrc
 
+###  Build instructions:
+
+The code is already compiled to bin/pnextract.exe and bin/pnflow.exe, Win64 
+executables (extract the bin.7z to see these files) using MinGW compilers.
+
+See the [src/script/README.md](../src/script/README.md) for build instructions.
+
 ###  Dependencies:
 The pnflow code depends on the [Hypre] library which along with other [pnextract] dependencies are included in 
-the [thirdparty](thirdparty) folder. 
+the [../../thirdparty](thirdparty) folder. 
 
 
-Note, you may need to install jpg and lzma libraries, prerequisites of libtif and oxelImage/libvoxel libraries (to check...), for the make command above to succeed. In Ubuntu, these can be installed by running the following commands:      
+Note, you MAY need to install jpg and lzma libraries, prerequisites of libtif and oxelImage/libvoxel libraries (to check...), for the make command above to succeed. In Ubuntu, these can be installed by running the following commands:      
 
     sudo apt install libjpeg-dev liblzma-dev
       
@@ -74,7 +69,7 @@ The code is release as a free, using a zlib-style licence, see the file
 src/pnflow/netsim.h for a copy of the licence.
 
 For contact and further information see [Imperial College - pore-scale consortium] website,
-or send me an email:   a.qaseminejad-raeini09@imperial.ac.uk
+or send me an email:   a.q.raeini@imperial.ac.uk
 
 
 

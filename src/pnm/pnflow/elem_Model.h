@@ -2,16 +2,14 @@
 #define SHAPE_H
 
 
-class Fluid;
-class Element;
 
 
-#include "FlowData.h"
 #include "Element.h"
- 
+#include "CommonData.h"
 
 
 
+class CommonData;
 ////////////////////////////// BASE CLASS FOR PORE SHAPES ////////////////////////////////
 class ElemModel
 {
@@ -20,7 +18,7 @@ class ElemModel
 
 public:
 
-	ElemModel(Element&, const CommonData&, double, int);
+	ElemModel(Elem&, const CommonData&, double, int);
 	virtual ~ElemModel(){}
 
 	virtual double calcR(double pc) = 0;
@@ -46,10 +44,10 @@ public:
 
 	virtual int    rockIndex() const  {return 0; };
 	int    index() const  {return elem_.index(); };
-	const Element* connection(int ind) { return elem_.connection(ind); };
+	const Elem* neib(int ind) { return elem_.neib(ind); };
 
 	//virtual bool containCFluid(const Fluid* injectant) const  { return (bulkFluid_ == injectant); }
-	virtual bool containCOil() const  {return (bulkFluid_ == &comn_.oil());	}
+	virtual bool containCOil() const   {return (bulkFluid_->ff() == OIL);	}
 
 
 	virtual bool canNOTReconfigure(const Fluid& injectant) const  
@@ -87,24 +85,24 @@ public:
 	double porosity() const {return porosity_;}
 
 	bool disConectedCentreWCornerW() const {return hasDisConectedCentreWCornerW_;}
-	bool affectsNeiEntryPc(const Fluid& retreadingFluid) const {return bulkFluid_ == &retreadingFluid;}
+	bool affectsAdjEntryPc(const Fluid& retreadingFluid) const {return bulkFluid_ == &retreadingFluid;}
 	const Fluid* bulkFluid() const {return bulkFluid_;}
 
-	const Element* const eleman() const {return &elem_;}   
-	Element* ChParent() const {return &elem_;}   
+	const Elem* const eleman() const {return &elem_;}   
+	Elem* ChParent() const {return &elem_;}   
 
 	void setClusterIndex(int wtindex) {tetaClusterIndex_ = wtindex;}
 	inline int clusterIndex() const {return tetaClusterIndex_;}
 
 
-	double Pc_pistonTypeAdv() const {return Pc__pistonTypeAdv;};
-	double Pc_pistonTypeRec() const {return Pc__pistonTypeRec;};
-	void SetInOutletPc_pistonTypeAdv(double pc)  {Pc__pistonTypeAdv=pc;};
-	void SetInOutletPc_pistonTypeRec(double pc)  {Pc__pistonTypeRec=pc;};
+	double Pc_pistonTypeAdv() const {return Pc_pistonTypeAdv_;};
+	double Pc_pistonTypeRec() const {return Pc_pistonTypeRec_;};
+	void SetInOutletPc_pistonTypeAdv(double pc)  {Pc_pistonTypeAdv_=pc;};
+	void SetInOutletPc_pistonTypeRec(double pc)  {Pc_pistonTypeRec_=pc;};
 
 	//inline double gravCorrectedEntryPress() const {	return elem_.gravCorrectedEntryPress(); }
 
-	double electricalConductance() const	{ return ElectricalConductance_+1.0e-260;	}
+	double electricalConductance() const	{ return ElectricalConductance_+1e-260;	}
 
 	inline double getConductance(const Fluid& fluid, bool neighbourToInOutlet) const;
 	inline double getWaterConductance(FluidBlob blob, bool neighbourToInOutlet) const;
@@ -136,7 +134,7 @@ public:
 
 protected:
 
-	Element&                       elem_;
+	Elem&                       elem_;
 	const CommonData&              comn_;
 
 	double                          R_;
@@ -153,8 +151,8 @@ protected:
 	double                          area_;
 	double                          SatWater_;
 
-	double                          Pc__pistonTypeRec;
-	double                          Pc__pistonTypeAdv;
+	double                          Pc_pistonTypeRec_;
+	double                          Pc_pistonTypeAdv_;
 
 
 	double                          ElectricalConductance_;
@@ -185,16 +183,16 @@ inline double ElemModel::getWaterConductance(FluidBlob blob, bool neighbourToInO
 
 inline double ElemModel::getConductance(const Fluid& fluid,  bool neighbourToInOutlet = false) const
 {
-	double flowConductance(0.0);
+	double flowConductance(0.);
 	if(neighbourToInOutlet)
 		flowConductance = SPConductance(area_, fluid.viscosity()); /// TODO: such a good job,
 	else if(fluid.isOil())
 		flowConductance = conductanceOil_;
 	else 
-		flowConductance = std::max(conductanceWater_.first,0.0) + std::max(conductanceWater_.second,0.0);
+		flowConductance = std::max(conductanceWater_.first,0.) + std::max(conductanceWater_.second,0.);
 
-	ensure(debugLevel<1 || flowConductance > 1.0e-50);
-	//if(flowConductance <=  1.0e-50 && debugLevel>500)
+	dbgAsrt(flowConductance > 1e-50);
+	//if(flowConductance <=  1e-50 && debugLevel>500)
 	//{
 		//std::cout<<"\nError: zero flow conductance "<<"\n" ;
 		//if(fluid == &comn_.oil())        std::cout<<" for oil phase "<<"\n";
