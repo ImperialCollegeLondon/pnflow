@@ -12,7 +12,7 @@ model [Raeini, Bijeljic and Blunt 2018], sponsored by [TOTAL].
 A recent validation of the pnflow and [pnextract] codes is published by [Bultreys et al. 2018].
 
 
-### Release notes:
+### Release notes
 
 - In 2020-2021, the code has been through further restructuring and clean up as part of a sponsorship from [Wintershall Dea].
 The common components of PNM codes are kept in sync with privately developed codes and the closed-source generalized network model to reduce development effort and to allow future collaborations. 
@@ -25,7 +25,7 @@ The physical assumptions used in the model are not affected, so if you are a use
 
 ----------------------------------------
 
-### Instructions for Windows:
+### Instructions for MS Windows
 
 Instructions for extracting a network from a micro-CT image are given in
 the doc folder; see also the [pnextract] README.md file.
@@ -39,42 +39,37 @@ keyword and other flow parameters. Finally run, in a Windows Command Prompt:
 
 * Replace `PATH\TO\bin\`` with the full path to the pnflow.exe, if it exists in a different directory than your command prompt working directory.
 
-* To open a command-prompt in Windows, hold the *Shift* key and *right-click*
-  into the folder where the input_pnflow.dat is copied and click the *Open Command Window Here* menu.
+* To open a command-prompt in Windows, hold the `Shift` key and `right-click`
+  into the folder where the input_pnflow.dat is copied and click the `Open Command Window Here` menu.
 
 
 The instructions are similar in Linux. Additionally, you can source the src/script/bashrc file to set the paths to the compiled binaries:     
 
      source PATH/TO/src/script/bashrc
 
-###  Build instructions:
+###  Build instructions
 
-The code is already compiled to bin/pnextract.exe and bin/pnflow.exe, Win64 
-executables (extract the bin.7z to see these files) using MinGW compilers.
+Download and extract [bin.7z](../../bin.7z) for pnextract.exe and pnflow.exe, 
+which are Win64 executables compiled using MinGW compilers.  
 
-See the [src/script/README.md](../src/script/README.md) for build instructions.
-
-###  Dependencies:
+See [../script/README.md](../script/README.md) for build instructions.
 The pnflow code depends on the [Hypre] library which along with other [pnextract] dependencies are included in 
 the [../../thirdparty](thirdparty) folder. 
 
 
-Note, you MAY need to install jpg and lzma libraries, prerequisites of libtif and oxelImage/libvoxel libraries (to check...), for the make command above to succeed. In Ubuntu, these can be installed by running the following commands:      
-
-    sudo apt install libjpeg-dev liblzma-dev
-      
-###  Licence:
+###  Licence
 
 The code is release as a free, using a zlib-style licence, see the file 
 src/pnflow/netsim.h for a copy of the licence.
 
-For contact and further information see [Imperial College - pore-scale consortium] website,
+For contact and further information see [Imperial College - Pore-scale Consortium] website,
+raise an `issue` on github mentioning @aliraeini in your message,
 or send me an email:   a.q.raeini@imperial.ac.uk
 
 
 
 
-[Imperial College - pore-scale consortium]: https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling
+[Imperial College - Pore-scale Consortium]: https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling
 [poreflow code]: https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/software/two-phase-network-modelling-code
 [Valvatne and Blunt (2004)]:  https://doi.org/10.1029/2003WR002627
 [Bultreys et al. 2018]: https://doi.org/10.1103/PhysRevE.97.053104
