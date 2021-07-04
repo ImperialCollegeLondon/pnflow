@@ -1,4 +1,4 @@
-
+# Temporary files
 Make/*/
 bin/*
 build/*
@@ -8,7 +8,7 @@ log.*
 *-
 */lnInclude
 
-# build folders - anywhere
+# foam build folders - anywhere
 linux*Gcc*/
 linux*Icc*/
 mingw*Gcc*/
@@ -19,7 +19,7 @@ SiCortex*Gcc*/
 solaris*Gcc*/
 SunOS*Gcc*/
 
-#latex
+# Latex
 *.aux
 *.toc
 

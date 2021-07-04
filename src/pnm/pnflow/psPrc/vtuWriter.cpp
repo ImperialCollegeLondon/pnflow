@@ -537,16 +537,11 @@ void results3D::vtuWritePores(string fnam, double Pc, double tension)
 
 
 	for(int i = 0; i <  nBpPors_; ++i)
-	{
 		addSpherePoreMesh(elems_,i,points,tags,elmInds,ffaz,cellPoints,/*facePoints,cellFaces,faceCells,*/rScaleFactor_, nTheta_);
-	}
 
 
 	ofstream outp(fnam);
-
 	outp<<results3D::start(points.size(),tags.size());
-
-
 
 	outp<<"      <Points>\n";
 	outp<<"        <DataArray type = \"Float32\" NumberOfComponents = \"3\" format = \"ascii\">\n";

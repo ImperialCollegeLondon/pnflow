@@ -293,8 +293,6 @@ void Polygon::calcR_waterWithOilLayers(double cappPressure)
 
 	  if(oilLayer_[i].LayerApex::exists(/*st ab le*/))
 	  {
-		double cappPcOL = cappPressure;
-		if( oilLayer_[i].trappingCL().first>-1 ) cappPcOL = oilLayer_[i].trappingCL().second;
 		
 		if(waterInCorner_[i].cornerExists())
 		{

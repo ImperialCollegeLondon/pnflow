@@ -1,6 +1,6 @@
 ﻿##  pnflow - classical pore-network (extraction and) flow simulation
 
-This repository included the classical network flow simulation code called pnflow. 
+This repository includes the classical network flow simulation code called pnflow. 
 [pnextract network extraction code](https://github.com/aliraeini/pnextract) is also 
 included [here in pnextract folder](src/pnm/pnextract) for convenience. These two 
 codes are kept compatible and refered to as pore-network model (PNM) together.
@@ -21,7 +21,7 @@ The physical assumptions used in the model are not affected, so if you are a use
 
 - pnflow input keywords are changed significantly (for compatibility with the generalized network model) see the new [input_pnflow.dat](https://github.com/aliraeini/pnflow/blob/master/doc/input_pnflow.dat) file in doc folder for more information.
 
-* The file [pnflow/ChangeLog](https://github.com/aliraeini/pnflow/blob/master/src/pnm/pnflow/ChangeLog) is used to document the main changes or extensions of the pnflow code.
+* The file [pnflow/ChangeLog](pnflow/ChangeLog) is used to document the main changes or extensions of the pnflow code.
 
 ----------------------------------------
 
@@ -37,7 +37,7 @@ keyword and other flow parameters. Finally run, in a Windows Command Prompt:
   
     PATH\TO\bin\pnflow.exe  input_pnflow.dat
 
-* Replace `PATH\TO\bin\`` with the full path to the pnflow.exe, if it exists in a different directory than your command prompt working directory.
+* Replace `PATH\TO\bin\`` with the path to the extracted pnflow.exe.
 
 * To open a command-prompt in Windows, hold the `Shift` key and `right-click`
   into the folder where the input_pnflow.dat is copied and click the `Open Command Window Here` menu.
