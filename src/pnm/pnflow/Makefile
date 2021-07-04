@@ -27,7 +27,6 @@ srcs = \
 
 
 
-msCFLAGS += -I${msSrc}/Xdmf 
 
 USE_msTEST=1
 USE_HYPRESEQ=1

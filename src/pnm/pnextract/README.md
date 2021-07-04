@@ -12,34 +12,46 @@ pores and throats, published in [Bultreys et al. 2018].
 
 
 ### Instructions
+
 A sample input file, Image.mhd, is provided in the doc folder, in ascii 
-(text) format. Please use this file together with a 8-bit micro-CT 
+(text) format. Please use this file together with a micro-CT 
 image, similar to the [images on our website].
 
-To extract a pore network, decompress the pnextract.exe.7z and run, in a Windows Command Prompt:     
-    pnextract.exe  Image.mhd
+To extract a pore network, decompress the bin.7z file
+ and run, in a Windows Command Prompt / PowerShell:     
 
-See the [pnextract wiki](https://github.com/aliraeini/pnextract/wiki/pnextract-FAQ) for more instructions!
+    C:\PATH\TO\bin\pnextract.exe  Image.mhd       
+Replace ``C:\PATH\TO\bin\`` with the path to the pnextract.exe, or remove if you place pnextract.exe in a system PATH.      
+To open a command-prompt in Windows, hold the `Shift` key and `right-click`
+into the folder where the input file is copied and click the `Open Command Window Here` menu.
 
-###  Compiling
-The code is already compiled to bin/pnextract.exe, a Windows (win64) executable, using MinGW compilers.
 
-The compilation can be done in Linux by running ``make`` command in the top-level directory.
+The instructions are similar in Linux. Additionally, you can source the src/script/bashrc file to set the paths to the compiled binaries:     
 
-###  Dependencies
-The included voxelImage library  is the main prerequisite. 
-voxelImage itself can optionally be linked to [libz] and [libtiff] to support
+     source PATH/TO/src/script/bashrc
+
+See the [pnextract wiki](https://github.com/aliraeini/pnextract/wiki/pnextract-FAQ) for more details.
+
+###  Build instructions
+
+Download and extract bin.7z for pnextract.exe, 
+a Win64 executable compiled using MinGW compilers.  
+
+See the src/script/README.md file for build instructions. 
+
+The included libvoxel  is the main dependancy. 
+libvoxel itself optionally links to [libz] and [libtiff] in the 
+thirdparty directory, to support
 reading .raw.gz and 3D .tif files. 
-Stripped down versions of both of these libraries are provided in the 
-thirdparty directory for compatibility and ease of compilation.
 
 ###  Licence
 
+TODO: add license.     
 The code and executables are provided as is, without any kind of warranty;
 use at your own risk.
 
-For contact and further information see [Imperial College - pore-scale consortium] website,
-or send me an email:   a.q.raeini@imperial.ac.uk
+For contact and further information see [Imperial College - Pore-scale Consortium] website,
+raise an `issue` on github, or send me an email:   a.q.raeini@imperial.ac.uk
 
 
 ### References
