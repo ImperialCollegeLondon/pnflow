@@ -128,6 +128,11 @@ public:
 
 	std::istringstream iss;
 
+	giv("vtk_resolution",  vtk_resolution);
+	giv("vtk_scaleRpore", vtk_scaleRpore);
+	giv("vtk_scaleRthroat", vtk_scaleRthroat);
+
+
 
 	segValues.resize(256, _rockTypes.size());
 
@@ -291,6 +296,11 @@ public:
 	stvec<int>             segValues;
 	stvec<poroRange>      _rockTypes;
 	voxelImage             VImage;
+
+	static int    vtk_resolution; /// used in writers_vtk;
+	static double vtk_scaleRthroat; /// used in writers_vtk;
+	static double vtk_scaleRpore; /// used in writers_vtk;
+
 
 };
 

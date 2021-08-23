@@ -74,7 +74,8 @@ test: checkRoot
 installDir?=$(HOME)/.local/
 install:
 	mkdir -p $(installDir)bin/
-	cp -r bin  $(installDir)
-	cp -r lib  $(installDir)
-	cp src/bashrc  $(installDir)bin/
-	cp -r src/script $(installDir)bin/
+	cp -rp bin  $(installDir)
+	cp -rp lib  $(installDir)
+	cp -p  src/bashrc  $(installDir)bin/
+	cp -rp src/script $(installDir)bin/
+

@@ -2,7 +2,7 @@
 
 
 allSubdirs:=$(shell ls -d */ | grep  -v [\ \(\)-] | sed 's/\///g')
-$(warning $(allSubdirs) )
+$(info $(allSubdirs) )
 all: zlib $(allSubdirs)
 
 .PHONY:  clean $(allSubdirs)
@@ -60,14 +60,14 @@ libpng:
 #zlib:
 #	[ -f ${msRoot}/include/zfstream.h ] || cp ${ms3rd}/zfstream/zfstream.h ${msRoot}/include/
 
-biltF=$(shell [ -d foamx3m ] && [ ! -f ${msRoot}/lib/libfiniteVolume*.so ] && echo Foam)
-foamx3m:
-	[ Foam  != "$(biltF)" ] || (cd foamx3m     && ./AllMak${OPT}e)
-	[ Foam  != "$(biltF)" ] || (cd foamx3m     && ./AllInstall)
+biltF=$(shell [ -d foamx4m ] && [ ! -f ${msRoot}/lib/libfiniteVolume*.so ] && echo Foam)
+foamx4m:
+	[ Foam  != "$(biltF)" ] || (cd foamx4m     && ./AllMak${OPT}e)
+	[ Foam  != "$(biltF)" ] || (cd foamx4m     && ./AllInstall)
 
 
 clean: 
-	(cd foamx3m  2>/dev/null  &&  ./AllDistclean) || echo !!
+	(cd foamx4m  2>/dev/null  &&  ./AllDistclean) || echo !!
 
 distclean: 
-	(cd foamx3m  2>/dev/null  &&  ./AllDistclean) || echo !!
+	(cd foamx4m  2>/dev/null  &&  ./AllDistclean) || echo !!

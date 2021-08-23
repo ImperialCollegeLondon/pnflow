@@ -21,7 +21,7 @@ Compilation requires gnu (Linux) make, cmake, a c++ compiler with -std=c++11
 support and MPI. The compilation is tested using g++ (version 5+) (default)
 and using intel-2018 compilers.
 
-For the modules which have `pkgs/foamx3m` as dependancy, you if you have
+For the modules which have `pkgs/foamx4m` as dependancy, you if you have
 any other OpenFOAM you have on your machine, need to temporarily ***deactivate 
 your OpenFOAM installation when compiling*** this code to avoid conflict between
 the foam3m provided here and your openfoam instalation.
@@ -67,7 +67,7 @@ required for running of the compiled applications.
 
 ---------
 
-## Aims 
+## Aims
 
 These scripts has been released as a separate module, to help 
 the code developers with script re-use,and simplification of 
@@ -97,7 +97,7 @@ what the directory structure should looks like:
         * `...`
         
     - `pkgs/ ---------- -- others' source codes`
-        * `foamx3m ---------- -- ** a minified openfoam `
+        * `foamx4m ---------- -- ** a minified openfoam `
         * `svplot ---------- -- ** a modified former svg_plot`
         * `zlib`
         * `libtiff`

@@ -60,14 +60,11 @@ msLibDir ?= ${msRoot}/lib
 
 # set thirdparty pkgs directory if not set
 ifndef ms3rd
- ifneq ("$(wildcard ${msSrc}/pkgs/)","")
-  ms3rd := ${msSrc}/pkgs
- else
   ifneq ("$(wildcard ${msRoot}/pkgs/)","")
    ms3rd := ${msRoot}/pkgs
+  else
+   $(warning ms3rd not set ${ms3rd})
   endif
- endif
- $(info ms3rd set to ${ms3rd})
 endif
 
 
@@ -244,34 +241,51 @@ msTstDirs:
 
 
 ifdef USE_MINIFOAMX3  #######################################################:
-  WM_PROJECT_DIR ?= ${ms3rd}/foamx3m
+
+  WM_PRECISION_OPTION ?= DP
+  WM_ARCH ?= linux64
+  GFLAGS = -DWM_LABEL_SIZE=32
+
+ ifneq ("$(wildcard ${msRoot}/pkgs/foamx4m)","")
+  WM_PROJECT_DIR ?= ${ms3rd}/foamx4m
   WM_PROJECT ?= foam
   WM_OSTYPE  ?= POSIX
   SO         ?= ext3.so
   # this could cause conflicts if openfoam is compiled differently:
   WM_MPLIB   ?= SYSTEMOPENMPI
-
-#  $(info $(WM_PROJECT_DIR)/wmake/rules/linux64Gcc/mplib$(WM_MPLIB))
-
   include $(WM_PROJECT_DIR)/wmake/rules/linux64Gcc/mplib$(WM_MPLIB)
-  WM_PRECISION_OPTION ?= DP
-  WM_ARCH ?= linux64
+  GFLAGS += -DFOAMX
+  OFInsDIR=${msRoot}
+ else
+  $(info WM_PROJECT_DIR= $(WM_PROJECT_DIR))
+  WM_PROJECT ?= OpenFOAM
+  WM_PROJECT_DIR ?= /opt/openfoam9
+  GFLAGS = -DWM_LABEL_SIZE=32
+  SO  = so
+  OFInsDIR=${WM_PROJECT_DIR}/platforms/${WM_ARCH}${WM_COMPILER}${WM_PRECISION_OPTION}Int${WM_LABEL_SIZE}Opt
+  msLFLAGS += -L${OFInsDIR}/lib   
+  msLFLAGS += -L${OFInsDIR}/lib/openmpi-system -Wl,-rpath=${OFInsDIR}/lib/openmpi-system -l:libPstream.$(SO)
+ endif
+
+  # $(info WM_PROJECT_DIR= $(WM_PROJECT_DIR))
+
   LIB_SRC            = $(WM_PROJECT_DIR)/src
-  GFLAGS     = -D$(WM_ARCH) -DWM_$(WM_PRECISION_OPTION)
+  GFLAGS     += -D$(WM_ARCH) -DWM_$(WM_PRECISION_OPTION) 
 
   GFLAGS += -Wall -Wextra -Wno-unused-parameter -Wnon-virtual-dtor  -DNoRepository -ftemplate-depth-200
   #$(info GFLAGS: $(GFLAGS))
 
   msCFLAGS += $(PFLAGS) $(PINC) $(GFLAGS)
+  $(info  using of=$(OFInsDIR) msCFLAGS=$(msCFLAGS) )
 
 
 
-  findOFsubdirs = $(shell find $(LIB_SRC)/$(dir) -type d ! -name 'lnInclude')
+  findOFsubdirs = $(shell find $(LIB_SRC)/$(dir) -type d ! -name 'lnInclude' -exec realpath --relative-to . {} \;)
   ofIncDirs = $(foreach dir,$(OFincs) $(WM_PROJECT) OSspecific/$(WM_OSTYPE),$(findOFsubdirs))
   OFCFLAGS += $(addprefix -I,$(ofIncDirs)) 
 #  $(info $(ofIncDirs))
   
-  msLFLAGS += $(PLIBS) -Wl,-rpath-link=${msRoot}/lib  $(addprefix -l:lib,$(addsuffix .$(SO),$(OFlibs) $(WM_PROJECT)))
+  msLFLAGS += $(PLIBS) -Wl,-rpath=${OFInsDIR}/lib  $(addprefix -l:lib,$(addsuffix .$(SO),$(OFlibs) $(WM_PROJECT)))   
 
 
   OFObj2C = $(subst ${msBuildDir}/,,$(subst __,/,$(subst ++,..,$(subst .Obj,.C,$@))))
@@ -422,11 +436,11 @@ clean:
 
 
 ${msBuildDir}/%.Obj: $(OFObj2C)
-	@echo  'Compiling $(OFObj2C) *'
+	@echo  'Compiling $(OFObj2C)  *'
 	@${msCXX}  ${msCFLAGS} ${OFCFLAGS} ${EXTRACFLAGS} -c $(OFObj2C) -o $@
 
 ${msBuildDir}/%.o: $(o2cpp)
-	@echo  'Compiling $(o2cpp) *'
+	@echo  'Compiling $(o2cpp)   *'
 	@${msCXX}  ${msCFLAGS}  ${EXTRACFLAGS} -c $(o2cpp) -o $@
 
 # this is a note only, for how to use nmake in Windows, will not work with complex makefiles

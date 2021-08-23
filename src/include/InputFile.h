@@ -1,11 +1,10 @@
-#ifndef INPUTFILE_H
-#define INPUTFILE_H
-
 // Input data file used by 3D image processing, network extraction, 
 // flow simulation  and other codes
 // Developed by Ali Q. Raeini. See the documentation of the 
 // relevant codes for user guids and contact details, 
 
+#ifndef INPUTFILE_H
+#define INPUTFILE_H
 
 
 #include <iostream>

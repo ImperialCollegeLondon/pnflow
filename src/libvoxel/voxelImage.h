@@ -90,8 +90,8 @@ template <typename T> class voxelField  //! 3D voxel data, on Cartesian uniform 
 	void readMicroCT(std::string);
 	bool readAscii(std::string);
 	void readAscii(std::ifstream& in);
-	bool readBin(std::string fileName, int nSkipBytes=0);
-	bool readBin(std::string fileName,int iBgn,int iEndp1 , int jBgn,int jEndp1 , int kBgn,int kEndp1, int nSkipBytes=0);
+	int  readBin(std::string fileName, int nSkipBytes=0);
+	int  readBin(std::string fileName,int iBgn,int iEndp1 , int jBgn,int jEndp1 , int kBgn,int kEndp1, int nSkipBytes=0);
 	void writeNoHdr(std::string fileName) const;
 	void writeBin(std::string fileName) const;
 	void writeBin(std::string fileName,int iBgn,int iEndp1 , int jBgn,int jEndp1 , int kBgn,int kEndp1 ) const;
@@ -181,8 +181,8 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>   //!  3D image 
 	voxelImageT(int3 n, dbl3 dx=dbl3(1.,1.,1.), dbl3 xmin=dbl3(0.,0.,0.), T value=0)
 	: voxelField<T>( n.x,  n.y,  n.z,  value), X0_(xmin),dx_(dx) {}
 
-	voxelImageT(const voxelImageT & vm)
-	:  voxelField<T>(vm), X0_(vm.X0_), dx_(vm.dx_) {}
+	//voxelImageT(const voxelImageT & vm)
+	//:  voxelField<T>(vm), X0_(vm.X0_), dx_(vm.dx_) {}
 
 
 

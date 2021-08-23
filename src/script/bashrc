@@ -26,9 +26,11 @@ else
 	export PATH=$PATH:$msBinDir
 
 
-	if ! [ -d $msBinDir ]; then  mkdir -p $msBinDir;   fi
-	if ! [ -d $msLibDir ]; then  mkdir -p $msLibDir;   fi
-	if ! [ -d $msIncDir ]; then  mkdir -p $msIncDir;   fi
+	if ! [ -d $msBinDir ]; then  
+		mkdir -p $msBinDir;   
+		mkdir -p $msLibDir; 
+		mkdir -p $msIncDir;   
+	fi
 
 	export PYTHONPATH=$msSrc/script:$msSrc/pylib:$PYTHONPATH
 

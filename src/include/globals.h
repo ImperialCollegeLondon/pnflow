@@ -1,3 +1,8 @@
+
+//! definition of global class and macros used to debugging and testing
+//! `#define _InitGlobals` in main.cpp then `#include "globals.h" for 
+//!  initialization of global data
+
 #ifndef GLOBALS_SkipH
 #define GLOBALS_SkipH
 #include <sstream>
@@ -5,36 +10,26 @@
 #include <stdexcept>
 #include <memory>
 #include <map>
-// definition of global class and macros used to debugging and testing
 
 
-/// mkdir getcwd chdir
-//#if (__cplusplus >= 201703L)
-	#include <experimental/filesystem>
-	namespace filesystem = std::experimental::filesystem;
-	//#define mkdirs filesystem::create_directories
-	//#define getpwd filesystem::current_path
-	inline std::string getpwd() { return filesystem::current_path().string(); }
-	inline int mkdirs(const std::string& dir) {std::error_code ec; filesystem::create_directories(dir, ec);	 return ec.value(); /*filesystem::permissions(dir, filesystem::perms::owner_all, filesystem::perm_options::add);*/}
-	inline int chdir(const std::string& dir) {std::error_code ec;  filesystem::current_path(dir,ec); return ec.value(); }
-//#elif defined(__unix__)  // to delete
-	//#include <sys/types.h>
-	//#include <sys/stat.h>
-	//#include <unistd.h>
-	//inline bool mkdirs(const std::string& dir) { return ::mkdir(dir.c_str(),0733); }
-	//inline int chdir(const std::string& dir)   { return ::chdir(dir.c_str()); }
-	//inline std::string getpwd() { char tmp[512];	return ( ::getcwd(tmp, sizeof(tmp)) ? std::string(tmp) : std::string("") ); }
-	//template<typename T, typename... Args>  std::unique_ptr<T> make_unique(Args&&... args)  { return std::unique_ptr<T>(new T(std::forward<Args>(args)...)); } //https://stackoverflow.com/a/24609331/2718352
-//#elif defined(_WIN32)  // to delete
-	//#include <direct.h>
-	//inline bool mkdirs(const std::string& dir) { return _mkdir(dir.c_str()); }
-	//inline int chdir(const std::string& dir) { return _chdir(dir.c_str()); }
-	//inline std::string getpwd() { char tmp[512];	return ( getcwd(tmp, sizeof(tmp)) ? std::string(tmp) : std::string("") ); }
-//#endif
+/// mkdir getcwd chdir, #if (__cplusplus >= 201703L) should be true
+#include <experimental/filesystem>
+namespace filesystem = std::experimental::filesystem;
+inline std::string getpwd() { return filesystem::current_path().string(); }
+inline int mkdirs(const std::string& dir) {std::error_code ec; filesystem::create_directories(dir, ec);	 return ec.value(); /*filesystem::permissions(dir, filesystem::perms::owner_all, filesystem::perm_options::add);*/}
+inline int chdir(const std::string& dir) {std::error_code ec;  filesystem::current_path(dir,ec); return ec.value(); }
 #define  _TRY_(_syscmnd_) std::string((_syscmnd_==0) ?  " succeed " : " failed ")
 
+//! Non-folding brackets for namespace '{' and '}', to be used in early stages of code development
+#define _begins_       {
+#define _end_of_(sec)  }
 
-#if defined __has_cpp_attribute
+// used by SiRun and VxlPro
+#define KeyHint(_args_desc_)  if(ins.peek()=='?') {	ins.str(_args_desc_); return 0; }
+
+
+
+#if defined __has_cpp_attribute 
     #if __has_cpp_attribute(fallthrough)
         #define fallThrough [[fallthrough]]
     #else
@@ -49,7 +44,7 @@
 #ifdef FOOL_GEANY_TO_COLOUR_HIGHLIGHT
 class vector {};  class for_ {};  class for_i {};  class fori0to {};
 class iterator {}; class fluidf {}; class Elem{}; class dbl {}; class string {};
-class map {}; class endl {}; class cout {}; class cerr {};
+class map {}; class T {}; class endl {}; class cout {}; class cerr {};
 namespace std {}
 #endif 
 
@@ -75,13 +70,14 @@ namespace std {}
 
 
 
-#ifndef Tst_SkipH  /// test macros
+#ifndef Tst_SkipH  /// ensure, alert (and ifnot hack)  runtime checks 
 #define Tst_SkipH
-	// Testing macros, uses variable argument macro trick
+	// Run-time check and testing macros
 	inline bool _cerr_(std::string hdr="",std::string msg="", int xit=0) // for debugger breakpoints: don't optimize out please !!!
 		{	 if(xit) throw std::runtime_error(hdr+msg);  else std::cerr<< hdr+msg <<std::endl; return true; }
 
 	 #define ERR_HDR(_xit_)  std::string(_xit_?"\n\n  Error":"\n  Warning") \
+				+" in "+ std::string(__FUNCTION__)+", "+std::string(__FILE__)+":"+_s(__LINE__)  \
 				,std::string(":  ")
 	 #define ensure1(isOk)           (!((isOk)|| _cerr_(ERR_HDR(0)+std::string(#isOk))))
 	 #define ensure2(isOk, msg)      (!((isOk)|| _cerr_(ERR_HDR(0)+  "   \""+msg+"\"")))
@@ -98,9 +94,7 @@ namespace std {}
 #endif // Tst_SkipH
 
 
-// Risky hack to allow both declaration and definition of global static variables from .h files.
-// `#define _InitGlobals` in main.cpp then `#include "globals.h"`...
-#ifdef _InitGlobals
+#ifdef _InitGlobals //! Allow declaration and definition of static variables in the same file
 	#define _Extern 
 	#define _Eq(...)  = __VA_ARGS__
 #else
@@ -111,9 +105,6 @@ namespace std {}
 
 
 //////////////////////////// OUTDATED \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\.
-
-
-
 #ifdef _debugCompile_ // by default do not use the obsolete debugLevel/dbgAsrt
 	template<class T> int debuglevel_(T level) {  static int l_=0;  if (level>=0) { l_=level; }  return l_;  }
 	#define debugLevel    debuglevel_(-1)
@@ -124,14 +115,7 @@ namespace std {}
 	#define dbgAsrt(...)
 	#define IN_DBG(...)  
 #endif // _debugCompile_
-
-
-
-// non-folding brackets for namespace '{' and '}', to be used in early stages of code development
-#define _begins_       {
-#define _end_of_(sec)  }
-
-#define KeyHint(_args_desc_)  if(ins.peek()=='?') {	ins.str(_args_desc_); return 0; }
+// Note use addr2line more for debugging
 
 
 

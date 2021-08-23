@@ -351,7 +351,7 @@ inline void getAmiraHeaderSize(const std::string& fnam, int3& nnn, dbl3& dx_, db
 	nSkipBytes = hdr.tellg(); ++nSkipBytes; //++ is for '\n' after "@1"
 }
 
-template<typename T>   bool voxelField<T>::readBin(std::string fnam, int nSkipBytes)  {
+template<typename T>   int voxelField<T>::readBin(std::string fnam, int nSkipBytes)  {
 	int3 nnn = size3();
 	int RLEcompressed=0;
 
@@ -380,7 +380,7 @@ template<typename T>   bool voxelField<T>::readBin(std::string fnam, int nSkipBy
 			in.close();
 
 			std::cout<<"."<<std::endl;
-			return true;
+			return 0;
 		}else std::cout<<"Error: could not be read "<<fnam<<std::endl;	
 	 #endif
 
@@ -416,31 +416,31 @@ template<typename T>   bool voxelField<T>::readBin(std::string fnam, int nSkipBy
 	}
 	(std::cout<<". ").flush();
 
-	if (!in)  {  std::cout<<  "\n\n ***** Error in reading "<<fnam<<" ***** \n"<<std::endl;  return false;  }
-	else return true;
+	if (!in)  {  std::cout<<  "\n\n ***** Error in reading "<<fnam<<" ***** \n"<<std::endl;  return -1;  }
+	else return 0;
 
 }
 
 
 
 template<typename T>   
-bool voxelField<T>::readBin(std::string fnam, int iS,int iE, int jS,int jE, int kS,int kE, int nSkipBytes)  {
+int voxelField<T>::readBin(std::string fnam, int iS,int iE, int jS,int jE, int kS,int kE, int nSkipBytes)  {
 	if(hasExt(fnam,4,".tif"))  {
 		voxelImageT<T> vxls(fnam);
 		if (vxls.nx()!=iE-iS)	std::cout<<"Error in reading "<<fnam<<", unexpected size: Nx="<<vxls.nx()<<"  !="<<iE-iS<<std::endl;
 		setBlock(iS,jS,kS, vxls);
-		return true;
+		return 0;
 	}
 	if(hasExt(fnam,3,".gz"))  {
 		voxelField<T> vxls(int3(iE-iS, jE-jS, kE-kS));
 		vxls.readBin(fnam);
 		setBlock(iS,jS,kS, vxls);
-		return true;
+		return 0;
 	}
 
 	(std::cout<<  " reading binary file "<<fnam<<" ").flush();
 	std::ifstream in (fnam, std::ios::in | std::ios::binary);
-	if(!in)  {std::cout<<"\n\n  Error: can not open image file, "<<fnam<<std::endl<<std::endl;		return false;}
+	if(!in)  {std::cout<<"\n\n  Error: can not open image file, "<<fnam<<std::endl<<std::endl;		return -1;}
 	if(nSkipBytes) in.ignore(nSkipBytes);
 	int k = kS;
 	for ( ; k < kE; k++)  {
@@ -451,7 +451,7 @@ bool voxelField<T>::readBin(std::string fnam, int iS,int iE, int jS,int jE, int 
 	if (!in)	std::cout<<  "\n\n ***** Error in reading "<<fnam<<" ***** \n"<<"only "<<k<<" layers read"<<std::endl;
 	in.close();
 	(std::cout<<"  ").flush();
-	return true;
+	return 0;
 }
 
 
@@ -1181,9 +1181,9 @@ void voxelImageT<T>::PointMedian032(int nAdj0,int nAdj1, T lbl0, T lbl1)  {
 			vj = voxls.v_k( 1,vp);  neiSum0 += vj==lbl0;  neiSum1 += vj==lbl1;
 
 			//neiSum-=voxls(i,j,k);
-			if (neiSum0 >= nAdj0  && vv==lbl1) {  vr=lbl0; ++nChanges;  }
+			if (neiSum0 >= nAdj0 && neiSum0>neiSum1 && vv==lbl1) {  vr=lbl0; ++nChanges;  }
 			else 
-			if (neiSum1 >= nAdj1  && vv==lbl0) {  vr=lbl1;  ++nChanges;  }
+			if (neiSum1 >= nAdj1 && neiSum1>neiSum0 && vv==lbl0) {  vr=lbl1;  ++nChanges;  }
 		}
 	}
 

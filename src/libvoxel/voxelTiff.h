@@ -109,7 +109,7 @@ template<typename T>   int readTif( voxelField<T>&  aa, std::string fnam )
         
 
 	TIFF *tif = (TIFF *) NULL;
-	tif = TIFFOpen(fnam.c_str(), "r");	 if (tif == NULL)	return (-1);
+	tif = TIFFOpen(fnam.c_str(), "r");	 if (tif == NULL)	{ alert("Cannot open tif"); return -1; }
 
 
 	TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &nx);
@@ -135,7 +135,7 @@ template<typename T>   int readTif( voxelField<T>&  aa, std::string fnam )
   	TIFFClose(tif);
 
 	std::cout<<  " ."<<std::endl;
-	return (0);
+	return 0;
 }
 
 template<typename T>   int writeTif(const voxelField<T>&  aa, std::string fnam)  {

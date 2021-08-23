@@ -156,7 +156,7 @@ template<typename T> bool resampleMode( stringstream& ins, voxelImageT<T>& vImg)
 }
 
 template<typename T> bool redirect( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("directiom(y/z) // flip x with y or z axes");
+	KeyHint("direction(y/z) // flip x with y or z axes");
 	char axs;
 	ins>>axs;
 	(cout<<axs<<", swapping x and "<<axs<<" axes").flush();
@@ -285,9 +285,9 @@ template<typename T> bool medianX( stringstream& ins, voxelImageT<T>& vImg)  {
 
 
 template<typename T> bool FaceMedian06( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("nAdj0(2), nAdj1(4),  nIterations(1)");
-	int nAdj0(2), nAdj1(4),  nIterations(1);     ins >>nAdj0 >>nAdj1 >>nIterations;
-	(cout<<"  FaceMedian06: "<<nAdj0<<" "<<nAdj1<<" "<<nIterations<<"     ").flush();
+	KeyHint("nIterations(1),  nAdj0(2), nAdj1(4)");
+	int nAdj0(2), nAdj1(4),  nIterations(1);     ins >>nIterations >>nAdj0 >>nAdj1;
+	(cout<<"  FaceMedian06: "<<nIterations<<"   "<<nAdj0<<" "<<nAdj1<<"    ").flush();
 	vImg.growBox(2);
 	for (int i=0; i<nIterations; ++i) vImg.FaceMedian06(nAdj0,nAdj1);
 	vImg.shrinkBox(2);
@@ -298,7 +298,7 @@ template<typename T> bool FaceMedian06( stringstream& ins, voxelImageT<T>& vImg)
 
 
 template<typename T> bool PointMedian032( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("nItrs(1),  nAdj(11), lbl0(0), lbl1(1)");
+	KeyHint("nItrs(1),  nAdj(11), lbl0(0), lbl1(1); nAdj is the threshold count of adjacent voxels to change the voxel");
 	int nItrs(1),  nAdj(11), lbl0(0), lbl1(1);
 	ins >> nItrs >> nAdj >> lbl0 >> lbl1;
 	(cout<<"  PointMedian032, "<<" nItrs:"<<nItrs<< "; nAdjThreshold "<<nAdj<<"  lbl0:"<<lbl0<<"  lbl1;"<<lbl1<<"s \n  PointMedian032 is only applied to the labels  lbl0 and  lbl1").flush();
@@ -749,30 +749,27 @@ void voxelImageT<T>::readFromHeader(istream& hdrFile, const string& hdrNam, int 
 	else  alert("Unknown (header) file type: "+hdrNam,-1); // exit
 
 	if(nnn.z) vImg.reset(nnn);
+	int readingImage=0;
 	if( !inputName.empty() && inputName!="NO_READ" && procesKeys!=2)  {
 	  if (hasExt(inputName,4,".tif"))  {
 			dbl3 dx=vImg.dx_, X0=vImg.X0_;
-			bool readingImage = vImg.readBin(inputName);
-			assert(readingImage);
+			readingImage = vImg.readBin(inputName);
 			if(X0read) vImg.X0_=X0;
 			if(dxread) vImg.dx_=dx;
 	  }
 	  else if ((hasExt(inputName,4,".raw") && BinaryData!="False") || BinaryData=="True")   {
-			bool readingImage = vImg.readBin(inputName, nSkipBytes);
-			assert(readingImage);
+			readingImage = vImg.readBin(inputName, nSkipBytes);
 	  }
 	  else if (hasExt(inputName,3,".am"))    {
 			int RLECompressed;
 			dbl3 dx=vImg.dx_, X0=vImg.X0_;
 			getAmiraHeaderSize(inputName, nnn,vImg.dx_,vImg.X0_,nSkipBytes,RLECompressed);
-			bool readingImage = vImg.readBin(inputName, nSkipBytes);
-			assert(readingImage);
+			readingImage = vImg.readBin(inputName, nSkipBytes);
 			if(X0read) vImg.X0_=X0;
 			if(dxread) vImg.dx_=dx;
 	  }
 	  else if (hasExt(inputName,7,".raw.gz"))   {
-			bool readingImage = vImg.readBin(inputName);
-			assert(readingImage);
+			readingImage = vImg.readBin(inputName);
 	  }
 	  else   {
 		std::ifstream in(inputName);  assert(in);
@@ -780,6 +777,7 @@ void voxelImageT<T>::readFromHeader(istream& hdrFile, const string& hdrNam, int 
 		vImg.voxelField<T>::readAscii(in);
 	  }
 	}
+	ensure(readingImage==0, "cannot read image "+inputName,-1);
 
 	if(flipSigByt=="True") {
 		cout<<"  flipEndian "<<endl;

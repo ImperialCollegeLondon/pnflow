@@ -89,9 +89,10 @@ def runSh(resDir, script, logfile=None, envs={}):
 	if not os.path.exists(resDir):   disp('error directory'+resDir+' not present'); exit(-1)
 	oNam=str(script).replace('[','').split(' ')[0]; disp('>> '+str(script)) # 
 	if not logfile and len(oNam)>3 and oNam[0].isalnum():  
-		logfile = open(resDir+'/'+oNam+'.log','wb')
+		oNam=resDir+'/'+oNam+'.log'; 
+		logfile = open(oNam,'wb'); 
 	myenv = msEnv.copy();	myenv.update(envs) 
-	disp(f'Running {script} in {resDir}, envs: {envs or ""} > {oNam or ""}');
+	disp(f'Running {script} in {resDir}, envs: {envs or ""} >> {oNam or ""}');
 	return subprocess.run(script, stdout=logfile, stderr=logfile, shell=True, cwd=resDir, env=myenv)
 
 
