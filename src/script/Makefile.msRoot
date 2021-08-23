@@ -3,7 +3,7 @@
 
 msRoot:=${CURDIR}
 msSrc := ${msRoot}/src
-ms3rd := ${msRoot}/thirdparty
+ms3rd := ${msRoot}/pkgs
 
 curMkfil:=$(lastword $(MAKEFILE_LIST))
 

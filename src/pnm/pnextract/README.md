@@ -41,7 +41,7 @@ See the src/script/README.md file for build instructions.
 
 The included libvoxel  is the main dependancy. 
 libvoxel itself optionally links to [libz] and [libtiff] in the 
-thirdparty directory, to support
+pkgs directory, to support
 reading .raw.gz and 3D .tif files. 
 
 ###  Licence

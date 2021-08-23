@@ -54,7 +54,7 @@ which are Win64 executables compiled using MinGW compilers.
 
 See [../script/README.md](../script/README.md) for build instructions.
 The pnflow code depends on the [Hypre] library which along with other [pnextract] dependencies are included in 
-the [../../thirdparty](thirdparty) folder. 
+the [../../pkgs](pkgs) folder. 
 
 
 ###  Licence

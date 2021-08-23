@@ -58,13 +58,13 @@ msLibDir ?= ${msRoot}/lib
 
 
 
-# set thirdparty directory if not set
+# set thirdparty pkgs directory if not set
 ifndef ms3rd
- ifneq ("$(wildcard ${msSrc}/thirdparty/)","")
-  ms3rd := ${msSrc}/thirdparty
+ ifneq ("$(wildcard ${msSrc}/pkgs/)","")
+  ms3rd := ${msSrc}/pkgs
  else
-  ifneq ("$(wildcard ${msRoot}/thirdparty/)","")
-   ms3rd := ${msRoot}/thirdparty
+  ifneq ("$(wildcard ${msRoot}/pkgs/)","")
+   ms3rd := ${msRoot}/pkgs
   endif
  endif
  $(info ms3rd set to ${ms3rd})

@@ -1,6 +1,6 @@
 # Compiling codes
 
-To compile, open a terminal in the upper most directory, where `src` and `thirdparty`
+To compile, open a terminal in the upper most directory, where `src` and `pkgs`
  folders are located, and run:    
 
  `make -j`
@@ -21,7 +21,7 @@ Compilation requires gnu (Linux) make, cmake, a c++ compiler with -std=c++11
 support and MPI. The compilation is tested using g++ (version 5+) (default)
 and using intel-2018 compilers.
 
-For the modules which have `thirdparty/foamx3m` as dependancy, you if you have
+For the modules which have `pkgs/foamx3m` as dependancy, you if you have
 any other OpenFOAM you have on your machine, need to temporarily ***deactivate 
 your OpenFOAM installation when compiling*** this code to avoid conflict between
 the foam3m provided here and your openfoam instalation.
@@ -96,7 +96,7 @@ what the directory structure should looks like:
         * `...`
         * `...`
         
-    - `thirdparty/ ---------- -- others' source codes`
+    - `pkgs/ ---------- -- others' source codes`
         * `foamx3m ---------- -- ** a minified openfoam `
         * `svplot ---------- -- ** a modified former svg_plot`
         * `zlib`
@@ -115,7 +115,7 @@ what the directory structure should looks like:
 As shown above, this `script` folder is typically located in `src` 
 (which holds regularly changed source codes as subdirectories). The 
 less frequently changed source code are placed a directory called 
-`thirdparty`.  A bench folder is also sometimes included holding 
+`pkgs`.  A bench folder is also sometimes included holding 
 temporary/client data, as shown above.  A `.git` directory is kept 
 outside the msRoot directory and is used to test and release varius 
 modules of the code, which it ends up in the msRoot directory in the 
