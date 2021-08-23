@@ -1,0 +1,104 @@
+---------------------- -*- Markdown -*- -------------------------
+	Classical pore-network flow simulation code  -  pnflow     
+		See the file main.cpp for the copyright notice
+
+--------------------------------------------------------------------
+ChangeLog,  a summary of main changes and updates:
+
+
+
+
+
+
+
+2019  Ali Raeini
+	Further cleanup, outlet index changed to 0, to fix visualization.
+	Old input abandoned in favour of InputFile.h Json/C-style format.
+
+2017     	Tom Bultreys and Ali Raeini
+	Validation:
+	Bultreys et al (2017), [https://doi.org/10.1103/PhysRevE.97.053104]
+	The code has been benchmarked for compatibility with pnextract
+	network extraction throat's shape factor and length assignments.
+
+2016  Jiazuo Zhang, Ali Q. Raeini and Matt Jackson: 
+	Wetted perimeter and spontanuous potential calculation
+
+2014-2015	Ali Q Raeini
+	Added support for Hypre linear equation solver. The old  AMG solver 
+	is moved to 'bu/' folder.
+
+2014-2015	Ali Q Raeini
+	Visualization and statistics utilities added to folder psPrc/. 
+
+2013-2014	Ali Q Raeini
+	Code restructuring and clean-up, in preparation for the development 
+	of a generalized network flow simulation code, funded by TOTAL.
+
+2004     	Per Valvatne and Martin J Blunt
+	Original code developed:
+	Valvatne and Blunt (2004), [https://doi.org/10.1029/2003WR002627]
+	see [poreflow] code on [pore-scale-modelling-and-imaging] website 
+	for more information.
+
+
+
+
+--------------------------------------------------------------------
+List of source code files 2019:
+
+	ChangeLog
+	compareFuncs.h
+	ElementConstSolver.cpp
+	Element.cpp
+	Element.h
+	ElementPore.cpp
+	ElementThroat.cpp
+	elem_Model.cpp
+	elem_Model.h
+	fluid.h
+	hypre.cpp
+	hypre.h
+	inputData.cpp
+	inputData.h
+	InputFile.h
+	main.cpp
+	Makefile
+	netsim.cpp
+	netsim_data.h
+	netsim_drain.cpp
+	netsim.h
+	netsim_imbibe.cpp
+	netsimSP.cpp
+	NetworkTransform.h
+	input_pnflow.dat
+	solver.h
+	sortedEvents.h
+	threeSome.h
+	utility.cpp
+	utility.h
+
+polygon:
+	cornerApex.cpp
+	cornerApex.h
+	layerApex.cpp
+	layerApex.h
+	makefile
+	polygon_calcR.cpp
+	polygon.cpp
+	polygonDrain.cpp
+	polygon.h
+	polygonImb.cpp
+
+psPrc:
+	makefile
+	netStatistics.cpp
+	netStatistics.h
+	typses.h
+	vtuWriter.cpp
+	results3D.h
+
+
+(poreflow): [https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/software/two-phase-network-modelling-code]
+(pore-scale-modelling-and-imaging): [https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/]
+
