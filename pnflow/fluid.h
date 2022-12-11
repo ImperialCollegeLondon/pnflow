@@ -19,7 +19,7 @@ enum fluidf  : ffT
 	GAS      = 1<<2,
 	ANF      = WTR|OIL|GAS,
 	CLAY     = 1<<4,
-	mj_ELEC     = 4,  
+	mj_ELEC     = 4,
 
 // GNM_1:
 	SOLID    = 1<<5,
@@ -93,8 +93,8 @@ class Fluid
 	void setFluidProps(double viscosity, double interfacialTen, double resistivity, double density, double epsilon, double zeta)
 	{
 		viscosity_ = viscosity;
-		//interfacialTen_ = interfacialTen; 
-		resistivity_ = resistivity; 
+		//interfacialTen_ = interfacialTen;
+		resistivity_ = resistivity;
 		density_ = density;
 		epsilon_ = epsilon;//mj_
 		zeta_ = zeta;//mj_
@@ -137,7 +137,7 @@ class Interface
 	, epsilon_(0.), zeta_(1e37)//mj_
 	{
 		std::istringstream data;
-		if(input.giv(name, data, importance)) 
+		if(input.giv(name, data, importance))
 		{
 			data >> interfacialTen_ ;
 			data >> epsilon_ >> zeta_;//mj_
@@ -165,4 +165,3 @@ inline char name(fluidf ff) {return ff==OIL ? 'O' : ff==WTR ? 'W' : 'E';}
 
 
 #endif
-

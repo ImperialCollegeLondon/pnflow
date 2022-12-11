@@ -21,8 +21,8 @@ using namespace std;
 
 
 Throat::Throat(const CommonData& common, int indx, dbl3 nod, double radius, double vol, double volumeClay,
-			   double shapeFactor, double length, double lengthPore1, double lengthPore2, int rockType) 
-	: Elem(common, indx, nod, radius, vol, volumeClay, shapeFactor, 2, false, rockType), index_(indx), 
+			   double shapeFactor, double length, double lengthPore1, double lengthPore2, int rockType)
+	: Elem(common, indx, nod, radius, vol, volumeClay, shapeFactor, 2, false, rockType), index_(indx),
 	poreLength_{lengthPore1,lengthPore2}, length_(length)  {}
 
 
@@ -47,7 +47,7 @@ double Throat::snapOfLongitCurvature() const
 	if (delRSqr<0.) return 0.; ///. Errror
 	delRSqr *= delRSqr;
 
-	return 0.; 
+	return 0.;
 	//return 4.*std::sqrt(delRSqr/(delRSqr+lengthEff*lengthEff*0.025330296))/lengthEff; //lengthEff/lengthEff;
 	///. return 2*sigma*sin(45)*sqrt(2.*delRSqr/(delRSqr+(L_poreToPore/2PI)^2)/(lengthEff/2.) //lengthEff/lengthEff;
 
@@ -109,7 +109,7 @@ void Throat::sortConnectingElems_DistToExit()  {
 // The first pores are usually located at x position 0.. These are still within
 // the box. There has to be some length to the outlet to make the problem
 // solveable, hence we allow pressure drop to occur within that pore.
-*/ 
+*/
 void Throat::addConnections(Elem* p1, Elem* p2, double inletBdr, double outletBdr, bool moveBoundary, bool setNod)  {
 	if(setNod)  {
 		node_=0.5*(p2->node() + p1->node());
@@ -242,7 +242,3 @@ void Throat::modifyLength(double scaleFactor)  {
 	poreLength_[1] *= scaleFactor;
 	length_ *= scaleFactor;
 }
-
-
-
-

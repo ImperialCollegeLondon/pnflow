@@ -1,5 +1,6 @@
 
 #include "blockNet.h"
+#include "voxelImageI.h"
 
 ///@cond INTERNAL
 
@@ -112,7 +113,7 @@ voxelField<int> poreMaxBalls(const blockNetwork& mpn, int firstSlice, int lastSl
 		  for (int b=-ey; b<=ey; ++b)  {
 			 ez = sqrt(1*rlim-a*a-b*b);
 			 for (int c=-ez; c<=ez; ++c)
-				if (rf.isInside(x+a, y+b, z+c) && (z+c >= firstSlice && z+c < lastSlice) 
+				if (rf.isInside(x+a, y+b, z+c) && (z+c >= firstSlice && z+c < lastSlice)
 						&& vfild(x+a,y+b,(z-firstSlice)+c) == 0)
 					vfild(x+a,y+b,z-firstSlice+c) = mpn.VElems(x,y,z);
 
@@ -183,7 +184,7 @@ voxelField<int> throatMaxBalls(const blockNetwork& mpn)  {
 			for (int b=-ey; b<=ey; ++b)  {
 				ez = sqrt(1*rlim-a*a-b*b);
 				for (int c=-ez; c<=ez; ++c)
-					if (rf.isInside(x+a, y+b, z+c) && (z+c >= firstSlice && 
+					if (rf.isInside(x+a, y+b, z+c) && (z+c >= firstSlice &&
 							z+c < lastSlice) && vfild(x+a,y+b,z-firstSlice+c) == 0)
 						vfild(x+a,y+b,z-firstSlice+c) = tr->tid + 1;
 			 }
@@ -195,4 +196,3 @@ voxelField<int> throatMaxBalls(const blockNetwork& mpn)  {
 
 
 ///@endcond
-

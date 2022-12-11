@@ -19,7 +19,7 @@ inline double randomG () /// to randomly distribute the shape factors, in case o
 
 void  blockNetwork::writePNM() const
 {
-	/// pnflow uses the following indexes: [0:nB(=2)] for boundary nodes, 
+	/// pnflow uses the following indexes: [0:nB(=2)] for boundary nodes,
 	/// [nB:nP+nB] for internal nodes and throat indices start afterwards.
 	/// here, in Statoil format, all these are subtracted by 1 (starting from -1).
 
@@ -220,9 +220,3 @@ void  blockNetwork::writePNM() const
 	cout<<".\n";cout.flush();
 
 }
-
-
-
-
-
-

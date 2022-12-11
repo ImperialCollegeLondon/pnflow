@@ -50,8 +50,8 @@ void NetworkTransform::getModif(	vector<Pore*>& pores2BAltered, vector<Throat*>&
 		if(ins.good())  {	char vB('x');    ins >>vB;  	volBased = (vB=='T'||vB=='t'||vB=='V'||vB=='v');
 			if (!(vB=='T'||vB=='t'||vB=='V'||vB=='v'||vB=='F'||vB=='f'||vB=='N'||vB=='n'))	{ out_<<" Error Wrong choice for \"volume-/number- based\" fraction, expected T/t/V/v or F/f/N/n"<<endl; exit(-1); }
 		}
-		if(ins.good()) 
-		{ 	char tF('x');  ins >> tF;  totalFraction = (tF=='T'||tF=='t'); 
+		if(ins.good())
+		{ 	char tF('x');  ins >> tF;  totalFraction = (tF=='T'||tF=='t');
 			if (!(tF=='T'||tF=='t'||tF=='F'||tF=='f'||tF=='O'||tF=='o'))	{ out_<<" Error Wrong choice for fraction of \"total/oil-invaded\" elements, expected T/t or F/f/O/o"<<endl; exit(-1);}
 		}
 
@@ -61,7 +61,7 @@ void NetworkTransform::getModif(	vector<Pore*>& pores2BAltered, vector<Throat*>&
 			clustDs.maxV+=0.999999;
 			if (ins.fail()) out_ <<"Error: cant read cluster size "<<endl;
 			input.Assert(clustDs.minV>1 && clustDs.maxV>=clustDs.minV, "Error: wrong cluster length");
-			if (ins.good()) 
+			if (ins.good())
 			{	char oInW('T'); ins >> oInW;		ffClust = (oInW == 'Y' || oInW == 'y' || oInW == 'T' || oInW == 't');
 				if (!(oInW=='T'||oInW=='t'||oInW=='F'||oInW=='f'||oInW=='O'||oInW=='o'))	{ out_<<" Error Wrong choice for fraction of \"total/oil-invaded\" elements, expected T/t or F/f/O/o"<<endl; exit(-1);}
 			}
@@ -434,7 +434,7 @@ void setShapeFactFromFile(vector<Elem*>& elems, const string& gFileName,
 	dbl2 funcPt, oldPt(1., -1.);
 	while(fin >> funcPt.a)  {
 		fin >> funcPt.b;
-		ensure(funcPt.b >= oldPt.b && funcPt.a <= oldPt.a, 
+		ensure(funcPt.b >= oldPt.b && funcPt.a <= oldPt.a,
 				"Fractional index should increase and value should decrease, monotonically.", -1 );
 		if(funcPt.b != oldPt.b)	targetDist.push_back(funcPt);
 		oldPt = funcPt;
@@ -788,13 +788,3 @@ void setRadiiFromFile(vector<Elem*>& elems, const string& radiiFileName, double 
 		elems[j]->ChModel()->setRadius(maxRadius);
 	}
 }
-
-
-
-
-
-
-
-
-
-

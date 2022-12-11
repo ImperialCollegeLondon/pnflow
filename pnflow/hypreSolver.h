@@ -47,7 +47,7 @@ class hypreSolver
 {
 
 public:
- 
+
 	hypreSolver(const vector<Elem*>& network, const vector<Elem*>& inlet, const vector<Elem*>& outlet,
 	  int, int, int debugMode, string matFileName, bool matlabFormat);
 

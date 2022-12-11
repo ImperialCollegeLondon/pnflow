@@ -127,7 +127,7 @@ FlowDomain::FlowDomain(InputFile & input)
 	elemans_[0]->identifyConnectedPoreElems();    // Possibly remove singlets
 
 	//for(int ie=2; ie<nBSs_; ++ie) elemans_[ie]->setConnectedToNetwork(false);
-	//nBSs_=2; 
+	//nBSs_=2;
 
 	bool inOrOutThroats(false);
 	if(input.giv("convertInOutThroatsToMicroPorosity", inOrOutThroats))  {	int converted = 0;
@@ -156,7 +156,7 @@ FlowDomain::FlowDomain(InputFile & input)
 				flowVolume_ += elm->flowVolume();
 				clayVolume_ += elm->clayVolume();
 			}
-		} 
+		}
 		else ++numIsolatedElems;
 	}
 
@@ -451,7 +451,7 @@ void FlowDomain::modifyNetwork(InputData& input)  {
 			medianLenToRadRatio = LToRRatio[nTrots_/2];
 		}
 
-		//if(Rad_scaleFactor > 0.) 
+		//if(Rad_scaleFactor > 0.)
 		if(poreRadModel && maintainLtoR)  {
 			double Rad_scaleFactor = oldMedianLenToRadRatio/medianLenToRadRatio;
 			for(int i = 0; i < nBpPors_; ++i)
@@ -967,7 +967,3 @@ void FlowDomain::writeResultData(bool wantRelPerm, bool wantResIdx)  {
 	resultWaterMass_.clear();
 	resultOilMass_.clear();
 }
-
-
-
-

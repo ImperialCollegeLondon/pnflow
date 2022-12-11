@@ -1,6 +1,6 @@
 
 /*---------------------------------------------------------------------------*\
-Developed by (2015): Ali Q Raeini  email: a.q.raeini@imperial.ac.uk
+Developed by (2015): Ali Q Raeini  email: a.q.raeini@gmail.com
 \*---------------------------------------------------------------------------*/
 
 
@@ -123,7 +123,7 @@ void printRadiusStatistics( const std::vector<Elem const*>&  elemans, int nBSs_,
 		//cout<<"RadAvgElem:\t"<<RadAvgElem<<endl;
 		//cout<<"VWRadAvgElem:\t"<<VWRadAvgElem<<endl;
 		cout<<"RadAvgElem:  \t "<<RadAvgElem<<"\t "<<VWRadAvgElem<<endl;
-	}      
+	}
 }
 
 
@@ -149,7 +149,7 @@ void printDistanceMapStatistics( const std::vector<Elem const *>&  elemans, int 
 				if(shyp0)
 				 for(int ic=0;ic<shyp0->numCorners();++ic)
 					  distribG[1][rr/dr] += 2.*((rt-rr)/tan(shyp0->cornerHalfAngles(ic)))*max(0.,(trote->throatLength())); //int Warn = -trote->poreLength(0)-trote->poreLength(1)  /// dA
-				else 
+				else
 					 distribG[1][rr/dr] += 2.*PI*((rt-rr))*(trote->throatLength()); //int Warn = -trote->poreLength(0)-trote->poreLength(1)  /// dA
 			}
 
@@ -161,7 +161,7 @@ void printDistanceMapStatistics( const std::vector<Elem const *>&  elemans, int 
 					//double dA =  dA;
 					distribG[1][rr/dr] += 2.*((rt-rr)/tan(shyp1->cornerHalfAngles(ic)))*(trote->poreLength(0));
 				}
-				else 
+				else
 					distribG[1][rr/dr] += 2.*PI*((rt-rr))*(trote->poreLength(0));  /// dA
 			}
 			rt=elemans[i]->neib(1)->RRR();
@@ -172,7 +172,7 @@ void printDistanceMapStatistics( const std::vector<Elem const *>&  elemans, int 
 					//double dA = dA;
 					distribG[1][rr/dr] += 2.*((rt-rr)/tan(shyp2->cornerHalfAngles(ic)))*(trote->poreLength(1));
 				}
-				else 
+				else
 					distribG[1][rr/dr] += 2.*PI*((rt-rr))*(trote->poreLength(1));  /// dA
 			}
 
@@ -391,7 +391,7 @@ void printShapeFactorStatistics( const std::vector<Elem const*>&  elemans, int n
 		//cout<<"GAvgElem:\t"<<GAvgElem<<endl;
 		//cout<<"VWGAvgElem:\t"<<VWGAvgElem<<endl;
 		cout<<"GAvgElem:     \t "<<GAvgElem<<"\t "<<VWGAvgElem<<endl;
-	}      
+	}
 }
 
 
@@ -407,7 +407,7 @@ void printAspectRatioStatistics( const std::vector<Elem const*>&  elemans, int n
 		double VWQWAspRatioAvgPore=0.; ///VolWeighted pore shape factor
 		double sumFlowVolume=0.;
 		for(size_t i = 0; i < elms.size(); ++i)  {
-			const Pore* pore = dynamic_cast< Pore const * >(elms[i]); 
+			const Pore* pore = dynamic_cast< Pore const * >(elms[i]);
 			//if (pore->nCncts()>0)
 			double AvgAspectRatio=0.;
 			double AWAvgAspectRatio=0.,sumAW=1e-31;
@@ -418,14 +418,14 @@ void printAspectRatioStatistics( const std::vector<Elem const*>&  elemans, int n
 				const ElemModel* shape = pore->neib(conn)->model();
 				double AspectRatio= shape->RRR()/poreR;
 				AvgAspectRatio+= AspectRatio;
-				sumAW+=shape->area();  
-				 AWAvgAspectRatio+= shape->area()*AspectRatio; 
-				sumQW+=shape->SPConductance(shape->area(),1.);  
+				sumAW+=shape->area();
+				 AWAvgAspectRatio+= shape->area()*AspectRatio;
+				sumQW+=shape->SPConductance(shape->area(),1.);
 				 QWAvgAspectRatio+=shape->SPConductance(shape->area(),1.)*AspectRatio;
 				//maxAspectRatio=max(maxAspectRatio,AspectRatio);
 			}
 				AvgAspectRatio/=pore->nCncts()+1e-16;
-				AWAvgAspectRatio/=sumAW; 
+				AWAvgAspectRatio/=sumAW;
 				QWAvgAspectRatio/=sumQW;
 			sumFlowVolume+=elms[i]->flowVolume();
 			VWAWAspRatioAvgPore+= elms[i]->flowVolume()*AWAvgAspectRatio;
@@ -446,7 +446,7 @@ void printAspectRatioStatistics( const std::vector<Elem const*>&  elemans, int n
 			<<VWQWAspRatioAvgPore<<endl;
 	}
 
-   
+
 }
 
 
@@ -464,7 +464,7 @@ void printCoordinaNumStatistics( const std::vector<Elem const*>&  elemans, int n
 		double VWQWCoordNAvgPore=0.; ///VolWeighted pore shape factor
 		double sumFlowVolume=0.;
 		for(size_t i = 0; i < elms.size(); ++i)  {
-			const Pore* pore = dynamic_cast< Pore const * >(elms[i]); 
+			const Pore* pore = dynamic_cast< Pore const * >(elms[i]);
 			//if (pore->nCncts()>0)
 			double AvgCoordN=0.;
 			double AWAvgCoordN=0.,sumAW=0.;
@@ -474,15 +474,15 @@ void printCoordinaNumStatistics( const std::vector<Elem const*>&  elemans, int n
 			for(int conn = 0; conn < pore->nCncts(); ++conn)  {
 				const ElemModel* shape = pore->neib(conn)->model();
 				AvgCoordN+= 1;
-				sumAW+=shape->area();  
-				 AWAvgCoordN+= shape->area()*shape->area(); 
-				sumQW+=shape->SPConductance(shape->area(),1.);  
+				sumAW+=shape->area();
+				 AWAvgCoordN+= shape->area()*shape->area();
+				sumQW+=shape->SPConductance(shape->area(),1.);
 				 QWAvgCoordN+=shape->SPConductance(shape->area(),1.)*shape->SPConductance(shape->area(),1.);
 				//maxCoordN=max(maxCoordN,CoordN);
 			}
 				AvgCoordN/=1;
-				AWAvgCoordN=sumAW*sumAW/(AWAvgCoordN+1e-63); 
-				QWAvgCoordN=sumQW*sumQW/(QWAvgCoordN+1e-63); 
+				AWAvgCoordN=sumAW*sumAW/(AWAvgCoordN+1e-63);
+				QWAvgCoordN=sumQW*sumQW/(QWAvgCoordN+1e-63);
 			sumFlowVolume+=elms[i]->flowVolume();
 			VWAWCoordNAvgPore+= elms[i]->flowVolume()*AWAvgCoordN;
 			VWQWCoordNAvgPore+= elms[i]->flowVolume()*QWAvgCoordN;
@@ -501,8 +501,5 @@ void printCoordinaNumStatistics( const std::vector<Elem const*>&  elemans, int n
 			<<VWQWCoordNAvgPore<<endl;
 	}
 
-   
+
 }
-
-
-

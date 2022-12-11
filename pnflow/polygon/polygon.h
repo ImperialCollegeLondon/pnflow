@@ -1,7 +1,7 @@
 #ifndef POLYGON_H
 #define POLYGON_H
 /////////////////////////  BASE CLASS FOR POLYGON SHAPES  /////////////////////////////////
-//! Pore and throat shapes 
+//! Pore and throat shapes
 #include "../elem_Model.h"
 #include "../sortedEvents.h"
 
@@ -24,13 +24,13 @@ class VoidElem : public ElemModel
 	double conAngleAdv() const {return cntAngAdv_;}
 	double conAngleRec() const {return cntAngRec_;}
 	double minInitRecCntAng() const {return minInitRecCntAng_;}
-	virtual bool check(double pc) const {return true;}; 
+	virtual bool check(double pc) const {return true;};
 
 protected:
 
 	double                          shapeFactor_;
 
-	 
+
 	double                          minInitRecCntAng_;
 	double                          cntAngAdv_;
 	double                          cntAngRec_;
@@ -181,4 +181,3 @@ class Circle : public VoidElem
 
 
 #endif
-

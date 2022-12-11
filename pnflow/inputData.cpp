@@ -100,7 +100,7 @@ int InputData::randSeed() const
 	}
 	else
 		seedNum = (unsigned)time( NULL );
-   
+
 	return seedNum;
 }
 
@@ -334,7 +334,7 @@ void InputData::resFormat(bool& matlabFormat, bool& excelFormat, bool& mcpFormat
 		matlabFormat = (resForm == "MATLAB" || resForm == "matlab" || resForm == "Matlab");
 		excelFormat = (resForm == "EXCEL" || resForm == "excel" || resForm == "Excel");
 		if (!excelFormat) excelFormat = (resForm == "excelAndMicroPorosity" || resForm == "EXCELANDMICROPOROSITY" || resForm == "ExcelAndMicroPorosity");
-		if (excelFormat) 
+		if (excelFormat)
 			mcpFormat = (resForm == "excelAndMicroPorosity" || resForm == "EXCELANDMICROPOROSITY" || resForm == "ExcelAndMicroPorosity");
 		else
 			mcpFormat = (resForm == "upscaling" || resForm == "UPSCALING");
@@ -1222,7 +1222,3 @@ void InputData::solverDebug(bool& watMat, bool& oilMat, bool& resMat, bool& watV
 	}
 
 }
-
-
-
-

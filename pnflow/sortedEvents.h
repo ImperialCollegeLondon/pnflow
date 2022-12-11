@@ -85,7 +85,7 @@ public:
 			EventsBase<Type>::sortedContainer_.erase(delCand);
 			return true;//EventsBase<Type>::sortedContainer_.empty();
 		}
-		//else if (delCand != EventsBase<Type>::sortedContainer_.end() && *delCand != elem) 
+		//else if (delCand != EventsBase<Type>::sortedContainer_.end() && *delCand != elem)
 		//{
 			//std::cout<<"  Error:*delCand==elem,"<<checkIfThere(elem)<<"  ";std::cout.flush();
 			//return false;

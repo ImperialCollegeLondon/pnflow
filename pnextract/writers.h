@@ -2,8 +2,8 @@
 #define VTUWRITER_H
 
 /*---------------------------------------------------------------------------*\
-written by:
-	Ali Q Raeini  email: a.q.raeini@imperial.ac.uk  and
+Developed by:
+	Ali Q Raeini
 	Tom Bultreys
 \*---------------------------------------------------------------------------*/
 
@@ -14,23 +14,17 @@ written by:
 #include "ElementGNE.h"
 
 
-
-
-
-
-
-
 voxelImage segToVxlMesh(const medialSurface & ref);
 voxelField<float> ballRadiiToVoxel(const blockNetwork& mpn);
 voxelField<int> VElemsPlusThroats(const blockNetwork& mpn);
 
 ///- written by Tom Bultreys:
- voxelField<int> VThroats(const blockNetwork& mpn);
- voxelField<int> VThroats(const blockNetwork& mpn, int firstSlice, int lastSlice);
- voxelField<int> poreMaxBalls(const blockNetwork& mpn);
- voxelField<int> poreMaxBalls(const blockNetwork& mpn, int firstSlice, int lastSlice);
- voxelField<int> throatMaxBalls(const blockNetwork& mpn);
- voxelField<int> throatMaxBalls(const blockNetwork& mpn, int firstSlice, int lastSlice);
+voxelField<int> VThroats(const blockNetwork& mpn);
+voxelField<int> VThroats(const blockNetwork& mpn, int firstSlice, int lastSlice);
+voxelField<int> poreMaxBalls(const blockNetwork& mpn);
+voxelField<int> poreMaxBalls(const blockNetwork& mpn, int firstSlice, int lastSlice);
+voxelField<int> throatMaxBalls(const blockNetwork& mpn);
+voxelField<int> throatMaxBalls(const blockNetwork& mpn, int firstSlice, int lastSlice);
 
 
 
@@ -44,8 +38,4 @@ void vtuWriteThroats(std::string bNam,  const stvec<poreNE*>& poreIs, const stve
 
 
 
-
-
-
 #endif
-

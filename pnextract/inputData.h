@@ -124,14 +124,15 @@ public:
 
 	cout<<" voxel indices:"<<endl;
 	_rockTypes.push_back(poroRange("void",0,0));
+	giv("void_range", _rockTypes.back());
 	cout<<"  "<<0<<": void voxels "<<endl;
-
-	std::istringstream iss;
 
 	giv("vtk_resolution",  vtk_resolution);
 	giv("vtk_scaleRpore", vtk_scaleRpore);
 	giv("vtk_scaleRthroat", vtk_scaleRthroat);
 
+
+	std::istringstream iss;
 
 
 	segValues.resize(256, _rockTypes.size());
@@ -175,13 +176,13 @@ public:
 	//if (dataType == "microct")	VImage.readMicroCT(fnam);
 	//else if (dataType == "binary")  {if (!VImage.readBin(fnam))   alert("could not read binary image!",-1); }
 	//else if (dataType == "ascii")   {if (!VImage.readAscii(fnam)) alert("could not read ascii image!",-1); }
-	//else  { VImage.reset(0,0,0,255);  
+	//else  { VImage.reset(0,0,0,255);
 	readConvertFromHeader(VImage,fnam);  //dataType="mhd"; }
 
 	const std::string& vxlkys=kwrd("VxlPro");
 	if(vxlkys.size())  vxlProcess(vxlkys,VImage,"GNE:VxlPro");
 
-	//if(dataType=="mhd") 
+	//if(dataType=="mhd")
 	//{
 	vxlSize = VImage.dx().x;
 	X0=VImage.X0();
@@ -192,7 +193,7 @@ public:
 
 	nInside= (long long)(nx)*ny*nz;
 	cout<<" siz:"<<VImage.size3()<<" vxlSize:"<<vxlSize<<" X0:"<<X0<<endl;
-	
+
 	int2 outrange;
 	if(giv("outside_range", outrange))  {
 		forAllcp(VImage) if(outrange.a<=(*cp) && (*cp)<=outrange.b) --nInside;

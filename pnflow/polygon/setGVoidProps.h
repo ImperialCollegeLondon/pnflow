@@ -499,7 +499,3 @@ void setElemProps(const InputFile& inp, const vector<Elem*>& elemans, size_t nBp
 	else if (comn.dispCycle()==2)
 		applyFWettabilityChange(inp, elemans, nBpPors, out_, comn);
 }
-
-
-
-

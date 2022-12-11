@@ -242,7 +242,7 @@ void medialSurface::moveUphill(medialBall* b_i) // const
 
 
 
-	
+
 	const voxel* vi = vxl(b_i->fi, b_i->fj, b_i->fk);
 	dbl3 disp(0.,0.,0.);
 	{
@@ -273,7 +273,7 @@ void medialSurface::moveUphill(medialBall* b_i) // const
 		}
 	}
 	if(b_i!=b_i->boss)  {
-		dbl3 BosKidVec=*b_i - *(b_i->boss);	
+		dbl3 BosKidVec=*b_i - *(b_i->boss);
 		disp -= 0.95*((BosKidVec&disp)/(magSqr(BosKidVec)+1e-12))*BosKidVec;
 	}
 	b_i->fi=vi->i-_mp5+disp.x;   b_i->fj=vi->j-_mp5+disp.y;   b_i->fk=vi->k-_mp5+disp.z;
@@ -321,10 +321,10 @@ void medialSurface::moveUphillp1(medialBall* bi) // const
 		}
 	}
 	disp+=1.4*grad;
-	
+
 	if(bi!=bi->boss)  {
 		dbl3 BosKidVec=*bi - *(bi->boss);
-		disp -= 0.5*((BosKidVec&disp)/(magSqr(BosKidVec)+1e-12))*BosKidVec; 
+		disp -= 0.5*((BosKidVec&disp)/(magSqr(BosKidVec)+1e-12))*BosKidVec;
 	}
 	disp/=(0.55*mag(disp)+0.05);
 
@@ -404,7 +404,7 @@ void medialSurface::competeForParent(medialBall* vi, medialBall* vj)  {///## Sel
 		medialBall* mvi=vi->mastrSphere();
 		medialBall* mvj=vj->mastrSphere();
 		if (mvi != vj && mvj != vi)  {
-	
+
 
 		 if (mvi==mvj)  {
 
@@ -422,7 +422,7 @@ void medialSurface::competeForParent(medialBall* vi, medialBall* vj)  {///## Sel
 			else if ( leveli > levelj+1 &&
 							(vi->boss->R-vi->R+2.*noise)/(dist(vi->boss,vi)+0.25) <  (vj->R-vi->R+2.*noise+0.01)/(dist(vj,vi)+0.2)
 						) vi->boss = vj;
-			else  { //if (leveli == levelj   or  leveli==levelj+1 ...)  
+			else  { //if (leveli == levelj   or  leveli==levelj+1 ...)
 
 				     if ( leveli > levelj && (vi->boss->R-vi->R+2.*noise)/(dist(vi->boss,vi)+1.2) <  (vj->R-vi->R+2.*noise)/(dist(vj,vi)+1.3)
 						&& !vj->inParents(vi) ) vi->boss = vj;
@@ -433,7 +433,7 @@ void medialSurface::competeForParent(medialBall* vi, medialBall* vj)  {///## Sel
 			}
 			if(vi->mastrSphere() != vj->mastrSphere()) {cout<<"sdsdsds"<<endl; exit(-1);}
 		 }
-		 else  {//if (mvi!=mvj)  
+		 else  {//if (mvi!=mvj)
 
 
 
@@ -609,6 +609,3 @@ void medialSurface::createBallsAndHierarchy()  {/// Create distance map, maximal
 
 
 }
-
-
-

@@ -1,15 +1,12 @@
 #ifndef NETSTATISTICS_H
 #define NETSTATISTICS_H
 /*---------------------------------------------------------------------------*\
-Developed by (2015): Ali Q Raeini  email: a.q.raeini@imperial.ac.uk
+Developed by: Ali Q Raeini (2015)
 \*---------------------------------------------------------------------------*/
 
 
 #include <vector>
 #include "../Element.h"
-
-
-
 
 
 
@@ -29,4 +26,3 @@ void printDistanceMapStatistics( const std::vector<Elem const *>&  rockLattices,
 
 
 #endif
-

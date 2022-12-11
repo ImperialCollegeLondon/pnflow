@@ -26,8 +26,8 @@ int Elem::nErrs = 0;
 double Elem::RRR() const {return model_->RRR();}
 
 Elem::Elem(const CommonData& comn, int indx, dbl3 nod, double radius, double volume,
-				 double volClay, double shapeFact, int connNum, bool amPore, int typ) 
-	 :  Apex(), iAmAPore_(amPore), rockIndex_(typ),comn_(comn), flowVolume_(volume), clayVolume_(volClay), nCncts_(connNum), 
+				 double volClay, double shapeFact, int connNum, bool amPore, int typ)
+	 :  Apex(), iAmAPore_(amPore), rockIndex_(typ),comn_(comn), flowVolume_(volume), clayVolume_(volClay), nCncts_(connNum),
 	trapIndexOil_(-1, 0.),
 	trapIndexWatBulk_(-1, 0.),
 	trapIndexWatFilm_(-1, 0.),
@@ -88,10 +88,10 @@ bool Elem::convertToMicroPorosityForSven(bool entry1Exit0)  {
 }
 
 int Elem::ffaz() const {return int(model_->containCOil())+1;} ///. Viz only
-//double Elem::saturation() const 
+//double Elem::saturation() const
 //{ return
 	//(flowVolume_*waterSaturation()+
-	//cnctions_[0]->waterSaturation()*cnctions_[0]->flowVolume()/cnctions_[0]->nCncts()+ 
+	//cnctions_[0]->waterSaturation()*cnctions_[0]->flowVolume()/cnctions_[0]->nCncts()+
 	//cnctions_[1]->waterSaturation()*cnctions_[1]->flowVolume()/cnctions_[1]->nCncts() ) /
 	//(flowVolume_+
 	 //cnctions_[0]->flowVolume()/cnctions_[0]->nCncts()+
@@ -111,7 +111,7 @@ void Elem::checkConnections() const
 	}
 
 	for(int ij = 0; ij < nCncts_; ++ij)  {
-		if(cnctions_[ij] == NULL)  { 
+		if(cnctions_[ij] == NULL)  {
 			cout<< "==================================="         << endl
 				<< "Error: missing network connecetions"          << endl
 				<< "Interanl pointer remains NULL      "          << endl
@@ -159,9 +159,9 @@ void Elem::findMarkTrappedOilGanglia(double prs, vector<Elem*>& trappingStorageO
 		clock_t startTrapRoutine(clock());
 		if(criteria == escapeToBoth)  {
 		   if ( foundEscapePathOil_trapOtherwise(prs, trappingStorageOil, escapeToOutlet)) ;
-		   else foundEscapePathOil_trapOtherwise(prs, trappingStorageOil, escapeToInlet)   ;       
+		   else foundEscapePathOil_trapOtherwise(prs, trappingStorageOil, escapeToInlet)   ;
 		}
-		else 
+		else
 			 foundEscapePathOil_trapOtherwise(prs, trappingStorageOil, criteria);
 
 		elapsed += (double)(clock() - startTrapRoutine) / CLOCKS_PER_SEC;
@@ -198,7 +198,7 @@ inline void Elem::trapOil(double prs)  {
 					cnctions_[i]->model()->conductsAnyOil())
 					return cnctions_[i];
 			}
-		}    
+		}
 		else if(criteria == escapeToEither)  {
 			for(short i = 0; i < nCncts_; ++i)  {
 				if(// !cnctions_[i]->isEntryOrExitRes() &&
@@ -255,7 +255,7 @@ bool Elem::foundEscapePathOil_trapOtherwise(double pc, vector<Elem*>& trappingSt
 		double localPc(datumPc - elemPtr->gravityCorrection());
 		ensure(!elemPtr->isEntryOrExitRes());
 		elemPtr->trapOil(localPc);
-		trappingStorage.push_back(elemPtr);          
+		trappingStorage.push_back(elemPtr);
 		elemStack.push(elemPtr);            // Simulate recursive descent
 
 
@@ -278,7 +278,7 @@ void Elem::findMarkTrappedWaterGanglia(double prs, FluidBlob startPt, vector< pa
 		clock_t startTrapRoutine(clock());
 		if(criteria == escapeToBoth)  {
 			if  (foundEscapePathWat_trapOtherwise(prs, startPt, trappingStorageWat, escapeToOutlet)) ;
-			else foundEscapePathWat_trapOtherwise(prs, startPt, trappingStorageWat, escapeToInlet );            
+			else foundEscapePathWat_trapOtherwise(prs, startPt, trappingStorageWat, escapeToInlet );
 		}
 		else     foundEscapePathWat_trapOtherwise(prs, startPt, trappingStorageWat, criteria);
 
@@ -493,7 +493,7 @@ void Elem::fillElemCentreWithOilRemoveLayers()  {
 		if (!rockIndex())	cnctions_[i]->ReduceNumWatCentreFeederNeis();
 	}
 
-	///. rubbish 
+	///. rubbish
 	if(model_->displacementType() == 'S')  {
 		//model_->addFillingEventToHistory(2);
 		eventI_ = -1;
@@ -522,8 +522,8 @@ void Elem::fillElemCentreWithWaterCreateLayers(bool snapOffOverRide)  {
 	model_->fillCentreWithWaterCreateLayers(snapOffOverRide);
 
 	for(int i = 0; i < nCncts_; ++i)  {
-		cnctions_[i]->ReduceNumOilCentreFeederNeis(); ///. 
-		if (!rockIndex())	cnctions_[i]->IncreaseNumWatCentreFeederNeis(); 
+		cnctions_[i]->ReduceNumOilCentreFeederNeis(); ///.
+		if (!rockIndex())	cnctions_[i]->IncreaseNumWatCentreFeederNeis();
 	}
 
 	if(model_->displacementType() == 'S')  {
@@ -545,7 +545,7 @@ bool Elem::canBeAddedToEventVec(const Fluid& injectant) const
 		return false;
 
    if(injectant.isOil())  {
-		if (model_->containCOil() && rockIndex() == 0) 
+		if (model_->containCOil() && rockIndex() == 0)
 		{
 			if (debugLevel>0) cout<<" sgsobqbd ";
 			return false;//         || nonTrappedOilCentreNeighbour(injectant));
@@ -567,7 +567,7 @@ bool Elem::canBeAddedToEventVec(const Fluid& injectant) const
 	}
 	else
 	{
-		if (!model_->conductsAnyOil() && rockIndex() == 0) 
+		if (!model_->conductsAnyOil() && rockIndex() == 0)
 		{
 			if (debugLevel>0) cout<<" sjswbqld ";
 			return false;//         || nonTrappedOilCentreNeighbour(injectant));
@@ -587,7 +587,7 @@ bool Elem::canBeAddedToEventVec(const Fluid& injectant) const
 
 		return false;
 	}
- 
+
 }
 
 
@@ -602,13 +602,13 @@ bool Elem::addToLayerVec(const Fluid& injectant, Polygon* shyp, std::vector< int
 
 	bool oilInj = injectant.isOil();
 
-	if(oilInj)     // Layer refcreation  
+	if(oilInj)     // Layer refcreation
 	{
 
 	  if(isInOilFloodVec())  {
 		for(int i = 0; i < shyp->numCorners(); ++i)
 			if(!shyp->oilLayerConst()[i].isInOilFloodVec() &&
-				 ! shyp->oilLayerConst()[i].exists() 
+				 ! shyp->oilLayerConst()[i].exists()
 				 && entryPc() > shyp->oilLayerConst()[i].entryPc()
 			  )
 				cornToAdd.push_back(i);
@@ -617,14 +617,14 @@ bool Elem::addToLayerVec(const Fluid& injectant, Polygon* shyp, std::vector< int
 	  {
 		for(int i = 0; i < shyp->numCorners(); ++i)
 			if(!shyp->oilLayerConst()[i].isInOilFloodVec() &&
-				 ! shyp->oilLayerConst()[i].exists() 
+				 ! shyp->oilLayerConst()[i].exists()
 			  )
 				cornToAdd.push_back(i);
 		}
 
 		if(!cornToAdd.empty())
 			for(size_t j = 0; j < cnctions_.size(); ++j)
-				if(cnctions_[j]->model()->conductsAnyOil()) 
+				if(cnctions_[j]->model()->conductsAnyOil())
 					return true;
 
 		return false;
@@ -632,7 +632,7 @@ bool Elem::addToLayerVec(const Fluid& injectant, Polygon* shyp, std::vector< int
 	else        // Layer collapse
 	{
 		for(int i = 0; i < shyp->numCorners(); ++i)
-			if(!shyp->oilLayerConst()[i].isInWatFloodVec() && 
+			if(!shyp->oilLayerConst()[i].isInWatFloodVec() &&
 				shyp->oilLayerConst()[i].exists() &&
 				trapIndexOil_.first < 0 &&
 				(trapIndexWatFilm_.first < 0 || trapIndexWatBulk_.first < 0)
@@ -663,4 +663,3 @@ void Elem::calcCentreEntryPrsWatInj()  {
 //#include "ElementConstSolver.cpp"
 //#include "ElementPore.cpp"
 //#include "ElementThroat.cpp"
-

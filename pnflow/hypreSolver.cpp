@@ -1,9 +1,9 @@
- 
+
 /*
    Example 5
 
    Interface:    Linear-Algebraic (IJ)
- 
+
    Compile with: make ex5
 
    Sample run:   mpirun -np 4 ex5
@@ -82,8 +82,8 @@ double                  hypreSolver::TOLERANCE = 1.0E-29;
 // all pores contain the fluid for which the flowrate is going to be obtained.
 */
 hypreSolver::hypreSolver(const vector<Elem*>& network, const vector<Elem*>& inlet, const vector<Elem*>& outlet,
-			   int nBSs, int nBpPors, int debugMode, string matFileName, bool matlabFormat) 
- : debugMode_(debugMode), elemans_(network), inPors_(inlet), outPores_(outlet), nBSs_(nBSs), nBpPors_(nBpPors), poreiRows_(nBpPors,-1) 
+			   int nBSs, int nBpPors, int debugMode, string matFileName, bool matlabFormat)
+ : debugMode_(debugMode), elemans_(network), inPors_(inlet), outPores_(outlet), nBSs_(nBSs), nBpPors_(nBpPors), poreiRows_(nBpPors,-1)
    ,matrixFileName_(matFileName) // probSize_(nPors-1),
 {
 
@@ -116,12 +116,12 @@ double hypreSolver::flowrate(double inletPrs, double outletPrs, const Fluid& flu
 	bool outletConnectionExists(false);                       // For each pore at inlet boundary a path to the outlet is tried found.
 	for (size_t bdrP = 0; bdrP < inPors_.size(); ++bdrP)   // The pores existing within this path is marked in the process
 	{
-		if (inPors_[bdrP]->connectedToOutlet(fluid))  { 
+		if (inPors_[bdrP]->connectedToOutlet(fluid))  {
 			outletConnectionExists = true;
 		}
-	} 
- 
-	if (!outletConnectionExists) 
+	}
+
+	if (!outletConnectionExists)
 		return 0.;                 // No fluid connection exists between inlet and outlet
 
 
@@ -132,7 +132,7 @@ double hypreSolver::flowrate(double inletPrs, double outletPrs, const Fluid& flu
 
 
    int i;
-   int myid(0);//, num_procs(1); 
+   int myid(0);//, num_procs(1);
    bool printError(false);
 
 
@@ -557,7 +557,7 @@ double hypreSolver::flowrate(double inletPrs, double outletPrs, const Fluid& flu
 	for(int i = 0; i < nMatrixRows_; ++i)    poreRows[i]=i;
 	HYPRE_IJVectorGetValues(xxx, nMatrixRows_, &poreRows[0], &porePressure[0]);
 
- 
+
 	for(int j = 0; j < nMatrixRows_; ++j)                                           // Pass back the results from the
 		((Pore*)(elemans_[rowedPores_[j]]))->setSolverPrs(fluid, porePressure[j]);   // solver. These values will// subsequently be used for calculating
 
@@ -573,8 +573,8 @@ double hypreSolver::flowrate(double inletPrs, double outletPrs, const Fluid& flu
 			inletPore->setSolverPrs(fluid, localInletPrs);
 		}
 	}
- 
- 
+
+
 	for(size_t op = 0; op < outPores_.size(); ++op)  {
 		Pore *outletPore = dynamic_cast< Pore* >(outPores_[op]);
 		if(outletPore)  {
@@ -611,7 +611,7 @@ double hypreSolver::flowrate(double inletPrs, double outletPrs, const Fluid& flu
 	return flowRate;
 
 }
- 
+
 
 
 /**
@@ -625,7 +625,7 @@ double hypreSolver::getFlowRate(HYPRE_IJVector xxx, const Fluid* fluid, double& 
 
 	vector<double> outletPrs(networkOutlets_.size(),0.);
 	vector<int>  outletRows(networkOutlets_.size(),0);
-	for(size_t i = 0; i < networkOutlets_.size(); ++i) 
+	for(size_t i = 0; i < networkOutlets_.size(); ++i)
 		outletRows[i]=networkOutlets_[i].first();
 	HYPRE_IJVectorGetValues(xxx, networkOutlets_.size(), &outletRows[0], &outletPrs[0]);
 	for(size_t i = 0; i < networkOutlets_.size(); ++i)  {
@@ -735,7 +735,7 @@ void hypreSolver::fillMatrixHypre(HYPRE_IJMatrix AAA, HYPRE_IJVector bbb, HYPRE_
 					values[0]+=conductance;
 					if(USE_GRAVITY) 	rhs += conductance*deltaGrav;
 
- 
+
 					if(prj->isOnInletSlvrBdr())                            // Inlet///////////////////////////////////////////////
 					{
 						double localInletPrs(inletPrs);
@@ -743,17 +743,17 @@ void hypreSolver::fillMatrixHypre(HYPRE_IJMatrix AAA, HYPRE_IJVector bbb, HYPRE_
 						else if(fluid.ff()<ELEC && USE_GRAVITY && !prj->isEntryOrExitRes())  localInletPrs += prj->rhogh(fluid.density(), prj->node());
 
 
-						inletPoint.first(row); inletPoint.second(inletPoint.second()+conductance);  inletPoint.third(localInletPrs);  inletPoint.fourth(deltaGrav); 
+						inletPoint.first(row); inletPoint.second(inletPoint.second()+conductance);  inletPoint.third(localInletPrs);  inletPoint.fourth(deltaGrav);
 						rhs += conductance * localInletPrs;
 					}
 					else if(prj->isOnOutletSlvrBdr())                       // Outlet////////////////////////////////////////////////
-					{ 
+					{
 						double localOutletPrs(outletPrs);
 						if(fluid.ff()<ELEC && USE_GRAVITY && prj->isEntryOrExitRes())        localOutletPrs += por->rhogh(fluid.density(), por->node());
 						else if(fluid.ff()<ELEC && USE_GRAVITY && !prj->isEntryOrExitRes())  localOutletPrs += prj->rhogh(fluid.density(), prj->node());
 
 
-						outletPoint.first(row); outletPoint.second(outletPoint.second()+conductance);  outletPoint.third(localOutletPrs);  outletPoint.fourth(deltaGrav); 
+						outletPoint.first(row); outletPoint.second(outletPoint.second()+conductance);  outletPoint.third(localOutletPrs);  outletPoint.fourth(deltaGrav);
 
 						rhs += conductance * localOutletPrs;
 					}
@@ -800,15 +800,3 @@ void hypreSolver::fillMatrixHypre(HYPRE_IJMatrix AAA, HYPRE_IJVector bbb, HYPRE_
 	ensure(row, "matrix is empty", 2);
 
 }
-
-
-
-
-
-
-
-
-
-
-
-

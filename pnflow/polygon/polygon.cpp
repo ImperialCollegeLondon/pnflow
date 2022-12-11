@@ -12,10 +12,10 @@ using namespace std;
 /**
 // Polygon Class Constructors
 */
-VoidElem::VoidElem(Elem& parent, const CommonData& common, 
-	double radius, double shapeFactor, int connNum) 
+VoidElem::VoidElem(Elem& parent, const CommonData& common,
+	double radius, double shapeFactor, int connNum)
 	: ElemModel(parent, common, radius, connNum), shapeFactor_(shapeFactor)
-				 
+
 {
 	area_ = pow(R_, 2.) / (4. * shapeFactor_);     //From Oren; This is ~correct for all shape
 	SatWater_ = 1.;
@@ -33,7 +33,7 @@ void Polygon::insertWatSnapEvent_IfSnapPcHgPc(Events<Apex*,PceImbCmp>& watEvents
 	if(bulkFluid_ == &comn_.oil())  // Water snap off when the bulk is filled by
 	{                                                   // oil. Make sure there is no trapping in
 		if (waterInCorner_[0].cornerExists() && (waterInCorner_[0].trappedCorner().first<0) && !(elem_.isTrappedOil()))
-			if(elem_.entryPc() > globalPc) 
+			if(elem_.entryPc() > globalPc)
 				watEvents.quickInsert(&elem_);
 	}
 	else if( oilLayer_[0].exists() && (oilLayer_[0].trappedOLayer().first<0) &&
@@ -51,7 +51,7 @@ void Polygon::insertWatSnapEvent_IfSnapPcHgPc(Events<Apex*,PceImbCmp>& watEvents
 
 
 void Polygon::insertOilSnapEvent_IfSnapPcLgPc(Events<Apex*,PceDrainCmp>& oilEvents, double globalPc)  {
-	if(bulkFluid_ == &comn_.water() && oilLayer_[0].exists(/*st ab le*/) && oilLayer_[0].trappedOLayer().first<0)  {   
+	if(bulkFluid_ == &comn_.water() && oilLayer_[0].exists(/*st ab le*/) && oilLayer_[0].trappedOLayer().first<0)  {
 		ensure(numLayers_==0);
 
 		double snapOffPrs = calcSnapOffPressureDrain();
@@ -137,18 +137,18 @@ void VoidElem::setContactAngle(double refCAng, int wettClass, double DAng)  {
 /**
 // Polygon Class Constructors
 */
-Polygon::Polygon(Elem& parent, const CommonData& common, double radius, 
+Polygon::Polygon(Elem& parent, const CommonData& common, double radius,
 				 double shapeFactor, int nCorners, int connNum)
 		: VoidElem(parent, common, radius, shapeFactor, connNum),
 	numCorners_(nCorners),displacementType_('X')  {
 	numLayers_ = 0;
 	maxConAngSpont_ = PI/2;
 
-	///. Warning should be constructed as array to allow comparison 
+	///. Warning should be constructed as array to allow comparison
 	waterInCorner_ = new CornerApex[nCorners];
 	oilLayer_ = new LayerApex[nCorners];
 	//waterInCorner_.reserve(nCorners);
-	//oilLayer_.reserve(nCorners);    
+	//oilLayer_.reserve(nCorners);
 	for(int i = 0; i < nCorners; ++i)  {
 		waterInCorner_[i].setCornerConnections(oilLayer_+i,this,i);
 		oilLayer_[i].setLayerConnections(waterInCorner_+i,this,i);
@@ -164,7 +164,7 @@ Polygon::Polygon(Elem& parent, const CommonData& common, double radius,
 // Triangle Class Constructors
 */
 Triangle::Triangle(Elem& parent, const CommonData& common,  double radius,
-				   double shapeFactor, int connNum, int) 
+				   double shapeFactor, int connNum, int)
 	  : Polygon(parent, common, radius, shapeFactor, 3, connNum)  {
 	crnHafAngs_.resize(numCorners_);
 	setHalfAngles();
@@ -200,7 +200,7 @@ void Triangle::setHalfAngles()  {
 /**
 // Square Class Constructors
 */
-Square::Square(Elem& parent, const CommonData& common, double radius, int connNum, int) 
+Square::Square(Elem& parent, const CommonData& common, double radius, int connNum, int)
    : Polygon(parent, common, radius, 0.0625, 4, connNum)  {
 	crnHafAngs_.resize(numCorners_, PI/4.);
 }
@@ -258,7 +258,7 @@ void Polygon::fillCentreWithWaterCreateLayers(bool snapOffOverRide)  {
 
 	}
 
-	if(numLayers_)   oilConnection_ = true; 
+	if(numLayers_)   oilConnection_ = true;
 	hasDisConectedCentreWCornerW_ = numLayers_ == numCorners_;
 
 	Pc_pistonTypeAdv_ = comn_.sigmaOW()*(2.*cos(cntAngAdv_)) / R_;
@@ -269,10 +269,10 @@ void Polygon::fillCentreWithWaterCreateLayers(bool snapOffOverRide)  {
 void Polygon::fillCentreWithOilRemoveLayers()  {
 	 oilConnection_ = true; bulkFluid_ = &comn_.oil();
 	 ensure(cntAngRec_>=0.,"contact angle not yet set",2);
-   
+
 
 	for(int i = 0; i < numCorners_; ++i)  {
-	  
+
 		oilLayer_[i].LayerApex::removeLayer();//_ exists
 
 
@@ -333,16 +333,16 @@ void Polygon::calcOilLayerPc_syncTrappings(double pc)  {///. pc is used for erro
 
 			waterInCorner_[i].finitCornerApex(pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],tension, oilInj, true);
 			if (!oilLayer_[i].finitLayerApex(oilTrp.second, cntAngRec_, cntAngAdv_, crnHafAngs_[i],tension, oilInj, true))  {
-				if (debugLevel>100) 
+				if (debugLevel>100)
 				{	vector<int> addCrns;
-					cout<<endl<<" q3jd "; 
+					cout<<endl<<" q3jd ";
 					cout
 					<<elem_.isInWatFloodVec()
 					<<elem_.canBeAddedToEventVec(comn_.water())
 					<<elem_.addToLayerVec(comn_.water(), this, addCrns)
 					<<(elem_.trappingWatFilm().first>-1)
 					<<(elem_.trappingWatBulk().first>-1)
-					<<(oilLayer_[i].trappedOLayer().first>-1) 
+					<<(oilLayer_[i].trappedOLayer().first>-1)
 					<<(oilLayer_[i].isInWatFloodVec())
 					<<canNOTReconfigure(comn_.water())
 					<<(elem_.trappingOil().first>-1)
@@ -377,16 +377,16 @@ void Polygon::calcOilLayerPc_syncTrappings(double pc)  {///. pc is used for erro
 
 		for(int i = 0; i < numCorners_; ++i)  {
 			waterInCorner_[i].finitCornerApex(pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],tension, oilInj, true);
-			if (!oilLayer_[i].finitLayerApex(pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],tension, oilInj,false))  { 
+			if (!oilLayer_[i].finitLayerApex(pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],tension, oilInj,false))  {
 				Pc_pin_disconnectOilLayer(i);
 				if (debugLevel>0) cout<<" q4jd ";
 
 			}
   			waterInCorner_[i].CornerApex::markTrappingCorner(watTrpFilm, pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],
-			   tension, oilInj); ///. 
+			   tension, oilInj); ///.
 
 			oilLayer_[i].LayerApex::markCentreLayerTrappings(oilTrp, pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],
-			   tension, oilInj); ///. 
+			   tension, oilInj); ///.
 
 
 			if (!oilLayer_[i].initLayerApex(pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],tension, oilInj))
@@ -414,7 +414,7 @@ void Polygon::calcOilLayerPc_syncTrappings(double pc)  {///. pc is used for erro
 					<<elem_.isInOilFloodVec()
 					<<(elem_.trappingWatFilm().first>-1)
 					<<canNOTReconfigure(comn_.oil())
-					<<(oilLayer_[i].trappedOLayer().first>-1) 
+					<<(oilLayer_[i].trappedOLayer().first>-1)
 					<< (elem_.trappingOil().first>-1)
 					<< (elem_.trappingWatBulk().first>-1)<<endl;
 
@@ -429,8 +429,8 @@ void Polygon::calcOilLayerPc_syncTrappings(double pc)  {///. pc is used for erro
 			}
 
 			//oilLayer_[i].LayerApex::markCentreLayerTrappings(oilTrp, pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],
-			   //tension, oilInj); ///. 
-			   
+			   //tension, oilInj); ///.
+
 			waterInCorner_[i].initCornerApex(pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],tension, oilInj);
 			if (!oilLayer_[i].initLayerApex(watTrpBulk.second, cntAngRec_, cntAngAdv_, crnHafAngs_[i],tension, oilInj))
 					if (debugLevel>0) cout<<" q4jd3";
@@ -459,28 +459,28 @@ void Polygon::calcOilLayerPc_markUntrappedFilms(double pc)  {///. pc is used for
 	bool oilInj =  comn_.injectant() == &comn_.oil();
 	double tension =  comn_.sigmaOW();
 
-	//if(oilTrp.first > -1) 
+	//if(oilTrp.first > -1)
 	{
 
 		for(int i = 0; i < numCorners_; ++i)  {				double oldLPc=oilLayer_[i].layerCollPc();
 
   			waterInCorner_[i].CornerApex::markTrappingCorner(watTrpFilm, pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],
-			   tension, oilInj); ///. 
+			   tension, oilInj); ///.
 			oilLayer_[i].LayerApex::markCentreLayerTrappings(oilTrp, pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],
 			comn_.sigmaOW(), oilInj);
 
 			waterInCorner_[i].initCornerApex(pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],tension, oilInj);
 			if (!oilLayer_[i].initLayerApex(pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],tension, oilInj, true))  {
-				if (debugLevel>100) 
+				if (debugLevel>100)
 				{	vector<int> addCrns;
-					cout<<" q3jdu "; 
+					cout<<" q3jdu ";
 					cout
 					<<elem_.isInWatFloodVec()
 					<<elem_.canBeAddedToEventVec(comn_.water())
 					<<elem_.addToLayerVec(comn_.water(), this, addCrns)
 					<<(elem_.trappingWatFilm().first>-1)
 					<<(elem_.trappingWatBulk().first>-1)
-					<<(oilLayer_[i].trappedOLayer().first>-1) 
+					<<(oilLayer_[i].trappedOLayer().first>-1)
 					<<(oilLayer_[i].isInWatFloodVec())
 					<<canNOTReconfigure(comn_.water())
 					<<(elem_.trappingOil().first>-1)
@@ -515,7 +515,7 @@ void Polygon::calcOilLayerPc_markUntrappedFilms(double pc)  {///. pc is used for
 
 		for(int i = 0; i < numCorners_; ++i)  {
  			waterInCorner_[i].initCornerApex(pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],tension, oilInj);
-			if (!oilLayer_[i].initLayerApex(pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],tension, oilInj))  { 
+			if (!oilLayer_[i].initLayerApex(pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],tension, oilInj))  {
 				Pc_pin_disconnectOilLayer(i);
 				if (debugLevel>0) cout<<" q4jdu ";
 
@@ -525,12 +525,12 @@ void Polygon::calcOilLayerPc_markUntrappedFilms(double pc)  {///. pc is used for
 
 	}
 
-	//if(watTrpBulk.first > -1)  
+	//if(watTrpBulk.first > -1)
 	{
 
 		for(int i = 0; i < numCorners_; ++i)  {
 			//oilLayer_[i].LayerApex::markCentreLayerTrappings(oilTrp, pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],
-			   //tension, oilInj); ///. 
+			   //tension, oilInj); ///.
 
 			waterInCorner_[i].initCornerApex(pc, cntAngRec_, cntAngAdv_, crnHafAngs_[i],tension, oilInj);
 			if (!oilLayer_[i].initLayerApex(watTrpBulk.second, cntAngRec_, cntAngAdv_, crnHafAngs_[i],tension, oilInj))  {
@@ -546,7 +546,7 @@ void Polygon::calcOilLayerPc_markUntrappedFilms(double pc)  {///. pc is used for
 					<<elem_.isInOilFloodVec()
 					<<(elem_.trappingWatFilm().first>-1)
 					<<canNOTReconfigure(comn_.oil())
-					<<(oilLayer_[i].trappedOLayer().first>-1) 
+					<<(oilLayer_[i].trappedOLayer().first>-1)
 					<< (elem_.trappingOil().first>-1)
 					<< (elem_.trappingWatBulk().first>-1)<<endl;
 
@@ -583,17 +583,17 @@ double Polygon::calcSnapOffPressureImb() const
 {
 	double snapOffPrs;
 	//int * sasasas;
-	if (waterInCorner_[0].trappedCorner().first>-1 || eleman()->isTrappedOil() || oilLayer_->trappingCL().first>-1) 
+	if (waterInCorner_[0].trappedCorner().first>-1 || eleman()->isTrappedOil() || oilLayer_->trappingCL().first>-1)
 	{
 		if (debugLevel>100) cout<<" nkdps ";
 		return -1e28;
-	} 
+	}
 
 	if(cntAngAdv_ < PI/2. - crnHafAngs_[0])              // Spontaneous
 		snapOffPrs = snapOffPrsImbNR();
 	else                                                   // Forced
 		snapOffPrs = waterInCorner_[0].cornerExists() ? waterInCorner_[0].advancingPc() : -1e64;
-   
+
 	return snapOffPrs-elem_.snapOfLongitCurvature()*comn_.sigmaOW();
 
 }
@@ -650,10 +650,10 @@ double Triangle::snapOffPrsImbNR() const
 	for(int i = 0; i < MAX_NEWT_ITR; ++i)               // Larger contact angles  => Need to use a NR technique
 	{
 
-		double apexDist2(0.), teta2(cntAngAdv_); 
+		double apexDist2(0.), teta2(cntAngAdv_);
 		waterInCorner_[1].getCApexDistConAng(apexDist2, teta2, oldPc, crnHafAngs_[1], tension, true, true);
 
-		double rL2 = -apexDist2*sin(crnHafAngs_[1])/(tension*sin(teta2+crnHafAngs_[1])); 
+		double rL2 = -apexDist2*sin(crnHafAngs_[1])/(tension*sin(teta2+crnHafAngs_[1]));
 
 		double func = oldPc - tension*(cos(cntAngAdv_)/tan(crnHafAngs_[0]) - sin(cntAngAdv_) + cos(teta2)/tan(crnHafAngs_[1]) - sin(teta2)) / L0pL2;
 
@@ -688,7 +688,7 @@ double Triangle::snapOffPrsImbNR() const
 	for(int i = 0; i < MAX_NEWT_ITR; ++i)               // Larger contact angles  => Need to use a NR technique
 	{
 
-		double pinnedApexDistance, hingAng(cntAngAdv_); 
+		double pinnedApexDistance, hingAng(cntAngAdv_);
 		waterInCorner_[2].getCApexDistConAng(pinnedApexDistance, hingAng, oldPc, crnHafAngs_[2], comn_.water().interfacialTen(), true, true);
 
 
@@ -721,7 +721,7 @@ double Triangle::snapOffPrsImbNR() const
 		<< "cntAngAdv_: " << cntAngAdv_                               << endl
 		<< "trapping ind" << elem_.trappingOil().first << endl
 		<< "error " << errorVal<<oldPc << endl
-		<< "=================================================" << endl;   
+		<< "=================================================" << endl;
 
 		 //exit(-1);
 
@@ -741,7 +741,7 @@ double Triangle::snapOffPrsDrainFromCorner(bool& casePossible, int cor) const
 {
 	if(!oilLayer_[cor].exists()) return 0.;
 
-	if (cntAngRec_ <= PI/2. + crnHafAngs_[cor])  { 
+	if (cntAngRec_ <= PI/2. + crnHafAngs_[cor])  {
 		casePossible=true;
 		return oilLayer_[cor].receedingPc();
 	}
@@ -865,6 +865,3 @@ double Square::snapOffPrsDrainSpontNR() const
 {
 		return (comn_.sigmaOW()/R_) * (cos(cntAngRec_) + sin(cntAngRec_));
 }
-
-
-

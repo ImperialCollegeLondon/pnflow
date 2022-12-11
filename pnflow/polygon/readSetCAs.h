@@ -1,7 +1,7 @@
 #ifndef READSETCAS_H
 #define READSETCAS_H
 void readSetCAs(istringstream& data, const vector<Elem*>& elemans, int nBpPors, mstream& out_)
-{ 
+{
 	string elmTyp("pore"), fnam;
 	int CAMdl(4);
 	const double piy180 = acos(-1.) / 180.;
@@ -61,4 +61,3 @@ void readSetCAs(istringstream& data, const vector<Elem*>& elemans, int nBpPors, 
 
 }
 #endif
-

@@ -50,7 +50,7 @@ public:
 	virtual bool containCOil() const   {return (bulkFluid_->ff() == OIL);	}
 
 
-	virtual bool canNOTReconfigure(const Fluid& injectant) const  
+	virtual bool canNOTReconfigure(const Fluid& injectant) const
 	{  ///. only dealing with centre reconfiguration
 		if (bulkFluid_==&injectant) return true;
 
@@ -88,8 +88,8 @@ public:
 	bool affectsAdjEntryPc(const Fluid& retreadingFluid) const {return bulkFluid_ == &retreadingFluid;}
 	const Fluid* bulkFluid() const {return bulkFluid_;}
 
-	const Elem* const eleman() const {return &elem_;}   
-	Elem* ChParent() const {return &elem_;}   
+	const Elem* const eleman() const {return &elem_;}
+	Elem* ChParent() const {return &elem_;}
 
 	void setClusterIndex(int wtindex) {tetaClusterIndex_ = wtindex;}
 	inline int clusterIndex() const {return tetaClusterIndex_;}
@@ -140,7 +140,7 @@ protected:
 	double                          R_;
 	const Fluid*                    bulkFluid_;
 	bool                            waterConnection_;
-	bool                            oilConnection_;  
+	bool                            oilConnection_;
 
 	bool                            hasDisConectedCentreWCornerW_;
 	bool                            virginState_;
@@ -174,7 +174,7 @@ inline double ElemModel::getWaterConductance(FluidBlob blob, bool neighbourToInO
 {
 	if(neighbourToInOutlet)
 		return SPConductance(area_, comn_.water().viscosity());/// TODO: such a good job,
-	else 
+	else
 	if(blob == filmBlob)
 		return conductanceWater_.first*0.999999999+0.000000001*conductanceWater_.second;
 	else
@@ -188,7 +188,7 @@ inline double ElemModel::getConductance(const Fluid& fluid,  bool neighbourToInO
 		flowConductance = SPConductance(area_, fluid.viscosity()); /// TODO: such a good job,
 	else if(fluid.isOil())
 		flowConductance = conductanceOil_;
-	else 
+	else
 		flowConductance = std::max(conductanceWater_.first,0.) + std::max(conductanceWater_.second,0.);
 
 	dbgAsrt(flowConductance > 1e-50);
@@ -197,7 +197,7 @@ inline double ElemModel::getConductance(const Fluid& fluid,  bool neighbourToInO
 		//std::cout<<"\nError: zero flow conductance "<<"\n" ;
 		//if(fluid == &comn_.oil())        std::cout<<" for oil phase "<<"\n";
 		//if(neighbourToInOutlet)        std::cout<<" which is neighbourToInOutlet"<<"\n";
-		//std::cout<<"  SPConductance = "<<SPConductance(area_, fluid->viscosity())<<"  bulkOil"<<conductCOil()<<std::endl; 
+		//std::cout<<"  SPConductance = "<<SPConductance(area_, fluid->viscosity())<<"  bulkOil"<<conductCOil()<<std::endl;
 	//}
 
 
@@ -208,4 +208,3 @@ inline double ElemModel::getConductance(const Fluid& fluid,  bool neighbourToInO
 
 
 #endif
-

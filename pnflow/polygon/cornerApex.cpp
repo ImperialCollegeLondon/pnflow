@@ -51,7 +51,7 @@ void CornerApex::createFilm(double pc, double conAngRec, double conAngAdv, doubl
 
 
 
-	initedApexDist_ = (intfacTen/pc)*cos(conAng+halfAng)/sin(halfAng); // TODO: valgrind error uninitialized halfAng 
+	initedApexDist_ = (intfacTen/pc)*cos(conAng+halfAng)/sin(halfAng); // TODO: valgrind error uninitialized halfAng
 	ensure(initedApexDist_ > 0.);
 	if (initedApexDist_ > parentShape_->RRR()/tan(halfAng)*2) 	{ cout<<" xkg ";	}
 	creationPc=pc;
@@ -68,7 +68,7 @@ void CornerApex::createFilm(double pc, double conAngRec, double conAngAdv, doubl
 	}
 
 }
- 
+
 
 //! sets m _pinnedApexDist m _advancingPc m _receedingPc based on pc....
 void CornerApex::finitCornerApex(double pc, double conAngRec, double conAngAdv, double halfAng, double intfacTen, bool oilInj, bool overwriteTrapping)  {
@@ -78,7 +78,7 @@ void CornerApex::finitCornerApex(double pc, double conAngRec, double conAngAdv, 
 	if( inited_/*(overwriteTrapping && nTraps < 2)*/ || nTraps < 1)  {
 		//double apxDistOld=initedApexDist_;
 		double apxDist;
-		double conAng(oilInj ? conAngRec : conAngAdv); 
+		double conAng(oilInj ? conAngRec : conAngAdv);
 		getCApexDistConAng(apxDist, conAng, pc, halfAng, intfacTen, true); ///. warnign don't send initedApexDist_ directly
 		if (apxDist <=0. || apxDist > parentShape_->RRR()/tan(halfAng)*2) 	{ cout<<" xkf ";	}
 
@@ -245,12 +245,10 @@ void CornerApex::getCApexDistConAng(double & apexDist, double & conAng, double p
 		ensure(conAng >= 0. && conAng <=  PI);
 	}
 
-	if (debug) if (apexDist > parentShape_->RRR()/tan(halfAng)*2) 
+	if (debug) if (apexDist > parentShape_->RRR()/tan(halfAng)*2)
 	{
 		cout<<" syp ";
 	}
 	 if (debug) cout<<" pc"<<pc<<",conAng"<<conAng<<" "<<endl;
 
 }
-
-

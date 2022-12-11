@@ -1,7 +1,7 @@
 #ifndef ELEMENT_CnM_H
 #define ELEMENT_CnM_H
 
-//! Pore and Throats and their connectivity 
+//! Pore and Throats and their connectivity
 
 
 #include <set>
@@ -11,7 +11,7 @@
 
 #define OutI  1  //! outlet pore index
 
- 
+
 
 class RockType;
 
@@ -195,7 +195,7 @@ public:
 	double flowVolume() const {return flowVolume_;}
 	double clayVolume() const {return clayVolume_;}
 	double waterSaturation() const {return waterSaturation_;}
-	double flowVolumeX() const {return flowVolume_+clayVolume_;} 
+	double flowVolumeX() const {return flowVolume_+clayVolume_;}
 	double saturation() const  {return waterSaturation_;}
 
 	Elem* neib(int conn) const {return cnctions_[conn];}
@@ -236,9 +236,9 @@ public:
 
 
 	void IncreaseNumOilCentreFeederNeis() {++numOilCentreFeederNeis_;}
-	void ReduceNumOilCentreFeederNeis() {--numOilCentreFeederNeis_;}    
+	void ReduceNumOilCentreFeederNeis() {--numOilCentreFeederNeis_;}
 	void IncreaseNumWatCentreFeederNeis() {++numWatCentreFeederNeis_;}
-	void ReduceNumWatCentreFeederNeis() {--numWatCentreFeederNeis_;}    
+	void ReduceNumWatCentreFeederNeis() {--numWatCentreFeederNeis_;}
 	int numOilCentreFeederNeis() const {return numOilCentreFeederNeis_;}
 	int num_WatCentreFeederNeis() const {return numWatCentreFeederNeis_;}
 
@@ -265,7 +265,7 @@ public:
 
 
 	///.  rare funcs
-	const std::pair<int, double>& trappingOil() const {return trapIndexOil_;}    
+	const std::pair<int, double>& trappingOil() const {return trapIndexOil_;}
 	inline const std::pair<int, double>& trappingWat(FluidBlob blob) const;
 	inline void setWatFilmTrappingFromBulk();
 	inline int trapIndexWat(FluidBlob blob) const;
@@ -308,16 +308,16 @@ protected:
 		inline Elem* nextUntrappedOil(TrappingCriteria criteria);
 
 		inline Elem* nextSuccessorWat(TrappingCriteria criteria, FluidBlob& blob);
-	bool foundEscapePathWat_trapOtherwise(double pc, FluidBlob startPt, std::vector< std::pair<Elem*, FluidBlob> >& stor, TrappingCriteria criteria); 
-		   
+	bool foundEscapePathWat_trapOtherwise(double pc, FluidBlob startPt, std::vector< std::pair<Elem*, FluidBlob> >& stor, TrappingCriteria criteria);
+
 	inline void trapOil(double prs);
-	inline void trapWat(double prs, FluidBlob blob);    
+	inline void trapWat(double prs, FluidBlob blob);
 
 
-///.  connected path search for solver 
+///.  connected path search for solver
 	bool markWaterElemForSolver(const Elem*elem, fluidf ff) const;
 	inline const Elem* nextSuccSolvrWat(bool& outletFound, fluidf ff) const; // water and electricity
-	inline const Elem* nextSuccSolvrOil(bool& outletFound) const;    
+	inline const Elem* nextSuccSolvrOil(bool& outletFound) const;
 
 
 	void checkConnections() const; ///.  used in calcVolume_CheckIntegr
@@ -417,7 +417,7 @@ public:
 	virtual void writeNetworkDataBinary(std::ostream& out) const;
 	virtual void updateLatticeIndex(int newIdx) {index_ = newIdx;}
 
-	void  neiSet(int i, Pore* por)  { neiPores_[i] = por;} // cnctions_[i] = por; 
+	void  neiSet(int i, Pore* por)  { neiPores_[i] = por;} // cnctions_[i] = por;
 	Pore*       neiPCh(int i)       { return neiPores_[i]; }
 	const Pore*	neiP(int i) const   { return neiPores_[i]; }
 	//int ihOf(const Elem* neip) const  {return (neiPores_[1]==neip)? 1 : ((neiPores_[0]==neip)? 0: 2);}
@@ -434,7 +434,7 @@ public:
 private:
 
 	int                          index_;
-	Pore*                        neiPores_[2]; 
+	Pore*                        neiPores_[2];
 	std::array<double,2>         poreLength_;
 	double                       length_;
 };
@@ -510,4 +510,3 @@ inline void Elem::unTrapWat(FluidBlob blob)
 
 
 #endif
-

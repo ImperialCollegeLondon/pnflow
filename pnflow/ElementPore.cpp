@@ -37,7 +37,7 @@ using namespace std;
 
 Pore::Pore(const CommonData& common, int indx, dbl3 nod, double radius, double volume,
 		   double volumeClay, double shapeFactor, bool insideSlvBox, bool insideSatBox,
-		   double initSolverPrs, vector<Elem*>& connThroats, int typ  ) 
+		   double initSolverPrs, vector<Elem*>& connThroats, int typ  )
    : Elem(common, indx, nod, radius, volume, volumeClay, shapeFactor, connThroats.size(), true,typ)  {
 	isInCalcBox_ = insideSatBox;
 	isInsideSolverBox_ = insideSlvBox;
@@ -105,7 +105,7 @@ void Pore::prepare2()  {
 /// they wont suddenly not contain water.
 InOutBoundary::InOutBoundary(const CommonData& common, int indx, dbl3 node, vector<Elem*>& connThroats)
 	 : Pore(common, indx, node, 1e-12, 0., 0., sqrt(3.)/36.+(indx>1), false, false, 0., connThroats,0)///.  warning hardcode pore type, last entry
-{  	 // Warning radius here has a big impact if calc_box include boundary throats, 
+{  	 // Warning radius here has a big impact if calc_box include boundary throats,
 	         // R<1e-13 leads to Error message
 	Polygon* shyp = dynamic_cast<Polygon*>(model_);
 	if(shyp)  {
@@ -164,17 +164,17 @@ void InOutBoundary::prepare2()  {
 		{	vector<Elem*> neis(1,tr); // dumb!!
 			Pore* mirr = new Pore(comn_, index(), projectAx(tr->neiP(1)->node(),index(),node()), tr->RRR()*1.1,
 				0., 0., tr->model()->shapeFactor(), false, false, 0., neis,0);
-			miroredPores_[i]=mirr; 
+			miroredPores_[i]=mirr;
 			 tr->neiSet(0, mirr);//if(index()>1)
 		}
 		else if(tr->neiP(1)->index()==index())  {	vector<Elem*> neis(1,tr); // dumb!!
 			Pore* mirr = new Pore(comn_, index(), projectAx(tr->neiP(0)->node(),index(),node()), tr->RRR()*1.1,
 				0., 0., tr->model()->shapeFactor(), false, false, 0., neis,0);
-			miroredPores_[i]=mirr; 
-			tr->neiSet(1, mirr);//if(index()>1) 
+			miroredPores_[i]=mirr;
+			tr->neiSet(1, mirr);//if(index()>1)
 		}
 	  else cout<<" Errorisdj ";
-	  if(index()>1) 
+	  if(index()>1)
 	  { //ChModel()->bulkFluid(&comn_.noFluid());
 		  	ChModel()->waterConnection_ = false;  ChModel()->oilConnection_ = false;  ChModel()->bulkFluid_ = &comn_.noFluid();
 	  }
@@ -184,4 +184,3 @@ InOutBoundary::~InOutBoundary()  {
 	for(auto& mirr:miroredPores_)
 		if(mirr) { delete mirr; mirr=nullptr; }
 }
-

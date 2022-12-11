@@ -24,6 +24,7 @@ or contact Ali Q. Raeini by email: a.qaseminejad-raeini@imperial.ac.uk
 #include "blockNet.h"
 #include "writers.h"
 #include "profilers.h"
+#include "voxelImageI.h"
 
 using namespace std;
 
@@ -44,7 +45,7 @@ inline void usage(int detailed=1)  {
 
 		cout<<" For more information, please visit Imperial College pore-scale modelling website:\n"
 		      "https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling\n"
-			   "or contact Ali Q. Raeini: a.q.raeini@imperial.ac.uk"<<endl;
+			   "or contact Ali Q. Raeini: a.q.raeini@gmail.com"<<endl;
 	}
 }
 
@@ -65,7 +66,7 @@ int main(int argc, char* argv[])  {
 			if (hasExt(arg1,".am") || hasExt(arg1,".tif") || hasExt(arg1,".gz") || hasExt(arg1,".raw")) arg1="";
 			inputDataNE cfg(arg1);
 			if(arg1.empty()) cfg.set("ElementDataFile",fnam);
-			
+
 				nextract(cfg,true);
 
 	}
@@ -78,7 +79,7 @@ int main(int argc, char* argv[])  {
 #endif
 
 int nextract(inputDataNE& cfg, bool verbose)  {
-	
+
 	if (!cfg.getOr("overwrite", true) && ifstream(cfg.netName()+".gnm")) { // overwrite by default,  sync with WRITENETWORKG(), sync with tests
 		cout<<"\n File "+cfg.netName()+".gnm"+" exists, delete it to regenerate, or set keyword `overwrite T;`\n"<<endl;  return 2; }
 
@@ -105,8 +106,8 @@ int nextract(inputDataNE& cfg, bool verbose)  {
 	Timing tim;
 															tim("Init");
 	cfg.init(verbose); // process input file
-	cfg.readImage(); // read image 
-	cfg.createSegments();  // RLE compress image 
+	cfg.readImage(); // read image
+	cfg.createSegments();  // RLE compress image
 
 															tim("createMedialSurface");
 	medialSurface* srf;
@@ -169,4 +170,3 @@ int nextract(inputDataNE& cfg, bool verbose)  {
 
  return 0;
 }
-

@@ -134,7 +134,7 @@
 
 
 	for (int c = std::max(frz1-1,-k); c <=  min(int(sqrt(frz2))+1,nz-k-1); ++c)	{
-	  //if( isInside(i, j, k+c))  
+	  //if( isInside(i, j, k+c))
 	  {const int blim=min(int(sqrt(frz2-c*c)+1.001),ny-j-1);
 		for (int b = std::max(std::max(int(-sqrt(frz2-c*c)),fry1)-1,-j); b<=blim  ; ++b)  {
 
@@ -279,7 +279,7 @@ void medialSurface::calc_distmaps() //search  MBs at each voxel
 void medialSurface::smoothRadius()  {
 
 	(cout<<" smoothing R  ").flush();
-	
+
 
 
 

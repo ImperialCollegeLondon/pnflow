@@ -25,7 +25,7 @@ class ElemRadCmpRed
 public:
 	bool operator() (const Elem* elem1, const Elem* elem2) const
 	{  return (elem1->RRR() > elem2->RRR());  }
-	
+
 	bool operator() (const VoidElem* elem1, const VoidElem* elem2) const
 	{  return (elem1->RRR() > elem2->RRR());  }
 };

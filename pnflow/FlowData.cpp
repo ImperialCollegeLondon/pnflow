@@ -187,5 +187,3 @@ void GNMData::writeResultData(bool wantRelPerm, bool wantResIdx, const std::stri
 	out_<<"\n\n";
 
 }
-
-

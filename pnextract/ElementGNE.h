@@ -52,7 +52,7 @@ class segment {
 class segments  {
  public:
 	segments(): s(nullptr), cnt(0) {};
-	void reSize(int size){ 
+	void reSize(int size){
 		if (!s) s = new segment[size];
 		else {std::cout<<" \nError in segments "<<size_t(s)<<std::endl; s = new segment[size];} }
 
@@ -265,4 +265,3 @@ inline double dist(const medialBall* i, const medialBall* j) {
 	return sqrt(double((i->fi-j->fi)*(i->fi-j->fi)+(i->fj-j->fj)*(i->fj-j->fj)+(i->fk-j->fk)*(i->fk-j->fk)));
 }
 #endif
-

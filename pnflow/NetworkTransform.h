@@ -47,11 +47,11 @@ T sum(std::array<T,N>& vs)
 
 
 class NetworkTransform
-{  
+{
 
 template<class ET, typename T, T> class Correlate;
 
-	template<class ET, class ET2, typename R, R (ET2::*mfcor)() const> //typename MFScale, typename MFWeight, 
+	template<class ET, class ET2, typename R, R (ET2::*mfcor)() const> //typename MFScale, typename MFWeight,
 	class Correlate <ET, R (ET2::*)() const, mfcor>
 	{ public:
 		 vector<double> randCorrelate(vector<ET*> & elms, string correlate,  double minv, double maxv, double deltaExp, double etaExp, NetworkTransform& randGen)
@@ -105,7 +105,7 @@ template<class ET, typename T, T> class Correlate;
 	}
 
 	void  fixRadius(Throat* tshap)
-	{ 
+	{
 		double	Rtppsf[3]={1.,1.,1.};
 		double	Gtppsf[3]={1.,1.,1.};
 
@@ -144,7 +144,7 @@ template<class ET, typename T, T> class Correlate;
 	double  rand01() const   { return uniformRand01_(randomGenerator_); }
 	double weibull(double minv, double maxv, double deltaExp, double etaExp) const // deltaExp = pow(beta,etaExp)
 	{	if(deltaExp < 0. || etaExp < 0.)    return minv + (maxv-minv)*rand01(); // Uniform Distribution
-		else  return (maxv-minv) * pow(-deltaExp*log(1.-rand01()*(1.-exp(-1./deltaExp))), 1./etaExp) + minv; // Weibull truncated up to 1., scaled between min and max  	// return (maxv-minv) * pow(-deltaExp*log(    rand01()*(1.-exp(-1./deltaExp))+exp(-1./deltaExp)), 1./etaExp) + minv;   
+		else  return (maxv-minv) * pow(-deltaExp*log(1.-rand01()*(1.-exp(-1./deltaExp))), 1./etaExp) + minv; // Weibull truncated up to 1., scaled between min and max  	// return (maxv-minv) * pow(-deltaExp*log(    rand01()*(1.-exp(-1./deltaExp))+exp(-1./deltaExp)), 1./etaExp) + minv;
 	}
 	mutable std::default_random_engine				 randomGenerator_;
 	mutable std::uniform_real_distribution<double>  uniformRand01_;
@@ -160,14 +160,9 @@ void modifyShapeFactor(int model, const string& options, vector<Elem*>& elems, c
 void setRadiiFromFile(vector<Elem*>& elems, const string& fileName, double lowCO, double hiCO, bool forPores);
 
 
-inline double weibull(double minv, double maxv, double delta, double eta) 
+inline double weibull(double minv, double maxv, double delta, double eta)
 {
 	double randm = double(rand())*(1./double(RAND_MAX));
 	if(delta < 0. && eta < 0.) return minv + (maxv-minv)*randm;                   // Uniform Distribution
 	else    return (maxv-minv) * pow(-delta*log(randm*(1.-exp(-1./delta))+exp(-1./delta)), 1./eta) + minv;
 }
-
-
-
-
-

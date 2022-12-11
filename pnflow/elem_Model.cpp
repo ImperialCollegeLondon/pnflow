@@ -34,6 +34,3 @@ ElemModel::ElemModel(Elem& parent, const CommonData& common, double radius, int 
 	Pc_pistonTypeAdv_ = -20000.*comn_.sigmaOW()*(-2.) / R_;     ///. TOBE initialised properly later, delete to check for errors
 	Pc_pistonTypeRec_ = -20000.*comn_.sigmaOW()*(2.) / R_;     ///. TOBE initialised properly later, delete to check for errors
 }
-
-
-

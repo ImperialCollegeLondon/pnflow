@@ -58,11 +58,11 @@ class CommonData : public GNMData
 	CommonData(const InputData& input)
 	:	GNMData(input,""),
 			maxEverCappPress_(0.),
-			minEverCappPress_(0.),   
+			minEverCappPress_(0.),
 		   trappedRegionsOil_(trappedRegionsOil__),
 		   trappedRegionsWat_(trappedRegionsWat__),
 		   informative(input.informative)
-	{ 
+	{
 		circWatCondMultFact_ = input.getOr("SURFACE_FILM_COND_FACT", 0.);
 		input.getOr("GRAV_CONST",dbl3(0.,0.,-9.81));
 		input.poreFillWgt(poreFillWeights_);
@@ -100,7 +100,7 @@ class CommonData : public GNMData
 		std::cout<<"W.density:"<<water_.density()<<std::endl;
 		std::cout<<"O.viscosity:"<<oil_.viscosity()<<std::endl;
 		std::cout<<"O.resistivity:"<<oil_.resistivity()<<std::endl;
-		std::cout<<"O.density:"<<oil_.density()<<std::endl; 
+		std::cout<<"O.density:"<<oil_.density()<<std::endl;
 
 	}
 
@@ -198,13 +198,13 @@ class CommonData : public GNMData
 	int numCircles() const {return numCircles_;}
 	int numTriangles() const {return numTriangles_;}
 	int numSquares() const {return numSquares_;}
-	int numPorous() const {return numPorous_;}    
+	int numPorous() const {return numPorous_;}
 
 	std::ofstream                        dbgOut;
 
  private:
 	Fluid                                       nof_; ///. TODO make const
-	Fluid                                       rockWaterSurface_;   
+	Fluid                                       rockWaterSurface_;
 	Fluid                                       rockWaterSurface__OW;
 
 	const Fluid*                                  injectant_;

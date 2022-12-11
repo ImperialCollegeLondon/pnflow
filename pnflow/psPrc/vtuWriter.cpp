@@ -1,8 +1,9 @@
 
 /*---------------------------------------------------------------------------*\
-2015:  Developed by Ali Q Raeini  email: a.q.raeini@imperial.ac.uk
+Developed by:
+ - Ali Q Raeini (2015)
 \*---------------------------------------------------------------------------*/
- 
+
 
 #include <vector>
 #include <cmath>
@@ -28,11 +29,6 @@
 
 
 
-
-
-
-
-
 using namespace std;
 
 
@@ -45,7 +41,7 @@ results3D::results3D(const InputFile& input, const GNMData * comn, string output
 
 	istringstream ss;                  //!### Keyword **visualize** writes 3D visualization files
 	if(input.giv("visualize", ss)) //!##### Keyword **visualize:**  	rScaleFactor 	thetaResulution	WriteInit	WriteOInj	WriteWInj	WriteAllSteps	WriteCorners;
-	{ 
+	{
 		if(inform) cout<<"Initialising full-3D vtu visualization";
 
 		ss >> rScaleFactor_ ;
@@ -178,7 +174,7 @@ dbl3 rotateAroundVec( dbl3 y, double gamma, dbl3 n)
 }
 
 
-void insertHalfCorneroints(vector<dbl3>&  points, vector<int>& cellPoints, dbl3 c1, dbl3 c2, dbl3 nE1, dbl3 nE2, 
+void insertHalfCorneroints(vector<dbl3>&  points, vector<int>& cellPoints, dbl3 c1, dbl3 c2, dbl3 nE1, dbl3 nE2,
                           double lp_inrR, double lp_outR, ///<- layer location of corner premiter
 							double teta1, double tetaW, double rOuter, double hafAng, double CARelax = 1.)
 {
@@ -233,14 +229,13 @@ void insertHalfCorneroints(vector<dbl3>&  points, vector<int>& cellPoints, dbl3 
 	 }
 	}
 
-	///. 8 points each elem 
+	///. 8 points each elem
 	for (int i=0;i<8;++i)	cellPoints.pbak(findOrInsertPoint(points, hcPs[i]));
 
 }
 
 
 
- 
 
 void getSolverPoreResults
 (
@@ -910,7 +905,7 @@ void results3D::writeThroatLines(string fName, double pc, double tension, int ic
 	{	outp<<"		<DataArray type = \"Float32\" NumberOfComponents = \"3\" format = \"ascii\">\n";
 		//double Dx[2] = {0.05*(elems_[0]->node().x - elems_[1]->node().x), 0.05*(elems_[1]->node().x - elems_[0]->node().x)};
 		for(i=0; i<nElms; ++i)
-		{	dbl3 p(elems_[i]->node().x,elems_[i]->node().y,elems_[i]->node().z); outp<<p<< " ";		if (!((i+1)%20))	 outp<<'\n';	
+		{	dbl3 p(elems_[i]->node().x,elems_[i]->node().y,elems_[i]->node().z); outp<<p<< " ";		if (!((i+1)%20))	 outp<<'\n';
 			btrotcpis[i][0]=-1;btrotcpis[i][1]=-1; }
 		for(ib=0; ib<2; ++ib)
 		 for(i=0; i<int(bcncs.size()); ++i)

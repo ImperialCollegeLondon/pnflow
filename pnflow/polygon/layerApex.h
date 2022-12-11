@@ -2,7 +2,7 @@
 #define LAYERAPEX_H
 
 
-//! Oil layer connectivity and interface tracking 
+//! Oil layer connectivity and interface tracking
 
 #include <algorithm>
 #undef max
@@ -20,7 +20,7 @@ public:
 
 	LayerApex() : initedOLApexDist_(-1.) {};
 
-	//LayerApex(CornerApex* innerCornerApex, Polygon* parent, int subIndex) 
+	//LayerApex(CornerApex* innerCornerApex, Polygon* parent, int subIndex)
 		//: Apex(parent, subIndex),  parentShape_(parent), /*lastStablePc_(0.),*/, innerCornerApex_(innerCornerApex)
 
 
@@ -105,7 +105,7 @@ inline void LayerApex::removeLayer()
 	inited_ = false;
 	trappedCL_.first = -1;
 	isInWatFloodVec_ = false;
-	advancingPc_=receedingPc_+10000.; ///.to affect unpinned calculations 
+	advancingPc_=receedingPc_+10000.; ///.to affect unpinned calculations
 }
 
 

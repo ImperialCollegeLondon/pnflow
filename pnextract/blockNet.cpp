@@ -1,9 +1,8 @@
 
 #include "blockNet.h"
 
-//#include "vxlImage_manip.h"
+#include "voxelImageI.h"
 
-//clock_t myTime::start = clock();
 
 
 
@@ -150,7 +149,7 @@ void blockNetwork::CreateVElem(size_t startValue)  { ///### map pore labels from
 			float ex = sqrt(r2);
 			for (float xpa = max((x-ex),0.5f); xpa <=  min((x+ex),cg.nx-0.5f); xpa+=1.0f)  {
 				 float ey = sqrt(r2-(xpa-x)*(xpa-x));
-				 for (float ypb = max((y-ey),0.5f); ypb <=  min((y+ey),cg.ny-0.5f); ypb+=1.0f)  { 
+				 for (float ypb = max((y-ey),0.5f); ypb <=  min((y+ey),cg.ny-0.5f); ypb+=1.0f)  {
 					float ez = sqrt(r2-(xpa-x)*(xpa-x)-(ypb-y)*(ypb-y));
 				   for (float zpc = max((z-ez),0.5f); zpc <=  min((z+ez),cg.nz-0.5f); zpc+=1.0f)  {
 					 int idj = VElems(xpa+1,ypb+1,zpc+1);
@@ -366,7 +365,7 @@ void blockNetwork::createNewThroats(medialSurface*& srf)  {
 			  if (p1ID>= firstPore)	++(poreIs[p1ID]->surfaceArea);
 			  if (p2ID>= firstPore)	++(poreIs[p2ID]->surfaceArea);
 			}
-			
+
 			if (p1ID>= firstPore) { ++(poreIs[p1ID]->volumn);}
 		 }
      }
@@ -501,7 +500,7 @@ void blockNetwork::createNewThroats(medialSurface*& srf)  {
 				throatNE* trot = throatIs[p1->contacts[nei]];
 				if(p1ID>nei)  {
 					dbgAsrt(srf->vxl(i-1,j-1,k-1));
-					trot->toxels2.push_back( (srf->vxl(i-1,j-1,k-1)) ); 	
+					trot->toxels2.push_back( (srf->vxl(i-1,j-1,k-1)) );
 				}
 				else {
 					dbgAsrt(srf->vxl(i-1,j-1,k-1));
@@ -527,7 +526,7 @@ void blockNetwork::createNewThroats(medialSurface*& srf)  {
 
 
 	cout<<" calculating throat radii";cout.flush();
-	for (throatNE* tr : throatIs)  { 
+	for (throatNE* tr : throatIs)  {
 		if (tr->toxels2.size()>0)  {
 			voxel* tvox2=*(tr->toxels2.begin());// get the largest distance map throat voxel
 			if (tvox2->ball!=nullptr)  {

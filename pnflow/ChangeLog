@@ -1,5 +1,5 @@
 ---------------------- -*- Markdown -*- -------------------------
-	Classical pore-network flow simulation code  -  pnflow     
+	Classical pore-network flow simulation code  -  pnflow
 		See the file main.cpp for the copyright notice
 
 --------------------------------------------------------------------
@@ -21,24 +21,24 @@ ChangeLog,  a summary of main changes and updates:
 	The code has been benchmarked for compatibility with pnextract
 	network extraction throat's shape factor and length assignments.
 
-2016  Jiazuo Zhang, Ali Q. Raeini and Matt Jackson: 
+2016  Jiazuo Zhang, Ali Q. Raeini and Matt Jackson:
 	Wetted perimeter and spontanuous potential calculation
 
 2014-2015	Ali Q Raeini
-	Added support for Hypre linear equation solver. The old  AMG solver 
+	Added support for Hypre linear equation solver. The old  AMG solver
 	is moved to 'bu/' folder.
 
 2014-2015	Ali Q Raeini
-	Visualization and statistics utilities added to folder psPrc/. 
+	Visualization and statistics utilities added to folder psPrc/.
 
 2013-2014	Ali Q Raeini
-	Code restructuring and clean-up, in preparation for the development 
+	Code restructuring and clean-up, in preparation for the development
 	of a generalized network flow simulation code, funded by TOTAL.
 
 2004     	Per Valvatne and Martin J Blunt
 	Original code developed:
 	Valvatne and Blunt (2004), [https://doi.org/10.1029/2003WR002627]
-	see [poreflow] code on [pore-scale-modelling-and-imaging] website 
+	see [poreflow] code on [pore-scale-modelling-and-imaging] website
 	for more information.
 
 
@@ -101,4 +101,3 @@ psPrc:
 
 (poreflow): [https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/software/two-phase-network-modelling-code]
 (pore-scale-modelling-and-imaging): [https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/]
-

@@ -7,7 +7,7 @@ import os, sys;  "msRoot" in os.environ or sys.exit("Retry after `source .../src
 #Paint sphere  I J K  R  InV OutV(ignored in Paint)
 nErrs=0
 cmds=''
-with open("spack4.mhd", 'w') as f1:	
+with open("spack4.mhd", 'w') as f1:
 	f1.write('DimSize = 40 40 40\n')
 	f1.write('replaceRange 0 255 0\n')
 	f1.write('reset dx  1   1   1\n\n')

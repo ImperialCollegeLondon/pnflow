@@ -1,7 +1,7 @@
 
 /*---------------------------------------------------------------------------*\
-written by: Ali Q Raeini  email: a.q.raeini@imperial.ac.uk
-Imperial College, Total project on network extraction
+Developed by: Ali Q Raeini  email: a.q.raeini@gmail.com
+Imperial College, TOTAL project on network extraction
 https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling/
 \*---------------------------------------------------------------------------*/
 
@@ -93,7 +93,7 @@ string vtkWriter_start(size_t nPoints, size_t nCells)  {
 	       "  <Piece NumberOfPoints = \""+_s(nPoints)+"\" NumberOfCells = \""+_s(nCells)+"\" >\n";
 }
 string  vtkWriter_finish()  {
-	return "  </Piece>\n"  
+	return "  </Piece>\n"
 	       " </UnstructuredGrid>\n"
 	       "</VTKFile>\n";
  }
@@ -215,7 +215,7 @@ void vtuWriteThroats(string basNam, const vector<poreNE*>& poreIs, const vector<
 	for_i(points)  {	outp << points[i]*dx+X0<< _nl_;  }
 	outp<<"\n\t\t</DataArray>\n";
 	outp<<"\t</Points>\n";
-	
+
 	outp<<"\t<Cells>\n";
 	writeVtuArray(outp,"connectivity",cellPoints,"Int32");
 	writeVtu_i(outp, "offsets",cellTrots, 8*i+8,"Int32")
@@ -265,7 +265,7 @@ void addSphereSegment(	dbl3& c1, dbl3& c2, double rr,
 			dbl3 nCE1 = nCE2;///. edge-centre ncc vector
 			nCE2 = rotateAroundVec(nCE2, hafAngleAzim*2., lAzimuth1);///. edge-centre ncc vector
 
-			insertHalfCorner( points,cellPoints,c1,c2,  -nCE1,  -nCE2,  1e-18,  rr, 0.,0.,   0,  hafAng,0.); 
+			insertHalfCorner( points,cellPoints,c1,c2,  -nCE1,  -nCE2,  1e-18,  rr, 0.,0.,   0,  hafAng,0.);
 			cellPores.push_back(Indx);
 
 			insertHalfCorner( points,cellPoints,c1,c2,  -nCE1,  -nCE2,  1e-18,  rr,  0.,0.,   0,  -hafAng,0.);
@@ -340,7 +340,7 @@ void vtuWriteTHroatSpheres(string basNam, const vector<poreNE*>& poreIs, const v
 	outp<<"\n\t\t</DataArray>\n";
 	outp<<"\t</Points>\n";
 
-	outp<<"\t<Cells>\n";	
+	outp<<"\t<Cells>\n";
 	writeVtuArray(outp,"connectivity",cellPoints,"Int32");
 	writeVtu_i(outp, "offsets",cellPores, 8*i+8,"Int32");
 	writeVtu_i(outp, "types"  ,cellPores, 12,"UInt8");
@@ -579,4 +579,3 @@ void vtuWriteThroatMbMbs(string basNam,      /// ********* throat *********
 
 
 /// @endcond
-

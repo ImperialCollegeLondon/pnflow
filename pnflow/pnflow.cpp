@@ -1,7 +1,4 @@
 
-#ifdef MNFLOW  //DAR_1:
-#include "cnflowMS.cpp"
-#endif         //DAR_1;
 
 #define HASH_ENDS_LINE //backward compatibility, deprecated
 
@@ -11,7 +8,7 @@
 
 #ifndef __DATE__
  #define __DATE__  "2021"
-#endif 
+#endif
 
 
 using namespace std;
@@ -136,4 +133,3 @@ int main(int argc, char *argv[])  {
 }
 
 #endif
-

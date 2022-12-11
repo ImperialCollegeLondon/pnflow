@@ -312,7 +312,7 @@ void FlowDomain::Drainage(double requestedFinalSw, double requestedFinalPc,  dou
 
 		for(int i = nBSs_; i < int(elemans_.size()); ++i)
 			if(elemans_[i]->connectedToNetwork())
-				elemans_[i]->ChModel()->finitOilInjection(Pc_-elemans_[i]->gravityCorrection());       
+				elemans_[i]->ChModel()->finitOilInjection(Pc_-elemans_[i]->gravityCorrection());
 
 		out_<<"\n:/\n\n"<<endl;
 
@@ -374,7 +374,7 @@ void FlowDomain::singleDrainStep(Events<Apex*,PceDrainCmp>& evnts, double SwTarg
 
 
 ///. Third inner loop, only when option stableFilling_, until no layer ready for pop(?)
-			if(stableFilling_)  
+			if(stableFilling_)
 			 while(nextCentrInjPc(evnts) <= Pc_+1e-32)  {	//cout<<" StableFilling ";
 					FlowDomain::popUpdateOilInj(evnts, insideBox, cappPressCh_, PcTarget);
 					++numInv;
@@ -972,6 +972,3 @@ void FlowDomain::untrap_OilGanglia(Events<Apex*,PceDrainCmp>& evnts, Elem* elem)
 
 	}
 }
-
-
-

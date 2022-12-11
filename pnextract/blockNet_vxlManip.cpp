@@ -2,6 +2,7 @@
 #define voxelImageManip_H
 
 #include "blockNet.h"
+#include "voxelImageI.h"
 
 
 //class mapComparer  {  public:

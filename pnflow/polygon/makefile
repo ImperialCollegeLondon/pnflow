@@ -7,5 +7,3 @@ all:
 
 clean:
 	(cd ../ && make clean)
-
-

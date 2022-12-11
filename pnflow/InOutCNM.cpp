@@ -9,7 +9,7 @@ void FlowDomain::initNetworkOld(InputData& input)  {
 	/// in a vector. Elem 0 and 1 are inlet and outlet. Throats follows after the pores.
 	/// Since all rock elements contain pointers to connecting elements rather than vector indicies,
 	/// initialization has to be in correct order: throats, pores, in/outlet and finally finishing the
-	/// throats. 
+	/// throats.
 
 
 		const int     DUMMY_IDX = -99;
@@ -51,7 +51,7 @@ void FlowDomain::initNetworkOld(InputData& input)  {
 
 	//int FlowDomain::readAndCreateThroats(InputData& input, vector< pair<int,int> >& neoTrotNeis,
 									  //vector<Elem*>& throatsToInlet, vector<Elem*>& throatsToOutlet,
-									  //const vector< pair< int, double> >& insidePoreHashs, vector< int >& insideThroatHashs, int neoNPors)  
+									  //const vector< pair< int, double> >& insidePoreHashs, vector< int >& insideThroatHashs, int neoNPors)
 	{
 		cout<<"Reading throats"<<endl;
 
@@ -272,10 +272,10 @@ void Throat::writeNetworkDataBinary(ostream& out) const
 	pr.clayVol = clayVolume_;
 	out.write((char *)(&pr), sizeof(pr));
 
-} 
- 
- 
- 
+}
+
+
+
 
 /**
 // The pore data is written to file in following format:
@@ -349,8 +349,8 @@ void Pore::writeNetworkDataBinary(ostream& out) const
 		out.write((char *)(&idx), sizeof(int));
 	}
 
-} 
- 
+}
+
 
 void InputData::writeNetwork(bool& writeNet, bool& writeBin, string& netName) const
 {
@@ -499,4 +499,3 @@ void FlowDomain::createMatlabLocationData() const
 	outt << "];" << endl;
 	outt.close();
 }
-

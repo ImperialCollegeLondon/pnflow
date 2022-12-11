@@ -12,7 +12,7 @@ void Circle::finitOilInjection(double cappPrs)  {
 	elem_.resetEventIndex();
 	//elem_.setInWatFloodVec(false);
 	elem_.setInOilFloodVec(false);
- 
+
 	//if(bulkFluid_ == &comn_.oil()) return;
  //
 	//m _maxConAngSpont = PI/2.;
@@ -21,8 +21,8 @@ void Circle::finitOilInjection(double cappPrs)  {
 	//calcCentreEntryPrsOilInj();
 	//timestep = -1;
 
-} 
- 
+}
+
 void Circle::initOilInjection(double cappPrs)  {
 	ensure(elem_.nCncts() > 0);
 	//elem_.resetEventIndex();
@@ -30,19 +30,19 @@ void Circle::initOilInjection(double cappPrs)  {
 	 ensure(!elem_.isInOilFloodVec());
 
 	if(bulkFluid_ == &comn_.oil()) return;
- 
+
 	//m _maxConAngSpont = PI/2.;
 	Pc_pistonTypeRec_ = comn_.sigmaOW()*(2.*cos(cntAngRec_)) / R_ ;
-  
+
 	//calcCentreEntryPrsOilInj();
-} 
+}
 
 ///. move to pore/throat classes (?)
-double Circle::centreEntryPrsOilInj()  { 
+double Circle::centreEntryPrsOilInj()  {
 	int num_OilCentreFeederNeis(elem_.numOilCentreFeederNeis());
 	double conAng(cntAngRec_);
 	double entryPres = Pc_pistonTypeRec_;
- 
+
 	if(elem_.iAmAPore() && conAng > PI/2. && num_OilCentreFeederNeis != 0)  {
 		double radSum(0.);
 		int iEvent(0);
@@ -142,17 +142,17 @@ void Polygon::initOilInjection(double cappPrs)  {
 
 	double conAng(cntAngRec_);
 
-	if(bulkFluid_ == &comn_.oil()) 
+	if(bulkFluid_ == &comn_.oil())
 	{
 		Pc_pistonTypeRec_ = comn_.sigmaOW()*(2.*cos(cntAngRec_)) / R_;
 		if (cappPrs > Pc_pistonTypeAdv_)  {
-			Pc_pistonTypeRec_ = cappPrs * cos(cntAngRec_) / cos(cntAngRec_); ///. Warning risk of division by zero 
+			Pc_pistonTypeRec_ = cappPrs * cos(cntAngRec_) / cos(cntAngRec_); ///. Warning risk of division by zero
 		}
 		return;
 	}
 
 
- 
+
 	double minLocalPcLastCycle(comn_.minPcLastImbCycle()-elem_.gravityCorrection());
 	double minLocalPc(comn_.minEverCappPress()-elem_.gravityCorrection());
 	double min_Pc = oilLayer_[0].stablePinnedInLastCycle(minLocalPcLastCycle) ? minLocalPcLastCycle: minLocalPc;
@@ -165,7 +165,7 @@ void Polygon::initOilInjection(double cappPrs)  {
 		/ (normThresPress-cos(cntAngAdv_)-12.*shapeFactor_*sin(cntAngAdv_));
 	rhsMaxRecConAng = min(max(rhsMaxRecConAng, -1.), 1.);  //Prevent falling out of range [1, -1]. This is only applicable when r is very small  and these elems are probably not drained.
 	maxConAngSpont_ = acos(rhsMaxRecConAng);
- 
+
 	if(conAng > maxConAngSpont_ && oilLayer_[0].exists())
 		Pc_pistonTypeRec_ = Pc_pistonType_DrainHing();
 	else if(conAng >= PI/2. - crnHafAngs_[0])
@@ -229,7 +229,7 @@ double Polygon::centreEntryPrsOilInj()  {
 
 	if(numLayers_ && oilLayer_[0].trappedOLayer().first < 0)  {
 	  double snapOffPrs = calcSnapOffPressureDrain();
-	  
+
 	  if(    oilLayer_[0].freeAtPrs(snapOffPrs)
 		 &&( num_OilCentreFeederNeis == 0 || pistonEntryPrs > snapOffPrs )
 		)  {
@@ -250,7 +250,7 @@ double Polygon::centreEntryPrsOilInj()  {
 		 else outD<<" e"<<displacementType_<<elem_.index()<<":"<<mySlfpistonEntryPrs<<" ";
 	}
 	return entryPres;
-  
+
 }
 
 
@@ -286,19 +286,19 @@ double Polygon::Pc_pistonType_DrainHing() const
 
 	double err, oldRad( tension / ( oilLayer_[0].stablePinnedInLastCycle(minLocalPcLastCycle) ? minLocalPcLastCycle: minLocalPc ) );
 	int itr(0);
- 
+
 	if(oilLayer_[0].trappedOLayer().first>-1)
 		oldRad = tension/oilLayer_[0].trappedOLayer().second;
- 
+
 	int numCorn(numCorners_);
-	while(numCorn >= 0) 
+	while(numCorn >= 0)
 	{
-  
+
 		for(itr = 0; itr < MAX_NEWT_ITR; ++itr)  {
 			double sumOne(0.), sumTwo(0.), sumThree(0.), sumFour(0.);
- 
+
 			for(int j = 0; j < numCorn; ++j)  {
-				if(oilLayer_[j].freeAtPrs(tension/oldRad) && !oilLayer_[j].forcedSnapOff(tension/oldRad))  { 
+				if(oilLayer_[j].freeAtPrs(tension/oldRad) && !oilLayer_[j].forcedSnapOff(tension/oldRad))  {
 					double hingConAng(cntAngRec_);// = oilLayer_[j].hingingConAngUntraped(tension/oldRad, cntAngRec_, crnHafAngs_[j], tension, true);
 					double meniscusApexDist;// = oilLayer_[j].getApexDistanceUntraped(tension/oldRad, hingConAng, crnHafAngs_[j], tension, true);
 					oilLayer_[j].getCAApexDistUntraped(meniscusApexDist,hingConAng, crnHafAngs_[j], tension/oldRad, tension, true);
@@ -306,13 +306,13 @@ double Polygon::Pc_pistonType_DrainHing() const
 
 					double partus(-meniscusApexDist * sin(crnHafAngs_[j])/oldRad);
 					ensure(partus >= -1. && partus <=  1.);
-  
+
 					sumOne += meniscusApexDist*cos(hingConAng);
 					sumTwo += hingConAng-crnHafAngs_[j]-PI/2.;
 					sumThree += asin(partus);
 					sumFour += meniscusApexDist;
 				}
-			} 
+			}
 
 			double newRad = (R_*R_/(4.*shapeFactor_) - oldRad*sumOne + oldRad*oldRad*sumTwo)
 				/ (2.*oldRad*sumThree + cos(cntAngRec_)*(R_/(2.*shapeFactor_) - 2.*sumFour));
@@ -325,8 +325,8 @@ double Polygon::Pc_pistonType_DrainHing() const
 		--numCorn;
 	}
 
-	cerr << "\n Error: failed to obtain valid value for threshold radius of curvature" 
-		 << "\n   in piston type displacement during drainage."   << "\n   Err  " << err << "        Con ang " << cntAngRec_*180./PI 
+	cerr << "\n Error: failed to obtain valid value for threshold radius of curvature"
+		 << "\n   in piston type displacement during drainage."   << "\n   Err  " << err << "        Con ang " << cntAngRec_*180./PI
 		 << "\n   Radius " << R_ << "   G " << shapeFactor_  << "\n   Iteration " << itr << endl ;    exit(-1);
 
 
@@ -339,7 +339,7 @@ double Polygon::Pc_pistonType_DrainHing() const
 bool Polygon::hasOilLayer_TrappedOutside_PcHsnapPc(double cappPrs) const
 { ///. checks if we need to untrap water, reCalcDrainEntryPrs ...
 	bool oilFlood(comn_.injectant() == &comn_.oil());
-  
+
 	return oilFlood && bulkFluid_ == &comn_.water() && numLayers_>0 && !oilLayer_[0].trappedOLayer().first /*&& oilTrp.second > snapOffPrs_*/ && cappPrs > calcSnapOffPressureDrain();
 }
 
@@ -361,16 +361,10 @@ bool Polygon::Pc_growStableOilLayerDrain_UseLess(double Pc, int corner)  {///. o
 
 
 		oilConnection_ = true;  ++numLayers_;
-		
+
 		ensure(numLayers_ > 0 && numLayers_ <=  numCorners_);
 
 		hasDisConectedCentreWCornerW_ = numLayers_ == numCorners_;
 	}
 	return oilLayer_[corner].exists();
 }
-
-
-
-
-
-

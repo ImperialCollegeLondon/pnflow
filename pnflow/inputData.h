@@ -199,4 +199,3 @@ inline void InputData::appendPoreData(int thisPoreIdx, int throatIdx, int thatPo
 
 
 #endif
-

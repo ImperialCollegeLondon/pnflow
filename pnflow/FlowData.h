@@ -137,7 +137,7 @@ class GNMData  {
 		else  return minv+(maxv-minv) * pow(-delta*log(1.-rand01()*(1.-exp(-1./delta))), 1./eta);  /// Weibull truncated up to 1., scaled between min and max
 		  /// wiki:  eta -> k ,  delta -> lambda^k
 	}
-	
+
 	double weibul1(const Weibul1& wb) const { return wb.quantile(rand01()); }
 
 	const Fluid&  oil()           const { return oil_; }

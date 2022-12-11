@@ -1,10 +1,10 @@
 
-all: msApp 
+all: msApp
 
 msSrc ?= $(abspath ../..)
 
-msCFLAGS +=  -I. -Wall -pedantic -DEXPERIMENTAL
-msLFLAGS += -static-libgcc -static-libstdc++ 
+msCFLAGS +=  -I. -Wall -pedantic
+msLFLAGS += -static-libgcc -static-libstdc++
 
 # keep grouped for auto package
 srcs = \
@@ -26,6 +26,3 @@ USE_CPP17=1
 USE_msMAKE=1
 USE_msTEST=1
 include  ${msSrc}/script/Makefile.in
-
-
-

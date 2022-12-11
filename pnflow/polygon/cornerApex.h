@@ -1,7 +1,7 @@
 #ifndef CORNERAPEX_H
 #define CORNERAPEX_H
 
-//! Water layer connectivity and interface tracking 
+//! Water layer connectivity and interface tracking
 
 #include <algorithm>
 
@@ -72,7 +72,7 @@ inline void CornerApex::markTrappingCorner(const std::pair< int, double >& trpIn
 	}
 	else if(trpInside.first == -1 && trappedCL_.first>-1)
 	{
-		trappedCL_.first = -1;    
+		trappedCL_.first = -1;
 		trapPcOld_ = trappedCL_.second;
 		trappedCL_.second = 0.;
 											  // If untrapping at a higher pressure
@@ -86,7 +86,7 @@ inline void CornerApex::removeCorner()
 	exists_ = false;
 	inited_ = false;
 	trappedCL_.first = -1;
-	advancingPc_=receedingPc_+10000.; ///.to affect unpinned calculations 
+	advancingPc_=receedingPc_+10000.; ///.to affect unpinned calculations
 
 }
 

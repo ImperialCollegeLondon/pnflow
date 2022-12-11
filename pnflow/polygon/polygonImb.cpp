@@ -9,32 +9,32 @@ void Circle::finitWaterInjection(double cappPrs)  {
 	//elem_.resetEventIndex();
 	//elem_.setInWatFloodVec(false);
 	//elem_.setInOilFloodVec(false);
- 
+
 	//if(bulkFluid_ == &comn_.water()) return;
  //
 	//m _maxConAngSpont = PI/2.;
 	//m _Pc_pistonTypeAdv = comn_.sigmaOW()*(2.*cos(cntAngAdv_)) / R_;
-  
+
 	//c alcCentreEntryPrsWatInj();
-} 
+}
 
 void Circle::initWaterInjection(double cappPrs)  {
 	ensure(elem_.nCncts() > 0);
 	elem_.resetEventIndex();
 	elem_.setInWatFloodVec(false);
 	//elem_.setInOilFloodVec(false);
- 
+
 	if(bulkFluid_ == &comn_.water()) return;
- 
+
 	//m _maxConAngSpont = PI/2.;
 	Pc_pistonTypeAdv_ = comn_.sigmaOW()*(2.*cos(cntAngAdv_)) / R_;
   	//timestep = -1;
 
 	//calcCentreEntryPrsWatInj();
-} 
- 
+}
+
 ///. move to pore/throat classes (?)
-double Circle::centreEntryPrsWatInj()  { 
+double Circle::centreEntryPrsWatInj()  {
 	int num_WatCentreFeederNeis(elem_.num_WatCentreFeederNeis());
 	double entryPres= Pc_pistonTypeAdv_;
 
@@ -73,7 +73,7 @@ double Circle::centreEntryPrsWatInj()  {
 			maxNeiPistonEntryPrs = max( maxNeiPistonEntryPrs,
 				elem_.neib(i)->model()->Pc_pistonTypeAdv());
 	}
-	if (maxNeiPistonEntryPrs<-1e25 && !conductAnyWater()) 
+	if (maxNeiPistonEntryPrs<-1e25 && !conductAnyWater())
 	{
 		cout<<"'";cout.flush();
 		//cout<<elem_.neib(0)->model()[100000000].Pc_pistonTypeAdv();
@@ -137,11 +137,11 @@ void Polygon::initWaterInjection(double cappPrs)  {
 		}
 	}
 
-	if(bulkFluid_ == &comn_.water()) 
+	if(bulkFluid_ == &comn_.water())
 	{
-		Pc_pistonTypeAdv_ = comn_.sigmaOW()*(2.*cos(cntAngAdv_)) / R_;     
+		Pc_pistonTypeAdv_ = comn_.sigmaOW()*(2.*cos(cntAngAdv_)) / R_;
 		if (cappPrs < Pc_pistonTypeRec_)  {
-			Pc_pistonTypeAdv_ = cappPrs * cos(cntAngAdv_) / cos(cntAngRec_); ///. Warning risk of division by zero 
+			Pc_pistonTypeAdv_ = cappPrs * cos(cntAngAdv_) / cos(cntAngRec_); ///. Warning risk of division by zero
 		}
 		return;
 	}
@@ -151,7 +151,7 @@ void Polygon::initWaterInjection(double cappPrs)  {
 
 	{
 		//double recConAng(waterInCorner_[0].cornerExists() ? waterInCorner_[0].getCApex DistConAng(cappPrs, cntAngAdv_, crnHafAngs_[0], comn_.sigmaOW()) : minInitRecCntAng_);
-		double apexDist, recConAng(minInitRecCntAng_); 
+		double apexDist, recConAng(minInitRecCntAng_);
 		waterInCorner_[0].getCApexDistConAng(apexDist, recConAng, cappPrs, crnHafAngs_[0], comn_.sigmaOW(),true);
 		//*************  WarningDontKnowWhatsGoingOn; **********
 
@@ -160,19 +160,19 @@ void Polygon::initWaterInjection(double cappPrs)  {
 		double max_Pc = waterInCorner_[0].pinnedInInitState() ? maxLocalPc: maxLocalPcLastCycle;
 		double angSum(0.), normThresPress((R_*max_Pc )/comn_.sigmaOW());//, curvRad(0.);
 		for(int i = 0; i < numCorners_; ++i)  {
-			if(waterInCorner_[i].cornerExists()) 
+			if(waterInCorner_[i].cornerExists())
 			{
 				angSum += cos(recConAng + crnHafAngs_[i]);
 			}
 		}
 
-		double rhsMaxAdvConAng = (-4.*shapeFactor_*angSum)                      
+		double rhsMaxAdvConAng = (-4.*shapeFactor_*angSum)
 			/ (normThresPress-cos(recConAng)+12.*shapeFactor_*sin(recConAng));
 		rhsMaxAdvConAng = max(rhsMaxAdvConAng, -1.);    // Prevent falling out of range [1, -1].  This is only applicable when r is very small
 		rhsMaxAdvConAng = min(rhsMaxAdvConAng, 1.);  // and these elems are probably not drained.
-		maxConAngSpont_ = acos(rhsMaxAdvConAng); 
+		maxConAngSpont_ = acos(rhsMaxAdvConAng);
 	}
- 
+
 	if(cntAngAdv_ < maxConAngSpont_)
 		Pc_pistonTypeAdv_ = Pc_pistonType_ImbHingCLine();
 	else if(cntAngAdv_ <=  PI/2. + crnHafAngs_[0])            // If oil layers are not possible in all
@@ -253,14 +253,14 @@ double Polygon::centreEntryPrsWatInj()  {
 	{
 		displacementType_ = 'S';
 		 if (elem_.iAmAPore()) outD<<" ep"<<elem_.index()<<":"<<pistonEntryPrs<<" ";
-		 else 
+		 else
 			{
 				outD<<" e"<<displacementType_<<elem_.index()<<":"<<snapOffPrs<<" ";
 				outD<<" e"<<'P'<<elem_.index()<<":"<<pistonEntryPrs<<" ";
 			}
 		return snapOffPrs;
 	}
-  
+
 }
 
 
@@ -301,7 +301,7 @@ double Polygon::Pc_pistonType_Imbnww() const
 		double tension(comn_.sigmaOW());
 		double pc(tension / potentialCurveRad[j]);
 		double layerPc(INF_NEG_NUM);
-		if(waterInCorner_[j].cornerExists()) 
+		if(waterInCorner_[j].cornerExists())
 		{///. Warning layers should be initialised for WatInj befor this
 			layerPc = oilLayer_[j].entryPc();//layerCollapsePc(pc, cntAngAdv_, crnHafAngs_[j], tension,false);
 		}
@@ -332,10 +332,10 @@ double Polygon::Pc_pistonType_ImbHingCLine() const
 	for(itr = 0; itr < MAX_NEWT_ITR+1; ++itr)  {
 		double sumOne(0.), sumTwo(0.), sumThree(0.), sumFour(0.);
 		oldPc = newPc;
-		for(int i = 0; i < numCorners_; ++i)  { 
-			if(waterInCorner_[i].cornerExists())  { 
+		for(int i = 0; i < numCorners_; ++i)  {
+			if(waterInCorner_[i].cornerExists())  {
 
-				double meniscusApexDist, hingConAng(cntAngAdv_); 
+				double meniscusApexDist, hingConAng(cntAngAdv_);
 				waterInCorner_[i].getCApexDistConAng(meniscusApexDist, hingConAng, oldPc, crnHafAngs_[i], comn_.sigmaOW(),true,true);
 
 				double partus(meniscusApexDist * sin(crnHafAngs_[i]) * oldPc/tension);
@@ -358,11 +358,11 @@ double Polygon::Pc_pistonType_ImbHingCLine() const
 			double a= 2.*sumThree - sumTwo;
 			double b=cos(cntAngAdv_)*(R_/(2.*shapeFactor_)) -2.*sumFour + sumOne;
 			double c=-R_*R_/(4.*shapeFactor_);
-			if (b*b-4.*a*c>0) 
+			if (b*b-4.*a*c>0)
 			{
 				newPc2=tension*(2.*a)/
 					( (-b+sqrt(b*b-4.*a*c)) );
-			} 
+			}
 			else
 			{
 				newPc2=tension*(2.*a)/
@@ -381,7 +381,7 @@ double Polygon::Pc_pistonType_ImbHingCLine() const
 
 
 
-	if(err < 0.0001)         
+	if(err < 0.0001)
 	{
 		return newPc;
 	}
@@ -409,7 +409,7 @@ double Polygon::Pc_pistonType_ImbHingCLine() const
 		<< "adPc " << waterInCorner_[0].advancingPc() << endl
 		<< "recPc " << waterInCorner_[0].receedingPc() << endl
 		<< "recPc " << waterInCorner_[0].pinnedApexDist() << endl
-		<< "=================================================" << endl;   
+		<< "=================================================" << endl;
 					//((double*)&R_)[10000000]=0.;
 		//exit(-1);
 	}
@@ -421,7 +421,7 @@ double Polygon::Pc_pistonType_ImbHingCLine() const
 bool Polygon::waterLayer_UntrappedCorner_PcLsnapPc(double cappPrs) const
 {  ///. checks if we need to untrap oil, insertReCalcImbibeEntryPrs ...         never does anything
 	if (!waterInCorner_[0].cornerExists()) return false;
-	if (waterInCorner_[0].trappedCorner().first>-1 && elem_.trappingWatFilm().first<0) 
+	if (waterInCorner_[0].trappedCorner().first>-1 && elem_.trappingWatFilm().first<0)
 	{
 		cout<<" * Error: unsynced Trapping * "<<endl;
 	}
@@ -431,7 +431,7 @@ bool Polygon::waterLayer_UntrappedCorner_PcLsnapPc(double cappPrs) const
 
 
 		for (int i=0;i<numCorners_;++i)  {
-			if (waterInCorner_[i].cornerExists() && waterInCorner_[i].trappedCorner().first<0 && !waterInCorner_[i].pinned()) 
+			if (waterInCorner_[i].cornerExists() && waterInCorner_[i].trappedCorner().first<0 && !waterInCorner_[i].pinned())
 			{
 				waterInCorner_[i].initCornerApex(cappPrs,cntAngRec_,cntAngAdv_,crnHafAngs_[i],comn_.sigmaOW(),false);
 				cout<<"j";
@@ -451,10 +451,10 @@ bool Polygon::waterLayer_UntrappedCorner_PcLsnapPc(double cappPrs) const
 
 
 
-///. Warning also called during Oil Injection, when decreasing oil pressure due to coalescence 
+///. Warning also called during Oil Injection, when decreasing oil pressure due to coalescence
 double Polygon::Pc_pin_disconnectOilLayer(int cor)  ///rare
 {
-	ensure(oilConnection_ && numLayers_>0);    
+	ensure(oilConnection_ && numLayers_>0);
 	LayerApex& oilLayer = oilLayer_[cor];
 	double layerPc(oilLayer.layerCollPc());
 	double tension =  comn_.sigmaOW();
@@ -478,9 +478,3 @@ double Polygon::Pc_pin_disconnectOilLayer(int cor)  ///rare
 	}
 	return layerPc;
 }
-
-
-
-
-
-

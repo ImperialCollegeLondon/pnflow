@@ -41,7 +41,7 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 
 	 solver_ = new hypreSolver(elemans_, krInletBoundary_, krOutletBoundary_, nBSs_,nBpPors_, debugLevel, title_+"_solverImb", writeSlvMatrixAsMatlab_);
 
-	
+
 	///At the end of draiange imbibition displacement is initialized as max Pc is set. This
 	///involves determening entry pressures for all elements.
 	{
@@ -83,7 +83,7 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 		else if(exitL)        trappingCriteria_ = escapeToInlet;
 		else if(exitR)        trappingCriteria_ = escapeToOutlet;
 		else    			  out_ << "Error: exit boundary is not specified "<<exitL << exitR<<endl;
-	   
+
 
 		setElemProps(input_, elemans_, nBpPors_, out_, comn_);
 
@@ -119,7 +119,7 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 		for(int i = nBSs_; i <  nBpPors_; ++i)
 			if(elemans_[i]->connectedToNetwork())
 				elemans_[i]->ChModel()->initWaterInjection(Pc_-elemans_[i]->gravityCorrection());
-	   
+
 
 		int nInWaterFlood0 = 0;
 		for(int i = nBSs_; i < int(elemans_.size()); ++i)  {
@@ -143,7 +143,7 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 
 
 
-		int nInWaterFlood = 0, count1WF = 0, nNotInWaterFlood = 0, count1NIWF = 0;   
+		int nInWaterFlood = 0, count1WF = 0, nNotInWaterFlood = 0, count1NIWF = 0;
 		for(int i = nBSs_; i < int(elemans_.size()); ++i)  {
 			if(elemans_[i]->connectedToNetwork())  {   Elem* elem = elemans_[i];
 				if(elem->rockIndex() == 0)  {
@@ -207,7 +207,7 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 			for(size_t i = nBSs_; i < elemans_.size(); ++i)
 				if(!elemans_[i]->model()->containCOil())
 					imbListOut_ << elemans_[i]->indexOren() << ", "<< (dynamic_cast<Pore*>(elemans_[i]) != 0) << "; ..." << endl;
-			imbListOut_ << "];\n\n" 
+			imbListOut_ << "];\n\n"
 			            << "% The filling list identifies the order through which pores/throats get filled by water\n"
 			            << "fill = [";
 		}
@@ -368,7 +368,7 @@ void FlowDomain::Imbibition(double requestedFinalSw, double requestedFinalPc,  d
 
 		for(int i = 2; i < int(elemans_.size()); ++i)
 			if(elemans_[i]->connectedToNetwork())
-				elemans_[i]->ChModel()->finitWaterInjection(Pc_-elemans_[i]->gravityCorrection());       
+				elemans_[i]->ChModel()->finitWaterInjection(Pc_-elemans_[i]->gravityCorrection());
 
 		out_<<"\n:/\n\n"<<endl;
 
@@ -434,7 +434,7 @@ void FlowDomain::singleImbibeStep(Events<Apex*,PceImbCmp>& evnts, double SwTarge
 			}
 
 		///. Third inner loop, only when option stableFilling_, until no layer ready for pop(?)
-			if(stableFilling_)  
+			if(stableFilling_)
 			 while(nextCentrInjPc(evnts) >= Pc_-1e-32)  {	//cout<<" StableFilling ";
 					FlowDomain::popUpdateWaterInj(evnts, insideBox, cappPressCh_, PcTarget);
 					++numInv;
@@ -793,10 +793,10 @@ void FlowDomain::untrap_WaterGanglia(Events<Apex*,PceImbCmp>& evnts, Elem* elem,
 				}
 			}
 
-			if (!oilFillingEvents.empty())  
+			if (!oilFillingEvents.empty())
 			{   //do the events
 				oilFillingEvents.sortEvents();
-				//FlowDomain::increasePressureInCoalescedBlobTrue(oilFillingEvents,localPc, Pc_); 
+				//FlowDomain::increasePressureInCoalescedBlobTrue(oilFillingEvents,localPc, Pc_);
 				while(!oilFillingEvents.empty() &&  oilFillingEvents.peek()->gravCorrectedEntryPress() < Pc_)  {
 					outD<<'^';outD.flush();
 
@@ -871,8 +871,3 @@ void FlowDomain::checkUntrapOilIfUnstableConfigsImb(Events<Apex*,PceImbCmp>& evn
 	}
 	outD<<"]"<<"  ";
 }
-
-
-
-
-

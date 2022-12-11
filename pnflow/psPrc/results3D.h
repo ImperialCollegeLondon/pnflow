@@ -2,7 +2,7 @@
 #define RESULTS3D_CnM_H
 
 /*---------------------------------------------------------------------------*\
-Developed by (2015-2019): Ali Q Raeini  email: a.q.raeini@imperial.ac.uk
+Developed by: Ali Q Raeini (2015-2019)
 \*---------------------------------------------------------------------------*/
 
 #include <memory>
@@ -22,7 +22,7 @@ class results3D
 
 public:
 	results3D(const InputFile& input,const GNMData* comn, ststr outputfolder, const std::vector<Elem const *>*  elems, size_t nBP2=0, size_t n6pPors=0);
-	void init(size_t nBP2, size_t n6pPors) {nBSs_=nBP2 ; nBpPors_=n6pPors;};
+	void init(size_t nBP2, size_t n6pPors) { nBSs_=nBP2 ; nBpPors_=n6pPors; };
 
 	void write3D(double pc, double intfacTen, bool endCycle = false);
 
@@ -66,4 +66,3 @@ public :
 
 
 #endif
-
