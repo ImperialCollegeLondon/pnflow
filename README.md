@@ -63,8 +63,8 @@ The code is release as a free, using a zlib-style licence, see the file
 src/pnflow/netsim.h for a copy of the licence.
 
 For contact and further information see [Imperial College - Pore-scale Consortium] website,
-raise an `issue` on github mentioning @aliraeini in your message,
-or send me an email:   a.q.raeini@imperial.ac.uk
+raise an `issue` on github mentioning @ForoughiSajjad @aliraeini in your message,
+or send me an email: s.foroughi@imperial.ac.uk or a.q.raeini@imperial.ac.uk
 
 
 
