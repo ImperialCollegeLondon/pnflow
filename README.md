@@ -74,7 +74,7 @@ or send me an email:   a.q.raeini@gmail.com
 [Valvatne and Blunt (2004)]:  https://doi.org/10.1029/2003WR002627
 [Bultreys et al. 2018]: https://doi.org/10.1103/PhysRevE.97.053104
 [Raeini, Bijeljic and Blunt 2018]: https://doi.org/10.1103/PhysRevE.97.023308
-[Foroughi et al. 2020]: [https://doi.org/10.1103/PhysRevE.102.023302](https://doi.org/10.1103/PhysRevE.102.023302)
+[Foroughi et al. 2020]: https://doi.org/10.1103/PhysRevE.102.023302
 [Foroughi et al. 2021]: https://doi.org/10.1007/s11242-021-01609-y
 [Hypre]: https://github.com/LLNL/hypre
 [TOTAL]: https://www.total.com
