@@ -12,7 +12,7 @@ This repository hosts the classical network flow simulation code called pnflow.
 ## See [src/script/README.md](src/script/README.md) for compile/build instructions.
 
 See also README files of other modules which are located in their own directories:    
-[src/libvoxel](src/libvoxel), [src/script](src/script) and in [pkgs](pkgs).
+[src/libvoxel](src/libvoxel), [src/script](src/script) and in [pkgs](pkgs).Additional
 
 
  ----------------------------------------------------------------
@@ -25,4 +25,7 @@ For contacts and references please see:
 https://www.imperial.ac.uk/earth-science/research/research-groups/pore-scale-modelling
 
 
+Alternatively, contact Sajjad Foroughi:
+- Email: s.foroughi@imperial.ac.uk
+- Additional Email: foroughi.sajad@gmail.com
 
