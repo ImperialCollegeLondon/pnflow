@@ -1,4 +1,4 @@
-﻿##  pnflow - classical pore-network (extraction and) flow simulation
+##  pnflow - classical pore-network (extraction and) flow simulation
 
 This repository includes the classical network flow simulation code called pnflow. 
 [pnextract network extraction code](https://github.com/aliraeini/pnextract) is also 
@@ -9,7 +9,7 @@ The pnflow code is essentially a cleaned up version of the [poreflow code] by
 [Valvatne and Blunt (2004)].  The poreflow code was restructured with some 
 post-processing features added in preparation for the generalized network 
 model [Raeini, Bijeljic and Blunt 2018], sponsored by [TOTAL]. 
-A recent validation of the pnflow and [pnextract] codes is published by [Bultreys et al. 2018].
+A recent validation of the pnflow and [pnextract] codes is published by [Bultreys et al. 2018], [Foroughi et al. 2020], and [Foroughi et al. 2021].
 
 
 ### Release notes
@@ -63,8 +63,8 @@ The code is release as a free, using a zlib-style licence, see the file
 src/pnflow/netsim.h for a copy of the licence.
 
 For contact and further information see [Imperial College - Pore-scale Consortium] website,
-raise an `issue` on github mentioning @aliraeini in your message,
-or send me an email:   a.q.raeini@imperial.ac.uk
+raise an `issue` on github mentioning @ForoughiSajjad @aliraeini in your message,
+or send me an email: s.foroughi@imperial.ac.uk or a.q.raeini@imperial.ac.uk
 
 
 
@@ -74,6 +74,8 @@ or send me an email:   a.q.raeini@imperial.ac.uk
 [Valvatne and Blunt (2004)]:  https://doi.org/10.1029/2003WR002627
 [Bultreys et al. 2018]: https://doi.org/10.1103/PhysRevE.97.053104
 [Raeini, Bijeljic and Blunt 2018]: https://doi.org/10.1103/PhysRevE.97.023308
+[Foroughi et al. 2020]: https://doi.org/10.1103/PhysRevE.102.023302
+[Foroughi et al. 2021]: https://doi.org/10.1007/s11242-021-01609-y
 [Hypre]: https://github.com/LLNL/hypre
 [TOTAL]: https://www.total.com
 [pnextract]:  src/pnm/pnextract
